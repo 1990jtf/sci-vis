@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>科普可视化 · 面向儿童科普</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: radial-gradient(circle at 50% 30%, #16223a, #050510 75%);
+      color: #fff; padding: 48px 24px;
+    }
+    header { text-align: center; margin-bottom: 48px; }
+    header h1 { font-size: 36px; letter-spacing: 3px; }
+    header p { margin-top: 12px; color: #9aa3b5; font-size: 15px; }
+    .grid {
+      max-width: 1080px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;
+    }
+    .card {
+      display: block; padding: 28px; border-radius: 16px; text-decoration: none; color: #fff;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { transform: translateY(-4px); background: rgba(255,255,255,0.1); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+    .card .icon { font-size: 40px; margin-bottom: 16px; }
+    .card h2 { font-size: 22px; margin-bottom: 8px; }
+    .card p { font-size: 13px; line-height: 1.7; color: #aab3c5; }
+    .card .badge {
+      display: inline-block; margin-top: 16px; padding: 4px 12px; border-radius: 12px;
+      font-size: 12px; background: rgba(106,92,255,0.3); color: #cfd0ff;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌌 科普可视化</h1>
+    <p>面向儿童的科学知识互动演示 · 点击进入</p>
+  </header>
+
+  <main class="grid">
+    <a class="card" href="src/solar-system/solar-system.html">
+      <div class="icon">🪐</div>
+      <h2>太阳系</h2>
+      <p>八大行星的公转与自转、土星环、卫星系统。点击天体查看科普介绍，支持语音讲解与自动漫游。</p>
+      <span class="badge">Three.js · 交互 · 语音</span>
+    </a>
+
+    <a class="card" href="src/circulation/circulation.html">
+      <div class="icon">❤️</div>
+      <h2>人体 · 血液循环</h2>
+      <p>半透明人体模型展示心脏、肺与血管。血液粒子沿动脉、静脉和肺循环流动，点击器官查看科普介绍。</p>
+      <span class="badge">Three.js · 半透明 · 粒子动画</span>
+    </a>
+  </main>
+</body>
+</html>

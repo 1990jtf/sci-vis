@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>人体 · 血液循环</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+    #info {
+      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+      color: #fff; background: rgba(0,0,0,0.55); padding: 10px 18px;
+      border-radius: 8px; font-size: 14px; letter-spacing: 1px; pointer-events: none; white-space: nowrap;
+    }
+    #hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      color: #ccc; font-size: 12px; pointer-events: none; }
+    #voiceBtn {
+      position: absolute; top: 16px; right: 20px; width: 44px; height: 44px;
+      border-radius: 50%; border: none; cursor: pointer; font-size: 20px;
+      background: rgba(10,15,30,0.85); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      z-index: 10; transition: transform 0.2s, background 0.2s;
+    }
+    #voiceBtn:hover { transform: scale(1.1); }
+    #voiceBtn.off { opacity: 0.45; }
+    #playBtn {
+      position: absolute; bottom: 60px; right: 20px; width: 44px; height: 44px;
+      border-radius: 50%; border: none; cursor: pointer; font-size: 18px;
+      background: rgba(10,15,30,0.85); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      z-index: 10; transition: transform 0.2s, background 0.2s;
+    }
+    #playBtn:hover { transform: scale(1.1); }
+    #legend {
+      position: absolute; left: 20px; bottom: 20px; padding: 14px 18px; border-radius: 12px;
+      background: rgba(10,15,30,0.85); border: 1px solid rgba(255,255,255,0.15); z-index: 10;
+    }
+    #legend .title { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <div id="info">人体 · 血液循环</div>
+  <div id="hint">点击心脏、肺或身体查看介绍 · 拖拽旋转视角 · 滚轮缩放</div>
+  <button id="voiceBtn" title="语音开关">🔊</button>
+  <button id="playBtn" title="暂停/继续动画">⏸</button>
+  <div id="legend"><div class="title">循环通路</div></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    // ---- 共享：中文语音播报 ----
+    function createVoice(buttonEl) {
+      const synth = window.speechSynthesis;
+      let enabled = true;
+      let zhVoice = null;
+      function pickVoice() {
+        const voices = synth.getVoices();
+        zhVoice = voices.find((v) => /zh/i.test(v.lang)) || null;
+      }
+      pickVoice();
+      synth.addEventListener('voiceschanged', pickVoice);
+      function speak(text) {
+        if (!enabled || !synth || !text) return;
+        synth.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'zh-CN'; utter.rate = 0.95; utter.pitch = 1.05;
+        if (zhVoice) utter.voice = zhVoice;
+        synth.speak(utter);
+      }
+      function toggle() {
+        enabled = !enabled;
+        if (buttonEl) buttonEl.classList.toggle('off', !enabled);
+        if (!enabled) synth.cancel();
+        return enabled;
+      }
+      if (buttonEl) buttonEl.addEventListener('click', toggle);
+      return { speak, toggle, stop: () => synth.cancel(), isEnabled: () => enabled };
+    }
+
+    // ---- 共享：科普介绍卡片 ----
+    function createInfoCard(container, { onShow } = {}) {
+      const card = document.createElement('div');
+      card.id = 'infoCard';
+      card.style.cssText = `
+        position: absolute; right: 20px; bottom: 20px; width: 300px;
+        color: #fff; background: rgba(10,15,30,0.9); border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 12px; padding: 18px 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+        display: none; z-index: 10; backdrop-filter: blur(6px); font-family: inherit;
+      `;
+      const close = document.createElement('button');
+      close.className = 'close';
+      close.textContent = '\u00D7';
+      close.style.cssText = `
+        position: absolute; top: 10px; right: 12px; cursor: pointer; color: #9aa3b5;
+        font-size: 18px; line-height: 1; background: none; border: none;
+      `;
+      close.addEventListener('mouseenter', () => (close.style.color = '#fff'));
+      close.addEventListener('mouseleave', () => (close.style.color = '#9aa3b5'));
+      const h3 = document.createElement('h3');
+      h3.style.cssText = 'margin: 0 0 10px; font-size: 20px; display: flex; align-items: center; gap: 10px;';
+      const dot = document.createElement('span');
+      dot.style.cssText = 'width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0;';
+      const title = document.createElement('span');
+      h3.appendChild(dot); h3.appendChild(title);
+      const body = document.createElement('div');
+      body.id = 'cardBody';
+      card.appendChild(close); card.appendChild(h3); card.appendChild(body);
+      container.appendChild(card);
+      close.addEventListener('click', () => hide());
+      function show(userData) {
+        if (!userData || !userData.name) return;
+        dot.style.background = '#' + (userData.color || 0xffffff).toString(16).padStart(6, '0');
+        title.textContent = userData.name + '（' + (userData.type || '天体') + '）';
+        body.innerHTML = (userData.info || []).map((line) => '<p style="margin:6px 0;font-size:13px;line-height:1.7;color:#cfd6e6;">' + line + '</p>').join('');
+        card.style.display = 'block';
+        if (onShow) onShow(userData);
+      }
+      function hide() { card.style.display = 'none'; }
+      return { element: card, show, hide };
+    }
+
+    // ---- 共享：点击拾取 ----
+    function enablePicking(renderer, camera, { clickable, onPick }) {
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      renderer.domElement.addEventListener('click', (event) => {
+        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(clickable, false);
+        if (hits.length > 0 && onPick) onPick(hits[0].object);
+      });
+    }
+
+    // ---- 数据 ----
+    const ORGANS = {
+      心脏: ['位于胸腔中部、略偏左', '像一个强力泵，一生都在跳动', '每分钟约跳动 60~100 次', '把血液输送到全身各处', '大小和我们的拳头差不多'],
+      肺: ['左右各一个，位于胸腔', '是人体进行气体交换的场所', '吸入氧气、呼出二氧化碳', '由亿万个肺泡构成', '血液在这里获得新鲜氧气'],
+      血管: ['遍布全身，像一张网', '分为动脉、静脉和毛细血管', '动脉把血送出心脏，鲜红色', '静脉把血送回心脏，暗红色', '全身血管连接起来可绕地球两圈多'],
+      人体: ['血液由心脏泵出，流遍全身', '给每个细胞送去氧气和营养', '再带走二氧化碳和废物', '这就是血液循环'],
+    };
+
+    // ---- 场景 ----
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x071018);
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 1.9, 10.5);
+    camera.lookAt(0, 1.9, 0);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, 1.9, 0);
+
+    // 灯光
+    scene.add(new THREE.AmbientLight(0x556677, 0.8));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    keyLight.position.set(3, 5, 4);
+    scene.add(keyLight);
+    const rimLight = new THREE.DirectionalLight(0x88aaff, 0.6);
+    rimLight.position.set(-4, 2, -3);
+    scene.add(rimLight);
+
+    // ---- 人体：加载真实 3D 模型 (Michelle.glb) ----
+    const clickable = [];
+    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/Michelle.glb';
+    const TARGET_HEIGHT = 4.6;   // 目标身高（世界单位）
+    let body, heart, lungs, vesselCurves;
+
+    const loader = new GLTFLoader();
+    loader.load(MODEL_URL, (gltf) => {
+      body = gltf.scene;
+      scene.add(body);
+
+      // 计算包围盒 → 缩放对齐到目标身高，并竖直居中
+      const box = new THREE.Box3().setFromObject(body);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const scale = TARGET_HEIGHT / size.y;
+      body.scale.setScalar(scale);
+      body.position.set(0, -(center.y * scale), 0);   // 让脚底落在 y=0
+      body.rotation.y = Math.PI;                       // 面朝相机
+
+      // 让皮肤半透明，透出内部器官
+      body.traverse((o) => {
+        if (o.isMesh && o.material) {
+          o.material.transparent = true;
+          o.material.opacity = 0.32;
+          o.material.depthWrite = false;
+        }
+      });
+
+      body.userData = { name: '人体', type: '身体', color: 0xc0b8ae, info: ORGANS['人体'] };
+      clickable.push(body);
+
+      // 按比例定位器官与血管
+      const foot = 0, head = TARGET_HEIGHT;
+      const waistH = head * 0.53;      // 髋部（腰部）高度
+      const shoulderH = head * 0.82;   // 肩部高度
+      const chestMid = (shoulderH + waistH) / 2;   // 胸腔中部
+      const hx = size.x * scale * 0.18; // 胸腔左右半宽
+
+      buildOrgans(chestMid, hx);
+      buildVessels(chestMid, hx, head);
+      buildParticles();
+    }, undefined, (err) => {
+      console.error('模型加载失败', err);
+      buildOrgans(2.4, 0.6);
+      buildVessels(2.4, 0.6, 5.2);
+      buildParticles();
+    });
+
+    // 器官
+    function buildOrgans(chestMid, hx) {
+      heart = new THREE.Group();
+      const heartMat = new THREE.MeshStandardMaterial({ color: 0xd23b46, emissive: 0x5c1018, emissiveIntensity: 0.35, roughness: 0.4 });
+      const heartBody = new THREE.Mesh(new THREE.SphereGeometry(0.3, 32, 32), heartMat);
+      heartBody.scale.set(1, 1.2, 0.85);
+      const heartTip = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.5, 20), heartMat);
+      heartTip.rotation.x = Math.PI / 2;
+      heartTip.position.y = -0.62;
+      heart.add(heartBody); heart.add(heartTip);
+      const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 0.2, 16), heartMat);
+      vent.position.y = 0.45;
+      heart.add(vent);
+      heart.position.set(-hx * 0.5, chestMid, hx * 0.25);
+      heart.rotation.z = 0.25;
+      heart.userData = { name: '心脏', type: '器官', color: 0xd23b46, info: ORGANS['心脏'] };
+      scene.add(heart);
+      clickable.push(heart);
+
+      const lungMat = new THREE.MeshPhysicalMaterial({ color: 0xffb3b8, transparent: true, opacity: 0.55, roughness: 0.5, side: THREE.DoubleSide });
+      lungs = [];
+      [-1, 1].forEach((side) => {
+        const lung = new THREE.Mesh(
+          new THREE.CapsuleGeometry(0.36, 0.9, 8, 20),
+          lungMat
+        );
+        lung.scale.set(1, 1.15, 0.62);
+        lung.position.set(side * hx * 0.85, chestMid, hx * 0.2);
+        lung.rotation.z = -side * 0.12;
+        lung.userData = { name: '肺', type: '器官', color: 0xffb3b8, info: ORGANS['肺'] };
+        scene.add(lung);
+        lungs.push(lung);
+        clickable.push(lung);
+      });
+    }
+
+    // 血管曲线
+    function buildVessels(chestMid, hx, head) {
+      const h = head;
+      const heartPos = [-hx * 0.5, chestMid, hx * 0.25];
+      vesselCurves = {
+        artery: makeCurve([
+          heartPos, [heartPos[0] * 0.2, chestMid + h * 0.16, heartPos[2] - h * 0.02], [0, chestMid + h * 0.3, heartPos[2] - h * 0.08],
+          [0, chestMid + h * 0.42, heartPos[2] - h * 0.1], [-hx * 0.3, chestMid + h * 0.4, heartPos[2] - h * 0.05],
+          [-hx * 0.7, chestMid + h * 0.25, heartPos[2]], [-hx * 0.8, chestMid + h * 0.05, heartPos[2]],
+          [-hx * 0.7, chestMid - h * 0.15, heartPos[2]], [-hx * 0.35, chestMid - h * 0.32, heartPos[2]],
+          [0, chestMid - h * 0.42, heartPos[2]], [hx * 0.35, chestMid - h * 0.32, heartPos[2]],
+          [hx * 0.7, chestMid - h * 0.1, heartPos[2]], [hx * 0.6, chestMid + h * 0.1, heartPos[2]],
+          [heartPos[0] * 0.4, chestMid + h * 0.05, heartPos[2]],
+        ]),
+        vein: makeCurve([
+          heartPos, [-hx * 0.4, chestMid + h * 0.1, heartPos[2] - h * 0.02],
+          [-hx * 0.45, chestMid - h * 0.05, heartPos[2] - h * 0.02], [0, chestMid - h * 0.35, heartPos[2] - h * 0.04],
+          [hx * 0.45, chestMid - h * 0.05, heartPos[2] - h * 0.02], [hx * 0.5, chestMid + h * 0.12, heartPos[2] - h * 0.02],
+          [heartPos[0] * 0.4, chestMid + h * 0.05, heartPos[2]],
+        ]),
+        pulmonary: makeCurve([
+          heartPos, [hx * 0.75, chestMid + h * 0.06, heartPos[2] - h * 0.02],
+          [hx * 0.85, chestMid, heartPos[2] - h * 0.06], [-hx * 0.85, chestMid, heartPos[2] - h * 0.06],
+          [-hx * 0.75, chestMid + h * 0.06, heartPos[2] - h * 0.02],
+        ]),
+      };
+
+      const vesselColors = { artery: 0xff5555, vein: 0x4aa5ff, pulmonary: 0xb76bff };
+      Object.keys(vesselCurves).forEach((k) => {
+        scene.add(new THREE.Mesh(
+          new THREE.TubeGeometry(vesselCurves[k], 160, 0.045, 8, true),
+          new THREE.MeshBasicMaterial({ color: vesselColors[k], transparent: true, opacity: 0.3 })
+        ));
+      });
+    }
+
+    // 血液粒子
+    function buildParticles() {
+      particleSets = [
+        makeParticles(vesselCurves.artery, 0xff6b6b, 70, 0.10),
+        makeParticles(vesselCurves.vein, 0x5fb4ff, 55, 0.08),
+        makeParticles(vesselCurves.pulmonary, 0xc98bff, 45, 0.14),
+      ];
+    }
+    let particleSets = [];
+
+    // 血管曲线工具
+    function makeCurve(points) {
+      const v = points.map((p) => new THREE.Vector3(...p));
+      return new THREE.CatmullRomCurve3(v, true, 'catmullrom', 0.6);
+    }
+
+    // 血液粒子
+    function makeParticles(curve, color, count, speed) {
+      const mat = new THREE.MeshBasicMaterial({ color });
+      const items = [];
+      for (let i = 0; i < count; i++) {
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 12), mat);
+        mesh.userData.t = i / count;
+        mesh.userData.speed = speed;
+        scene.add(mesh);
+        items.push(mesh);
+      }
+      return { curve, items };
+    }
+
+    // 语音 + 卡片 + 点击
+    const voice = createVoice(document.getElementById('voiceBtn'));
+    const infoCard = createInfoCard(document.body, {
+      onShow: (userData) => voice.speak(userData.name + '。' + (userData.info || []).join('，')),
+    });
+    enablePicking(renderer, camera, { clickable, onPick: (obj) => infoCard.show(obj.userData) });
+
+    // 图例
+    function addLegend(color, text) {
+      const el = document.createElement('div');
+      el.style.cssText = 'display:flex;align-items:center;gap:6px;margin:6px 0;font-size:12px;color:#cfd6e6;';
+      const dot = document.createElement('span');
+      dot.style.cssText = `width:12px;height:12px;border-radius:50%;background:#${color.toString(16).padStart(6,'0')};flex-shrink:0;`;
+      el.appendChild(dot);
+      el.appendChild(document.createTextNode(text));
+      document.getElementById('legend').appendChild(el);
+    }
+    addLegend(0xff6b6b, '动脉 · 含氧血流向全身');
+    addLegend(0x5fb4ff, '静脉 · 回流心脏');
+    addLegend(0xc98bff, '肺循环 · 心脏与肺往返');
+
+    // 播放控制
+    const clock = new THREE.Clock();
+    let isPlaying = true;
+    const playBtn = document.getElementById('playBtn');
+    playBtn.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      playBtn.textContent = isPlaying ? '⏸' : '▶';
+      clock.getDelta();
+    });
+    function animate() {
+      const dt = isPlaying ? clock.getDelta() : 0;
+      if (isPlaying) {
+        if (heart) {
+          const pulse = 1 + Math.sin(performance.now() / 250) * 0.12;
+          heart.scale.set(pulse, pulse, pulse);
+        }
+        particleSets.forEach(({ curve, items }) => {
+          items.forEach((m) => {
+            m.userData.t = (m.userData.t + dt * m.userData.speed) % 1;
+            curve.getPointAt(m.userData.t, m.position);
+          });
+        });
+      }
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
