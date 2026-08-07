@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>天气系统 · 水循环</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+    #info {
+      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+      color: #fff; background: rgba(0,0,0,0.55); padding: 10px 18px;
+      border-radius: 8px; font-size: 14px; letter-spacing: 1px; pointer-events: none; white-space: nowrap;
+    }
+    #hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      color: #ccc; font-size: 12px; pointer-events: none; white-space: nowrap; }
+    #voiceBtn {
+      position: absolute; top: 16px; right: 20px; width: 44px; height: 44px;
+      border-radius: 50%; border: none; cursor: pointer; font-size: 20px;
+      background: rgba(10,15,30,0.85); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      z-index: 10; transition: transform 0.2s, background 0.2s;
+    }
+    #voiceBtn:hover { transform: scale(1.1); }
+    #voiceBtn.off { opacity: 0.45; }
+    #playBtn {
+      position: absolute; bottom: 60px; right: 20px; width: 44px; height: 44px;
+      border-radius: 50%; border: none; cursor: pointer; font-size: 18px;
+      background: rgba(10,15,30,0.85); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      z-index: 10; transition: transform 0.2s, background 0.2s;
+    }
+    #playBtn:hover { transform: scale(1.1); }
+    #legend {
+      position: absolute; left: 20px; bottom: 20px; padding: 14px 18px; border-radius: 12px;
+      background: rgba(10,15,30,0.85); border: 1px solid rgba(255,255,255,0.15); z-index: 10;
+    }
+    #legend .title { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    #legend div { display: flex; align-items: center; gap: 6px; margin: 5px 0; font-size: 12px; color: #cfd6e6; }
+    #legend .dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+  <div id="info">天气系统 · 水循环</div>
+  <div id="hint">点击太阳、云、海洋查看介绍 · 拖拽旋转视角 · 滚轮缩放</div>
+  <button id="voiceBtn" title="语音开关">🔊</button>
+  <button id="playBtn" title="暂停/继续动画">⏸</button>
+  <div id="legend">
+    <div class="title">水循环过程</div>
+    <div><span class="dot" style="background:#ffb347"></span>蒸发（水汽上升）</div>
+    <div><span class="dot" style="background:#9ad0ff"></span>冷凝（云中水滴）</div>
+    <div><span class="dot" style="background:#5eb8ff"></span>降水（降雨/降雪）</div>
+    <div><span class="dot" style="background:#8ecae6"></span>径流（汇入江河海洋）</div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ---- 共享：中文语音播报 ----
+    function createVoice(buttonEl) {
+      const synth = window.speechSynthesis;
+      let enabled = true;
+      let zhVoice = null;
+      function pickVoice() {
+        const voices = synth.getVoices();
+        zhVoice = voices.find((v) => /zh/i.test(v.lang)) || null;
+      }
+      pickVoice();
+      synth.addEventListener('voiceschanged', pickVoice);
+      function speak(text) {
+        if (!enabled || !synth || !text) return;
+        synth.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'zh-CN'; utter.rate = 0.95; utter.pitch = 1.05;
+        if (zhVoice) utter.voice = zhVoice;
+        synth.speak(utter);
+      }
+      function toggle() {
+        enabled = !enabled;
+        if (buttonEl) buttonEl.classList.toggle('off', !enabled);
+        if (!enabled) synth.cancel();
+        return enabled;
+      }
+      if (buttonEl) buttonEl.addEventListener('click', toggle);
+      return { speak, toggle, stop: () => synth.cancel(), isEnabled: () => enabled };
+    }
+
+    // ---- 共享：科普介绍卡片 ----
+    function createInfoCard(container, { onShow } = {}) {
+      const card = document.createElement('div');
+      card.id = 'infoCard';
+      card.style.cssText = `
+        position: absolute; right: 20px; bottom: 20px; width: 300px;
+        color: #fff; background: rgba(10,15,30,0.9); border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 12px; padding: 18px 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+        display: none; z-index: 10; backdrop-filter: blur(6px); font-family: inherit;
+      `;
+      const close = document.createElement('button');
+      close.className = 'close';
+      close.textContent = '\u00D7';
+      close.style.cssText = `
+        position: absolute; top: 10px; right: 12px; cursor: pointer; color: #9aa3b5;
+        font-size: 18px; line-height: 1; background: none; border: none;
+      `;
+      close.addEventListener('mouseenter', () => (close.style.color = '#fff'));
+      close.addEventListener('mouseleave', () => (close.style.color = '#9aa3b5'));
+      const h3 = document.createElement('h3');
+      h3.style.cssText = 'margin: 0 0 10px; font-size: 20px; display: flex; align-items: center; gap: 10px;';
+      const dot = document.createElement('span');
+      dot.style.cssText = 'width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0;';
+      const title = document.createElement('span');
+      h3.appendChild(dot); h3.appendChild(title);
+      const body = document.createElement('div');
+      body.id = 'cardBody';
+      card.appendChild(close); card.appendChild(h3); card.appendChild(body);
+      container.appendChild(card);
+      close.addEventListener('click', () => hide());
+      function show(userData) {
+        if (!userData || !userData.name) return;
+        dot.style.background = '#' + (userData.color || 0xffffff).toString(16).padStart(6, '0');
+        title.textContent = userData.name + '（' + (userData.type || '要素') + '）';
+        body.innerHTML = (userData.info || []).map((line) => '<p style="margin:6px 0;font-size:13px;line-height:1.7;color:#cfd6e6;">' + line + '</p>').join('');
+        card.style.display = 'block';
+        if (onShow) onShow(userData);
+      }
+      function hide() { card.style.display = 'none'; }
+      return { element: card, show, hide };
+    }
+
+    // ---- 共享：点击拾取 ----
+    function enablePicking(renderer, camera, { clickable, onPick }) {
+      const raycaster = new THREE.Raycaster();
+      const pointer = new THREE.Vector2();
+      renderer.domElement.addEventListener('click', (event) => {
+        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        raycaster.setFromCamera(pointer, camera);
+        const hits = raycaster.intersectObjects(clickable, false);
+        if (hits.length > 0 && onPick) onPick(hits[0].object);
+      });
+    }
+
+    // ---- 科普数据 ----
+    const INFO = {
+      太阳: ['水循环的能量来源', '阳光让江河海洋的水受热蒸发', '为整个水循环提供动力'],
+      云: ['由无数小水滴或小冰晶聚集而成', '水汽上升冷却后凝结成云（冷凝）', '云朵聚集变重后就会下雨'],
+      海洋: ['地球上约 97% 的水都在海洋', '海洋是水循环最大的水汽来源', '海水蒸发后留下盐分，所以海水是咸的'],
+      水循环: ['水不断在海洋、天空、陆地之间循环', '蒸发 → 冷凝 → 降水 → 径流，周而复始', '水循环让地球上的水用之不竭'],
+    };
+
+    // ---- 场景 ----
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0xbfd8ef, 30, 70);
+
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
+    camera.position.set(13, 7, 16);
+    camera.lookAt(0, 2.5, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(0, 2.5, 0);
+    controls.maxPolarAngle = Math.PI * 0.5;
+
+    // 灯光
+    const hemi = new THREE.HemisphereLight(0xbfdfff, 0x4a7a4a, 0.85);
+    scene.add(hemi);
+    const sunLight = new THREE.DirectionalLight(0xfff2d9, 1.5);
+    sunLight.position.set(12, 18, 8);
+    scene.add(sunLight);
+
+    const clickable = [];
+
+    // ---- 天空：渐变 + 地平线辉光（ShaderMaterial）----
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      depthWrite: false,
+      uniforms: {
+        topColor: { value: new THREE.Color(0x2e6fb7) },
+        bottomColor: { value: new THREE.Color(0xd9eefc) },
+        sunDir: { value: new THREE.Vector3(0.55, 0.75, 0.35).normalize() },
+      },
+      vertexShader: `
+        varying vec3 vDir;
+        void main(){
+          vDir = normalize(position);
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+        }`,
+      fragmentShader: `
+        varying vec3 vDir;
+        uniform vec3 topColor; uniform vec3 bottomColor; uniform vec3 sunDir;
+        void main(){
+          float h = clamp(vDir.y, 0.0, 1.0);
+          vec3 col = mix(bottomColor, topColor, pow(h, 0.55));
+          // 太阳周围暖色辉光
+          float s = pow(max(dot(vDir, sunDir), 0.0), 24.0);
+          col += vec3(1.0,0.85,0.55) * s * 1.2;
+          // 地平线附近更亮
+          float haze = pow(1.0 - h, 6.0);
+          col = mix(col, vec3(0.93,0.96,1.0), haze * 0.7);
+          gl_FragColor = vec4(col, 1.0);
+        }`,
+    });
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(120, 32, 20), skyMat);
+    scene.add(sky);
+
+    // ---- 太阳（亮盘 + 光晕精灵）----
+    const sunDisc = new THREE.Mesh(
+      new THREE.CircleGeometry(1.6, 32),
+      new THREE.MeshBasicMaterial({ color: 0xfff3b0, fog: false })
+    );
+    sunDisc.position.set(12, 15, 8);
+    sunDisc.lookAt(camera.position);
+    sunDisc.userData = { name: '太阳', type: '能量', color: 0xffe066, info: INFO['太阳'] };
+    scene.add(sunDisc);
+    clickable.push(sunDisc);
+
+    // 径向渐变纹理（太阳光晕）
+    const glowCanvas = document.createElement('canvas');
+    glowCanvas.width = 256; glowCanvas.height = 256;
+    const gctx = glowCanvas.getContext('2d');
+    const grad = gctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+    grad.addColorStop(0, 'rgba(255,244,200,1)');
+    grad.addColorStop(0.25, 'rgba(255,235,170,0.5)');
+    grad.addColorStop(1, 'rgba(255,230,150,0)');
+    gctx.fillStyle = grad;
+    gctx.fillRect(0, 0, 256, 256);
+    const glowTex = new THREE.CanvasTexture(glowCanvas);
+    const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+    }));
+    sunGlow.scale.set(14, 14, 1);
+    sunGlow.position.copy(sunDisc.position);
+    scene.add(sunGlow);
+
+    // ---- 水面（波浪动画）----
+    const waterGeo = new THREE.PlaneGeometry(70, 70, 48, 48);
+    waterGeo.rotateX(-Math.PI / 2);
+    const waterPos = waterGeo.attributes.position.array.slice();
+    const waterMat = new THREE.MeshPhysicalMaterial({
+      color: 0x2f7fb5, transparent: true, opacity: 0.9, roughness: 0.12, metalness: 0.05, side: THREE.DoubleSide,
+    });
+    const water = new THREE.Mesh(waterGeo, waterMat);
+    water.position.y = 0.2;
+    water.userData = { name: '海洋', type: '水体', color: 0x2f7fb5, info: INFO['海洋'] };
+    scene.add(water);
+    clickable.push(water);
+    const waveTime = { t: 0 };
+
+    // ---- 地形（起伏丘陵，非平圆柱）----
+    const terrainGeo = new THREE.PlaneGeometry(28, 28, 80, 80);
+    terrainGeo.rotateX(-Math.PI / 2);
+    const tpos = terrainGeo.attributes.position.array;
+    for (let i = 0; i < tpos.length; i += 3) {
+      const x = tpos[i], z = tpos[i + 2];
+      let h = 1.6 * Math.exp(-(x * x + z * z) / 60);       // 中央山丘
+      h += 0.9 * Math.sin(x * 0.7) * Math.cos(z * 0.8);
+      h += 0.45 * Math.sin(x * 1.6 + 2) * Math.cos(z * 1.4);
+      tpos[i + 1] = Math.max(h, 0.0);
+    }
+    terrainGeo.computeVertexNormals();
+    const terrain = new THREE.Mesh(terrainGeo, new THREE.MeshLambertMaterial({ color: 0x6fae5c }));
+    terrain.position.y = 0;
+    scene.add(terrain);
+
+    // 在丘陵上点缀树木（小锥体 + 圆柱）
+    function makeTree(x, z) {
+      const g = new THREE.Group();
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.6, 6), new THREE.MeshLambertMaterial({ color: 0x7a5230 }));
+      trunk.position.y = 0.3;
+      const crown = new THREE.Mesh(new THREE.ConeGeometry(0.42, 1.0, 8), new THREE.MeshLambertMaterial({ color: 0x3f7d3a }));
+      crown.position.y = 0.95;
+      g.add(trunk); g.add(crown);
+      g.position.set(x, 0.05, z);
+      scene.add(g);
+    }
+    [[-4, -3], [5, 2], [-6, 4], [4, -5], [-2, 6], [7, -2]].forEach(([x, z]) => makeTree(x, z));
+
+    // ---- 云层（柔和的多球云）----
+    function makeCloud(x, y, z, scale) {
+      const cloud = new THREE.Group();
+      const mat = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.92 });
+      const parts = [
+        [0, 0, 0, 1.1], [-0.8, 0.12, 0.2, 0.85], [0.85, 0.12, -0.1, 0.85],
+        [0, 0.35, -0.2, 0.95], [-0.3, 0.5, 0.1, 0.7], [0.55, 0.42, 0.15, 0.68],
+        [-0.45, -0.1, -0.3, 0.7], [0.3, -0.15, 0.35, 0.6],
+      ];
+      parts.forEach(([px, py, pz, r]) => {
+        const puff = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 16), mat);
+        puff.position.set(px, py, pz);
+        cloud.add(puff);
+      });
+      cloud.scale.setScalar(scale);
+      cloud.position.set(x, y, z);
+      cloud.userData = { name: '云', type: '天气', color: 0xffffff, info: INFO['云'] };
+      scene.add(cloud);
+      clickable.push(cloud);
+      return cloud;
+    }
+    const clouds = [
+      makeCloud(-4, 7.2, -2, 1.4),
+      makeCloud(3, 8.0, 0.5, 1.8),
+      makeCloud(-8, 6.8, 3, 1.2),
+      makeCloud(6, 6.6, -4, 1.0),
+      makeCloud(0, 9.5, -6, 1.3),
+    ];
+
+    // ---- 蒸发粒子（水汽从水面上升）----
+    const evapMat = new THREE.MeshBasicMaterial({ color: 0xffcf8a, transparent: true, opacity: 0.65 });
+    const evap = [];
+    for (let i = 0; i < 110; i++) {
+      const p = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), evapMat);
+      p.userData.phase = Math.random() * Math.PI * 2;
+      p.userData.speed = 0.6 + Math.random() * 0.5;
+      p.userData.rx = (Math.random() - 0.5) * 12;
+      p.userData.rz = (Math.random() - 0.5) * 12;
+      scene.add(p);
+      evap.push(p);
+    }
+
+    // ---- 降水粒子（雨滴下落）----
+    const rainMat = new THREE.MeshBasicMaterial({ color: 0x8cc9ff, transparent: true, opacity: 0.75 });
+    const rain = [];
+    for (let i = 0; i < 240; i++) {
+      const p = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), rainMat);
+      p.userData.speed = 4 + Math.random() * 3;
+      p.userData.x = (Math.random() - 0.5) * 12;
+      p.userData.z = (Math.random() - 0.5) * 8 - 1;
+      p.userData.t = 6 + Math.random() * 4;
+      scene.add(p);
+      rain.push(p);
+    }
+
+    // ---- 径流：山间小溪汇入水面（沿曲线流动）----
+    const runoffCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(4.5, 2.6, -2.5),
+      new THREE.Vector3(2.8, 1.8, -1.4),
+      new THREE.Vector3(1.2, 1.0, -0.4),
+      new THREE.Vector3(0.2, 0.45, 0.2),
+      new THREE.Vector3(-0.4, 0.25, 0.5),
+    ]);
+    const runoffTube = new THREE.Mesh(
+      new THREE.TubeGeometry(runoffCurve, 40, 0.05, 8, false),
+      new THREE.MeshBasicMaterial({ color: 0x9fdcff, transparent: true, opacity: 0.7 })
+    );
+    scene.add(runoffTube);
+
+    // 蒸发/降水箭头（指示方向）
+    const upArrowMat = new THREE.MeshBasicMaterial({ color: 0xffb347 });
+    const downArrowMat = new THREE.MeshBasicMaterial({ color: 0x8cc9ff });
+    function makeArrow(mat) {
+      const g = new THREE.Group();
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 8), mat);
+      shaft.position.y = 0;
+      const head = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.3, 10), mat);
+      head.position.y = 0.5;
+      g.add(shaft); g.add(head);
+      return g;
+    }
+    const upArrow = makeArrow(upArrowMat);
+    upArrow.position.set(-2, 4.5, 5);
+    scene.add(upArrow);
+    const downArrow = makeArrow(downArrowMat);
+    downArrow.position.set(3, 3.4, 3);
+    downArrow.rotation.z = Math.PI;
+    scene.add(downArrow);
+
+    // ---- 语音 + 卡片 + 点击 ----
+    const voice = createVoice(document.getElementById('voiceBtn'));
+    const infoCard = createInfoCard(document.body, {
+      onShow: (userData) => voice.speak(userData.name + '。' + (userData.info || []).join('，')),
+    });
+    enablePicking(renderer, camera, { clickable, onPick: (obj) => infoCard.show(obj.userData) });
+
+    // ---- 播放控制 + 动画 ----
+    const clock = new THREE.Clock();
+    let isPlaying = true;
+    const playBtn = document.getElementById('playBtn');
+    playBtn.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      playBtn.textContent = isPlaying ? '⏸' : '▶';
+      clock.getDelta();
+    });
+
+    function animate() {
+      const dt = isPlaying ? clock.getDelta() : 0;
+      if (isPlaying) {
+        // 水面波浪（顶点正弦位移）
+        waveTime.t += dt;
+        const wp = waterGeo.attributes.position.array;
+        for (let i = 0; i < wp.length; i += 3) {
+          const x = waterPos[i], z = waterPos[i + 2];
+          wp[i + 1] = waterPos[i + 1] + Math.sin(x * 1.2 + waveTime.t * 1.5) * 0.12
+                     + Math.cos(z * 1.5 + waveTime.t * 1.1) * 0.12;
+        }
+        waterGeo.attributes.position.needsUpdate = true;
+        waterGeo.computeVertexNormals();
+
+        // 太阳光晕缓慢旋转
+        sunGlow.material.rotation += dt * 0.05;
+
+        // 蒸发粒子上升
+        evap.forEach((p) => {
+          p.userData.phase += dt * p.userData.speed;
+          const t = (Math.sin(p.userData.phase) + 1) / 2;
+          p.position.y = 0.3 + t * 6.5;
+          p.position.x = p.userData.rx + Math.sin(p.userData.phase * 0.5) * 1.2;
+          p.position.z = p.userData.rz + Math.cos(p.userData.phase * 0.5) * 1.2;
+          p.material.opacity = 0.2 + t * 0.55;
+        });
+
+        // 降水粒子下落
+        rain.forEach((p) => {
+          p.userData.t -= dt * p.userData.speed;
+          p.position.y = p.userData.t;
+          p.position.x = p.userData.x;
+          p.position.z = p.userData.z;
+          if (p.userData.t < 0.3) p.userData.t = 6.5;
+        });
+
+        // 云朵缓慢飘动
+        clouds.forEach((c, i) => {
+          c.position.x += dt * (0.5 + i * 0.08);
+          if (c.position.x > 12) c.position.x = -12;
+        });
+
+        // 径流粒子沿曲线流动
+        if (runoffItem) {
+          runoffItem.userData.t = (runoffItem.userData.t + dt * 0.1) % 1;
+          runoffCurve.getPointAt(runoffItem.userData.t, runoffItem.position);
+        }
+      }
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    // 径流粒子（沿曲线流动）
+    const runoffItem = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 12), new THREE.MeshBasicMaterial({ color: 0x8ecae6 }));
+    runoffItem.userData.t = 0;
+    scene.add(runoffItem);
+
+    animate();
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
