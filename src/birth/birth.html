@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中国大陆出生人口 · 1985-2025</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: radial-gradient(circle at 50% 40%, #16223a, #050510 80%); }
+    #info {
+      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
+      color: #fff; background: rgba(0,0,0,0.55); padding: 10px 18px;
+      border-radius: 8px; font-size: 14px; letter-spacing: 1px; pointer-events: none; white-space: nowrap;
+    }
+    #hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+      color: #ccc; font-size: 12px; pointer-events: none; white-space: nowrap; }
+    #tooltip {
+      position: absolute; display: none; pointer-events: none; z-index: 20;
+      color: #fff; background: rgba(10,15,30,0.92); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px; padding: 8px 14px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    #tooltip b { font-size: 16px; }
+    #voiceBtn {
+      position: absolute; top: 16px; right: 20px; width: 44px; height: 44px;
+      border-radius: 50%; border: none; cursor: pointer; font-size: 20px;
+      background: rgba(10,15,30,0.85); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      z-index: 10; transition: transform 0.2s, background 0.2s;
+    }
+    #voiceBtn:hover { transform: scale(1.1); }
+    #voiceBtn.off { opacity: 0.45; }
+  </style>
+</head>
+<body>
+  <div id="info">中国大陆 · 每年出生人口（柱）与出生率（线，1985-2025）</div>
+  <div id="hint">鼠标悬停查看数据 · 拖拽旋转视角 · 滚轮缩放 · 粉色折线为出生率‰</div>
+  <button id="voiceBtn" title="语音开关">🔊</button>
+  <div id="tooltip"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ---- 数据（万人）----
+    const DATA = [
+      [1985,2211.39],[1986,2392.81],[1987,2529.05],[1988,2464.35],[1989,2414.05],
+      [1990,2390.70],[1991,2264.74],[1992,2124.91],[1993,2131.80],[1994,2109.55],
+      [1995,2062.71],[1996,2067.40],[1997,2038.23],[1998,1942.39],[1999,1834.00],
+      [2000,1771.49],[2001,1701.74],[2002,1646.59],[2003,1598.90],[2004,1592.88],
+      [2005,1616.61],[2006,1585.02],[2007,1594.64],[2008,1608.13],[2009,1590.86],
+      [2010,1591.87],[2011,1784.86],[2012,1973.05],[2013,1776.30],[2014,1897.29],
+      [2015,1654.46],[2016,1883.24],[2017,1764.82],[2018,1523.40],[2019,1465.46],
+      [2020,1202.26],[2021,1062.00],[2022,956.00],[2023,902.00],[2024,954.00],
+      [2025,792.00],
+    ];
+
+    // 出生率（‰），与上面同一年份
+    const RATE = [
+      21.04,22.43,23.33,22.37,21.58,21.06,19.68,18.24,18.09,17.70,
+      17.12,16.98,16.57,15.64,14.64,14.03,13.38,12.86,12.41,12.29,
+      12.40,12.09,12.10,12.14,11.95,11.90,13.27,14.57,13.03,13.83,
+      11.99,13.57,12.64,10.86,10.41,8.52,7.52,6.77,6.39,6.77,
+      5.63,
+    ];
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
+    camera.position.set(55, 38, 78);
+    camera.lookAt(20, 10, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(20, 12, 0);
+    controls.minDistance = 20;
+    controls.maxDistance = 160;
+
+    // 灯光
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const dir = new THREE.DirectionalLight(0xffffff, 1.1);
+    dir.position.set(40, 60, 30);
+    scene.add(dir);
+    const rim = new THREE.DirectionalLight(0x6a5cff, 0.5);
+    rim.position.set(-30, 20, -40);
+    scene.add(rim);
+
+    // 星空背景
+    const stars = new THREE.Points(
+      new THREE.BufferGeometry(),
+      new THREE.PointsMaterial({ color: 0xffffff, size: 0.3, transparent: true, opacity: 0.7 })
+    );
+    {
+      const n = 900; const pos = new Float32Array(n * 3);
+      for (let i = 0; i < n * 3; i++) pos[i] = (Math.random() - 0.5) * 400;
+      stars.geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    }
+    scene.add(stars);
+
+    // 峰值/基准比例
+    const MAX = 2600;
+    const BAR_SPACING = 2.2;
+    const baseY = 0;
+    const bars = [];
+
+    // ---- 颜色插值：峰值暖黄，谷底冷蓝 ----
+    function colorFor(v) {
+      const t = (v - 700) / (2529 - 700);
+      const c1 = new THREE.Color(0x2f6bff); // 低
+      const c2 = new THREE.Color(0xffd66b); // 高
+      return c1.lerp(c2, Math.min(Math.max(t, 0), 1));
+    }
+
+    DATA.forEach(([year, v], i) => {
+      const h = v / MAX * 40;
+      const x = i * BAR_SPACING;
+      const geo = new THREE.BoxGeometry(1.4, h, 1.4);
+      const mat = new THREE.MeshPhongMaterial({
+        color: colorFor(v),
+        transparent: true, opacity: 0.9,
+        emissive: colorFor(v).clone().multiplyScalar(0.12),
+      });
+      const bar = new THREE.Mesh(geo, mat);
+      bar.position.set(x, baseY + h / 2, 0);
+      bar.userData = { year, v };
+      scene.add(bar);
+      bars.push(bar);
+    });
+
+    // ---- 出生率折线（叠加在柱状图上方）----
+    const RATE_MAX = 25;  // ‰ 刻度上限，映射到柱高上限
+    const lineColor = 0xff5c8a;
+    const linePoints = DATA.map(([year], i) => {
+      const x = i * BAR_SPACING;
+      const y = RATE[i] / RATE_MAX * 40;
+      return new THREE.Vector3(x, y, 0);
+    });
+    const rateLine = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(linePoints),
+      new THREE.LineBasicMaterial({ color: lineColor, linewidth: 3 })
+    );
+    scene.add(rateLine);
+
+    // 折线上的数据点小球
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xff8fb2 });
+    const rateDots = [];
+    linePoints.forEach((p, i) => {
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), dotMat);
+      dot.position.copy(p);
+      dot.userData = { year: DATA[i][0], rate: RATE[i] };
+      scene.add(dot);
+      rateDots.push(dot);
+    });
+
+    // ---- 底部基准线 ----
+    const totalW = (DATA.length - 1) * BAR_SPACING;
+    const baseLine = new THREE.Mesh(
+      new THREE.BoxGeometry(totalW + 3, 0.3, 1.6),
+      new THREE.MeshPhongMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 })
+    );
+    baseLine.position.set(totalW / 2, baseY - 0.2, 0);
+    scene.add(baseLine);
+
+    // ---- 年份标签（文字精灵）----
+    function makeTextSprite(text, size) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 256; canvas.height = 128;
+      ctx.font = 'bold ' + size + 'px "PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(text, 128, 64);
+      const tex = new THREE.CanvasTexture(canvas);
+      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+      const sprite = new THREE.Sprite(mat);
+      sprite.scale.set(4, 2, 1);
+      return sprite;
+    }
+
+    const labelEvery = Math.ceil(DATA.length / 15); // 约每5年一个标签
+    DATA.forEach(([year], i) => {
+      if (i % labelEvery !== 0) return;
+      const s = makeTextSprite(String(year), 40);
+      s.position.set(i * BAR_SPACING, baseY - 2.6, 0);
+      scene.add(s);
+    });
+
+    // ---- 语音 + 提示 ----
+    const synth = window.speechSynthesis;
+    let voiceEnabled = true;
+    let zhVoice = null;
+    function pickVoice() {
+      const vs = synth.getVoices();
+      zhVoice = vs.find((v) => /zh/i.test(v.lang)) || null;
+    }
+    pickVoice();
+    synth.addEventListener('voiceschanged', pickVoice);
+    const voiceBtn = document.getElementById('voiceBtn');
+    voiceBtn.addEventListener('click', () => {
+      voiceEnabled = !voiceEnabled;
+      voiceBtn.classList.toggle('off', !voiceEnabled);
+      if (!voiceEnabled) synth.cancel();
+    });
+
+    // ---- 悬停拾取 + tooltip ----
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    const tooltip = document.getElementById('tooltip');
+    let hovered = null;
+
+    function onMove(event) {
+      pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(bars.concat(rateDots), false);
+      if (hits.length > 0) {
+        const obj = hits[0].object;
+        if (hovered !== obj) {
+          hovered = obj;
+          const isBar = obj.geometry.type === 'BoxGeometry';
+          if (isBar) {
+            const ri = DATA.findIndex((d) => d[0] === obj.userData.year);
+            tooltip.innerHTML = '<b>' + obj.userData.year + '年</b><br>出生人口：' + obj.userData.v.toFixed(2) + ' 万人<br>出生率：' + RATE[ri].toFixed(2) + ' ‰';
+            if (voiceEnabled) {
+              synth.cancel();
+              const u = new SpeechSynthesisUtterance(obj.userData.year + '年，出生人口' + obj.userData.v.toFixed(2) + '万人，出生率千分之' + RATE[ri].toFixed(2));
+              u.lang = 'zh-CN'; u.rate = 0.9;
+              if (zhVoice) u.voice = zhVoice;
+              synth.speak(u);
+            }
+          } else {
+            const bi = DATA.findIndex((d) => d[0] === obj.userData.year);
+            tooltip.innerHTML = '<b>' + obj.userData.year + '年</b><br>出生率：' + obj.userData.rate.toFixed(2) + ' ‰<br>出生人口：' + DATA[bi][1].toFixed(2) + ' 万人';
+            if (voiceEnabled) {
+              synth.cancel();
+              const u = new SpeechSynthesisUtterance(obj.userData.year + '年，出生率千分之' + obj.userData.rate.toFixed(2) + '，出生人口' + DATA[bi][1].toFixed(2) + '万人');
+              u.lang = 'zh-CN'; u.rate = 0.9;
+              if (zhVoice) u.voice = zhVoice;
+              synth.speak(u);
+            }
+          }
+        }
+        tooltip.style.display = 'block';
+        tooltip.style.left = event.clientX + 16 + 'px';
+        tooltip.style.top = event.clientY + 16 + 'px';
+        renderer.domElement.style.cursor = 'pointer';
+      } else {
+        if (hovered) { hovered = null; synth.cancel(); }
+        tooltip.style.display = 'none';
+        renderer.domElement.style.cursor = 'grab';
+      }
+    }
+    renderer.domElement.addEventListener('mousemove', onMove);
+
+    // ---- 动画 ----
+    const clock = new THREE.Clock();
+    let growDone = false;
+    bars.forEach((bar, i) => {
+      bar.scale.y = 0.001; // 从0长高
+    });
+
+    function animate() {
+      const dt = clock.getDelta();
+      if (!growDone) {
+        let done = true;
+        bars.forEach((bar, i) => {
+          const target = 1;
+          bar.scale.y += (target - bar.scale.y) * dt * 3;
+          if (Math.abs(target - bar.scale.y) > 0.01) done = false;
+          bar.position.y = (bar.userData.v / MAX * 40) * bar.scale.y / 2;
+        });
+        if (done) growDone = true;
+      }
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
