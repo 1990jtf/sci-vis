@@ -506,7 +506,9 @@
     /* ================= 渲染 ================= */
     const scene = S.createScene(0x02040a);
     const camera = S.createCamera(52, 0.1, 2000);
-    camera.position.set(0, 18, 34);
+    // 相机距离需大于最外圈轨道（海王星 26.8），否则外行星转到近侧时
+    // 会贴到镜头前被放大成"前景道具"、盖住底部控制坞
+    camera.position.set(0, 24, 46);
 
     const { renderer, composer, renderPass } = S.createRenderer({ exposure: 1.15, bloomStrength: 0.75, bloomThreshold: 0.8 });
     const labelRenderer = new CSS2DRenderer();
@@ -518,7 +520,7 @@
 
     const controls = S.createControls(camera, renderer.domElement, new THREE.Vector3(0, 0, 0));
     controls.minDistance = 3;
-    controls.maxDistance = 90;
+    controls.maxDistance = 130;
     controls.maxPolarAngle = Math.PI;
 
     // 环境光（程序化 IBL，让 PBR 材质有真实反射）
@@ -744,7 +746,7 @@
             tourBtn.innerHTML = '<span class="sv-btn__icon">🚀</span><span>自动漫游</span>';
             tourBtn.classList.remove('is-active');
             card.hide();
-            fly.flyTo(new THREE.Vector3(0, 18, 34), new THREE.Vector3(0, 0, 0), 1.4);
+            fly.flyTo(new THREE.Vector3(0, 24, 46), new THREE.Vector3(0, 0, 0), 1.4);
           } else {
             tourState = 'fly';
           }
