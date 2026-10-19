@@ -2,6 +2,8 @@
 
 面向儿童的科学知识可视化项目。基于 Three.js 的极致 3D 交互演示：电影级色调映射（ACES）+ UnrealBloom 泛光后处理、程序化生成贴图、平滑运镜、流光 Shader、统一玻璃拟态设计系统。帮助孩子通过直观、有趣的 3D 动画认识科学。
 
+**在线访问：<https://1990jtf.github.io/sci-vis/>**（由 GitHub Actions 自动部署，推送 main 即更新）
+
 ## 目录结构
 
 ```
