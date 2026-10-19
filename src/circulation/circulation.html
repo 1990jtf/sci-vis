@@ -6,6 +6,77 @@
   <title>人体 · 血液循环</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJnIiBjeD0iMzUlIiBjeT0iMzAlIiByPSI3NSUiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2M3ZDJmZSIvPjxzdG9wIG9mZnNldD0iLjU1IiBzdG9wLWNvbG9yPSIjNjM2NmYxIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMzEyZTgxIi8+PC9yYWRpYWxHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwYjEwMjAiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNyIgZmlsbD0idXJsKCNnKSIvPjxlbGxpcHNlIGN4PSIzMiIgY3k9IjMyIiByeD0iMjUiIHJ5PSI4IiBmaWxsPSJub25lIiBzdHJva2U9IiNhNWI0ZmMiIHN0cm9rZS13aWR0aD0iMi42IiBvcGFjaXR5PSIuOSIgdHJhbnNmb3JtPSJyb3RhdGUoLTIyIDMyIDMyKSIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjE3IiBmaWxsPSJub25lIiBzdHJva2U9IiNlMGU3ZmYiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iLjUiLz48L3N2Zz4=" />
   <link rel="stylesheet" href="../shared/theme.css" />
+  <style>
+    /* ---- 器官索引 ---- */
+    .cx-index {
+      left: 24px; top: 116px; width: 176px;
+      padding: 12px 12px 10px;
+      max-height: calc(100vh - 330px);
+      overflow-y: auto; overscroll-behavior: contain;
+    }
+    .cx-index__title {
+      font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--sv-text-faint); margin-bottom: 9px;
+    }
+    .cx-index__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .cx-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 6px; border-radius: 8px; cursor: pointer;
+      font-size: 11.5px; color: var(--sv-text-dim); white-space: nowrap;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid transparent;
+      transition: background .16s, color .16s, border-color .16s;
+    }
+    .cx-item:hover { background: rgba(255, 255, 255, 0.09); color: var(--sv-text); }
+    .cx-item.is-on {
+      background: rgba(255, 92, 112, 0.18);
+      border-color: rgba(255, 130, 148, 0.45); color: #fff;
+    }
+    .cx-item__dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+
+    /* ---- 分段按钮 ---- */
+    .cx-seg { display: flex; gap: 4px; margin-top: 10px; }
+    .cx-seg button {
+      flex: 1; padding: 6px 0; font-size: 11px; line-height: 1;
+      font-family: inherit; border-radius: 8px; cursor: pointer;
+      border: 1px solid var(--sv-stroke);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--sv-text-dim);
+      transition: background .16s, color .16s, border-color .16s;
+    }
+    .cx-seg button:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+    .cx-seg button.is-on {
+      background: rgba(120, 150, 255, 0.24);
+      border-color: rgba(140, 170, 255, 0.5);
+      color: #fff;
+    }
+    .cx-note {
+      margin-top: 10px; padding-top: 9px;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      font-size: 10.5px; line-height: 1.55; color: var(--sv-text-faint);
+    }
+
+    .sv-legend { min-width: 234px; }
+    .cx-label-wrap { pointer-events: none; }
+    .cx-label-wrap .sv-label { pointer-events: auto; transition: transform 0.18s ease; }
+    .sv-label { pointer-events: auto; cursor: pointer; }
+    .sv-label.is-minor { font-size: 10px; opacity: 0.62; }
+
+    @media (max-width: 980px) {
+      .cx-index { display: none; }
+    }
+    /* 窄屏：控制坞改为贴边横向铺开，避免左右被裁 */
+    @media (max-width: 900px) {
+      .sv-dock {
+        left: 8px; right: 8px; transform: none;
+        justify-content: center; flex-wrap: wrap;
+        border-radius: 18px; padding: 6px; gap: 4px;
+      }
+      .sv-btn { font-size: 11px; height: 32px; padding: 0 10px; }
+      .sv-dock__sep { margin: 0; }
+      .sv-legend { display: none; }
+    }
+  </style>
 </head>
 <body>
   <div class="sv-loader" id="loader">
@@ -21,11 +92,28 @@
 
   <button class="sv-iconbtn sv-iconbtn--top" id="voiceBtn" title="语音开关">🔊</button>
 
+  <div class="sv-panel cx-index sv-in" id="organIndex">
+    <div class="cx-index__title">器官索引</div>
+    <div class="cx-index__grid" id="organList"></div>
+  </div>
+
   <div class="sv-legend sv-panel sv-in">
     <div class="sv-panel__title">循环通路</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#ff5566;color:#ff5566"></span>体循环 · 动脉（含氧血）</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#3b82f6;color:#3b82f6"></span>体循环 · 静脉（回流）</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#a855f7;color:#a855f7"></span>肺循环 · 心肺往返</div>
+    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#ff4d5e;color:#ff4d5e"></span>动脉 · 含氧血离开心脏</div>
+    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#3b82f6;color:#3b82f6"></span>静脉 · 缺氧血回到心脏</div>
+    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#a855f7;color:#a855f7"></span>肺循环 · 心脏与肺之间</div>
+
+    <div class="cx-seg" id="cycleSeg">
+      <button data-cycle="all" class="is-on">全部</button>
+      <button data-cycle="systemic">体循环</button>
+      <button data-cycle="pulmonary">肺循环</button>
+    </div>
+    <div class="cx-seg" id="viewSeg">
+      <button data-view="chest">胸腔</button>
+      <button data-view="belly">腹腔</button>
+      <button data-view="head">头部</button>
+    </div>
+    <div class="cx-note">心脏 → 动脉 → 毛细血管 → 静脉 → 心脏，一圈约 1 分钟。点器官或左侧索引查看细节。</div>
   </div>
 
   <div class="sv-card" id="card"></div>
@@ -34,10 +122,10 @@
     <button class="sv-btn" id="playBtn"><span class="sv-btn__icon">⏸</span><span>暂停</span></button>
     <span class="sv-dock__sep"></span>
     <button class="sv-btn sv-btn--ghost" id="resetBtn">🔄 全身视角</button>
-    <button class="sv-btn sv-btn--ghost" id="xrayBtn">🩻 透视 <b class="sv-num" id="xrayVal">30</b>%</button>
+    <button class="sv-btn sv-btn--ghost" id="xrayBtn">🩻 透视 <b class="sv-num" id="xrayVal">32</b>%</button>
   </div>
 
-  <div class="sv-hint">点击心脏 / 肺 / 血管查看介绍 · 拖拽旋转 · 滚轮缩放</div>
+  <div class="sv-hint">点击器官或左侧索引查看介绍 · 拖拽旋转 · 滚轮缩放</div>
 
   <script type="importmap">
   {
@@ -55,14 +143,7 @@
     import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
     import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
     import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    
-
-
-
-
-
-
+        
     // ===== SciVis Kit（由 tools/inline-kit.js 自动内联，勿手改） =====
     const SciVis = (function () {
     
@@ -598,45 +679,183 @@
     })();
 
 
-    const S = SciVis.init(THREE, { OrbitControls, EffectComposer, RenderPass, UnrealBloomPass });
-
-    /* ================= 科普数据 ================= */
-    const INFO = {
-      心脏: {
-        color: 0xd23b46, type: '器官',
-        stats: [['每分钟跳动','60~100 次'],['每日泵血','约 7000 升'],['大小','与拳头相当'],['位置','胸腔中部略偏左']],
-        desc: ['像一个不知疲倦的强力泵', '把血液输送到全身每个角落'],
+    /* ==================================================================
+       科普数据（@voice-data 块由 tools/gen-voice.js 读取，只放纯数据）
+       ================================================================== */
+    /* @voice-data-begin */
+    const ORGANS = {
+      heart: {
+        id: 'heart', name: '心脏', type: '循环系统的泵 · 胸腔中偏左', color: 0xe0455a,
+        stats: [['大小', '约一个拳头'], ['质量', '250~300 克'], ['每天跳动', '约 10 万次'], ['每分钟泵血', '约 5 升'], ['结构', '2 心房 + 2 心室']],
+        desc: ['右心把缺氧血送去肺，左心把含氧血压向全身', '它自己也要靠冠状动脉供血，这条路堵了就是心梗'],
+        facts: ['心跳的“发电机”是右心房里的窦房结，它自己会放电', '一天泵出的血，能装满一辆小货车'],
+        say: '心脏，拳头那么大，重量只有半斤多。它一天要跳十万次，把大约七千升血液送到全身。心脏里面有四个房间：上面两个叫心房，负责接血；下面两个叫心室，负责把血泵出去。右边的心把缺氧的血送去肺，左边的心把含氧的血压向全身。它自己也有一条专门的血管供血，那就是冠状动脉。',
       },
-      肺: {
-        color: 0xffb3b8, type: '器官',
-        stats: [['肺泡数量','约 3 亿个'],['表面积','约 70 ㎡'],['位置','胸腔左右各一']],
-        desc: ['气体交换的场所', '血液在这里获得新鲜氧气'],
+      lungs: {
+        id: 'lungs', name: '肺', type: '气体交换站 · 胸腔左右各一', color: 0xf2a0ac,
+        stats: [['肺泡', '约 3 亿个'], ['交换面积', '约 70 平方米'], ['右肺', '3 叶'], ['左肺', '2 叶（给心脏让位）'], ['颜色', '粉红，软得像海绵']],
+        desc: ['吸气时肺泡鼓起来，氧气就在这里钻进血液', '二氧化碳从血液里跑出来，跟着呼气离开身体'],
+        facts: ['70 平方米摊开，差不多是一间小教室的地面', '肺里没有肌肉，呼吸靠的是横膈膜和肋间肌'],
+        say: '肺是血液换气的地方，左右各一个。右肺分成三叶，左肺分成两叶，中间给心脏让出了位置。肺里面有大约三亿个肺泡，全部摊开有七十平方米，差不多一间小教室那么大。吸气的时候，氧气从肺泡钻进毛细血管，二氧化碳则从血液里跑出来，被呼出体外。',
       },
-      动脉: {
-        color: 0xff5566, type: '血管',
-        stats: [['管壁','厚而弹性强'],['血色','鲜红（含氧）'],['流速','最快']],
-        desc: ['把含氧血从心脏送出去', '分布较深，靠近骨骼'],
+      brain: {
+        id: 'brain', name: '大脑', type: '耗氧大户 · 颅腔', color: 0xe8b6bd,
+        stats: [['质量', '约 1.4 千克'], ['占体重', '约 2%'], ['耗氧', '全身的 20%'], ['供血', '心输出量的 15%'], ['缺氧耐受', '仅 4~6 分钟']],
+        desc: ['四条动脉在脑底连成一个环，一条堵了还有备份', '血脑屏障像安检口，只放需要的物质进去'],
+        facts: ['大脑缺血 4 到 6 分钟，脑细胞就会不可逆地死亡', '脑底的“威利斯环”是身体里最聪明的备用管路'],
+        say: '大脑只有一点四公斤，却要消耗全身五分之一的氧气。给它供血的是四条动脉，它们在脑底连成一个环，叫做威利斯环。这样即使其中一条被堵住，血液还能从别的路绕过来。不过大脑对缺氧非常敏感，缺血四到六分钟，脑细胞就会开始不可逆地死亡。',
       },
-      静脉: {
-        color: 0x3b82f6, type: '血管',
-        stats: [['管壁','薄而有瓣膜'],['血色','暗红（缺氧）'],['流速','较慢']],
-        desc: ['把血液送回心脏', '手臂上的"青筋"就是静脉'],
+      liver: {
+        id: 'liver', name: '肝脏', type: '化工厂 · 右上腹', color: 0x9a4238,
+        stats: [['质量', '1.2~1.5 千克'], ['功能', '500 多种'], ['门静脉', '来自肠胃的血先到这里'], ['再生', '切掉 70% 仍能长回来']],
+        desc: ['肝动脉送来含氧血，门静脉送来刚吸收的营养', '解毒、合成蛋白、储存糖原，都在这里完成'],
+        facts: ['肝脏是唯一能大幅再生的内脏，捐一部分还能长回来', '来自肠道的血要先过肝脏“安检”，再回到心脏'],
+        say: '肝脏是身体里最大的化工厂，有一公斤多重，能做五百多种工作。它收到两种血：一种是肝动脉送来的含氧血，另一种是门静脉送来的、刚从肠道吸收完营养的血。肝脏在这里解毒、储存糖原、合成蛋白质，还把用过的红细胞回收掉。它的再生能力惊人，切掉一大半还能慢慢长回来。',
       },
-      肺循环: {
-        color: 0xa855f7, type: '循环',
-        stats: [['路径','心脏 ↔ 肺'],['耗时','约 10 秒'],['功能','补充氧气']],
-        desc: ['血液在心肺之间的小循环', '暗血变鲜血的魔法环节'],
+      stomach: {
+        id: 'stomach', name: '胃', type: '食物搅拌机 · 左上腹', color: 0xd88a6a,
+        stats: [['容量', '空腹约 50 毫升，吃饱可达 1.5 升'], ['胃酸', 'pH 1.5~3.5'], ['胃壁', '三层肌肉'], ['停留', '2~4 小时']],
+        desc: ['三层肌肉像揉面团一样，把食物和胃酸搅匀', '胃酸能杀死大部分随食物进来的细菌'],
+        facts: ['胃酸强到能腐蚀金属，胃壁靠一层黏液保护自己', '食物在胃里被磨成糊，再一点点送进小肠'],
+        say: '胃是一个有弹性的袋子，空的时候只有五十毫升，吃饱了能装一升半。它的壁上有三层肌肉，像揉面团一样把食物和胃酸搅拌在一起。胃酸非常强，能杀死大部分细菌，也能腐蚀金属。胃自己不会被消化，是因为内壁有一层不断更新的黏液保护着。',
+      },
+      smallIntestine: {
+        id: 'small-intestine', name: '小肠', type: '吸收主力 · 腹腔中央', color: 0xe98f6b,
+        stats: [['长度', '6~7 米'], ['直径', '约 2.5 厘米'], ['吸收面积', '约 200 平方米'], ['停留', '3~5 小时']],
+        desc: ['盘在腹腔中央，靠绒毛把营养吸进血液', '吸走的糖和氨基酸，经门静脉先送到肝脏'],
+        facts: ['绒毛上的微绒毛，把吸收面积放大了 600 倍', '小肠盘起来才塞得进肚子，拉直有六七米'],
+        say: '小肠是吸收营养的主力，拉直有六七米长，盘在肚子中央。它的内壁长满了绒毛，绒毛上还有更小的微绒毛，把吸收面积放大到两百平方米。糖、氨基酸和脂肪在这里被吸进血液，再沿着门静脉先送到肝脏。食物在小肠里要走三到五个小时。',
+      },
+      largeIntestine: {
+        id: 'large-intestine', name: '大肠', type: '回收水分 · 腹腔四周', color: 0xc9a15f,
+        stats: [['长度', '约 1.5 米'], ['直径', '约 6 厘米'], ['停留', '10 小时以上'], ['菌群', '数百种，上百万亿个']],
+        desc: ['把没吸收完的水和盐回收，剩下的变成粪便', '肠道菌群在这里帮我们合成维生素 K'],
+        facts: ['大肠里的细菌数量，比人体细胞还多', '粪便的颜色来自被分解的血红素'],
+        say: '大肠比小肠短，只有一米五，但要粗得多。它像画框一样围在小肠周围，主要工作是回收水分和盐分。剩下的残渣在这里停留十小时以上，慢慢变成粪便。大肠里住着上百万亿个细菌，它们帮我们合成维生素 K，也帮我们挡住有害菌。',
+      },
+      kidney: {
+        id: 'kidney', name: '肾脏', type: '过滤器 · 腰部两侧', color: 0x8c5b52,
+        stats: [['数量', '左右各一'], ['每天过滤', '约 180 升'], ['最终尿液', '约 1.5 升'], ['肾单位', '每侧约 100 万个']],
+        desc: ['肾动脉送来大量血液，肾单位把废物筛出去', '过滤后的血经肾静脉回到下腔静脉'],
+        facts: ['一天过滤 180 升，相当于把全身血液洗了 40 遍', '肾脏还管血压、造血和维生素 D 的活化'],
+        say: '肾脏长在腰的两侧，像两颗蚕豆。它们每天要过滤一百八十升血液，相当于把全身的血洗了四十遍，最后只留下一点五升尿液。每个肾里有一百万个肾单位，负责把废物筛出去、把有用的东西留下来。肾脏还悄悄管着血压、造血和维生素 D 的活化。',
+      },
+      spleen: {
+        id: 'spleen', name: '脾脏', type: '血液质检站 · 左上腹', color: 0x7d4a58,
+        stats: [['质量', '约 150 克'], ['功能', '过滤老旧红细胞'], ['储血', '约 200 毫升']],
+        desc: ['红髓像筛子，把老化的红细胞挑出来拆掉', '它也是免疫器官，能识别血液里的病菌'],
+        facts: ['脾脏拆掉的红细胞，铁会被回收再用来造血', '脾脏切除后，人对某些细菌的抵抗力会下降'],
+        say: '脾脏只有一百五十克，藏在胃的左后方。它像血液的质检站，把老化、变形的红细胞挑出来拆掉，铁回收后继续用来造血。脾脏还会储存大约两百毫升血液，紧急时能补进循环。它同时也是免疫器官，能发现血液里的病菌。',
+      },
+      pancreas: {
+        id: 'pancreas', name: '胰腺', type: '双面手 · 胃的后方', color: 0xd8b46a,
+        stats: [['长度', '约 15 厘米'], ['外分泌', '消化酶'], ['内分泌', '胰岛素、胰高血糖素'], ['胰液', '每天约 1.5 升']],
+        desc: ['消化酶经导管进入小肠，分解脂肪和蛋白', '胰岛细胞把血糖调稳，出问题就是糖尿病'],
+        facts: ['胰腺每天分泌的胰液，比胃液还多', '胰岛素是身体里唯一能降血糖的激素'],
+        say: '胰腺横躺在胃的后面，只有十几厘米长，却身兼两职。它分泌的消化酶通过导管进入小肠，把脂肪、蛋白质和淀粉拆开。它里面的胰岛细胞还会分泌胰岛素，把血糖调稳。胰岛素是身体里唯一能降低血糖的激素，分泌不足就是糖尿病。',
+      },
+      bladder: {
+        id: 'bladder', name: '膀胱', type: '储尿袋 · 盆腔', color: 0xc9c07a,
+        stats: [['容量', '300~500 毫升'], ['位置', '耻骨后方'], ['排尿', '受大脑控制']],
+        desc: ['肾脏来的尿经输尿管一滴一滴流进膀胱', '膀胱壁肌肉收缩，把尿送出去'],
+        facts: ['膀胱空的时候只有核桃大，装满能到拳头大', '尿意来自膀胱壁上的牵张感受器'],
+        say: '膀胱是盆腔里的一个储尿袋，能装三百到五百毫升尿。肾脏产生的尿通过两条输尿管一滴一滴流进来。膀胱壁上有牵张感受器，装到一定程度就给大脑发信号，产生尿意。排尿时膀胱的肌肉收缩，尿道括约肌放松，尿就被送出去了。',
       },
     };
 
-    /* ================= 渲染基础 ================= */
-    const scene = S.createScene(0x060a16, new THREE.Fog(0x060a16, 16, 36));
-    const camera = S.createCamera(48, 0.1, 200);
-    camera.position.set(0.6, 3.6, 8.5);
+    const VESSELS = {
+      aorta: {
+        id: 'aorta', name: '主动脉', type: '体循环 · 最粗的动脉', kind: 'artery', group: 'systemic', color: 0xff4d5e,
+        stats: [['直径', '约 2.5~3 厘米'], ['流速', '约 40 厘米/秒'], ['起点', '左心室'], ['分支', '全身各处']],
+        desc: ['从左心室出发，先向上弯成主动脉弓，再沿脊柱下行', '管壁里的弹性纤维能缓冲心脏泵血的压力'],
+        facts: ['主动脉是身体最粗的血管，比大拇指还粗', '它发出的分支，最终会细成比头发丝还细的毛细血管'],
+        say: '主动脉是身体里最粗的血管，直径将近三厘米。它从左心室出发，先向上弯成一个弓，再沿着脊柱一路下行，把含氧血送到全身。主动脉的管壁里有弹性纤维，心脏每次泵血时它会先撑开，再把血稳稳地推出去。',
+      },
+      venaCava: {
+        id: 'vena-cava', name: '上、下腔静脉', type: '体循环 · 回心的大静脉', kind: 'vein', group: 'systemic', color: 0x3b82f6,
+        stats: [['上腔静脉', '收集头颈和上肢的血'], ['下腔静脉', '收集腹部和下肢的血'], ['终点', '右心房'], ['特点', '管壁薄，内有瓣膜']],
+        desc: ['全身用完氧的血，最后都汇进这两条大静脉', '腿上的静脉里有瓣膜，防止血液倒流'],
+        facts: ['站久了腿会胀，是因为静脉要靠肌肉挤压才能把血送回心脏', '下腔静脉是身体里最粗的静脉'],
+        say: '上腔静脉和下腔静脉，是两条把血送回心脏的大静脉。上腔静脉收集头、颈和上肢的血，下腔静脉收集腹部和下肢的血，它们最后都汇进右心房。静脉的管壁比动脉薄，腿上的静脉里还有小瓣膜，像单向门一样防止血液倒流。',
+      },
+      pulmArtery: {
+        id: 'pulmonary-artery', name: '肺动脉', type: '肺循环 · 唯一送缺氧血的动脉', kind: 'artery', group: 'pulmonary', color: 0xa855f7,
+        stats: [['起点', '右心室'], ['终点', '左右两肺'], ['特点', '动脉里流的是缺氧血']],
+        desc: ['它是全身唯一一条送缺氧血的动脉', '在这里，动脉和静脉的颜色正好反过来'],
+        facts: ['肺动脉里的血是暗红色，因为它还没有去肺里换氧', '这也是为什么医生说“动脉血”不等于“含氧血”'],
+        say: '肺动脉很特别，它是全身唯一一条送缺氧血的动脉。它从右心室出发，分成左右两支进入两肺。在这里，动脉和静脉的颜色正好反过来：动脉里流的是暗红的缺氧血，静脉里流的是鲜红的含氧血。',
+      },
+      pulmVein: {
+        id: 'pulmonary-vein', name: '肺静脉', type: '肺循环 · 送含氧血回心', kind: 'vein', group: 'pulmonary', color: 0xe879f9,
+        stats: [['起点', '两肺'], ['终点', '左心房'], ['数量', '通常 4 条'], ['特点', '静脉里流的是含氧血']],
+        desc: ['在肺里换完氧的血，经肺静脉回到左心房', '左心房一收缩，血就被送进左心室'],
+        facts: ['肺静脉通常有四条，左右各两条', '它是少数“静脉里流着鲜红血”的血管'],
+        say: '肺静脉把在肺里换完氧的血送回心脏。它通常有四条，左右各两条，全部汇入左心房。左心房一收缩，这些鲜红的含氧血就被送进左心室，准备开始下一轮全身旅行。',
+      },
+      portal: {
+        id: 'portal-vein', name: '门静脉', type: '肝门静脉 · 营养专线', kind: 'vein', group: 'systemic', color: 0x6366f1,
+        stats: [['起点', '小肠、大肠'], ['终点', '肝脏'], ['特点', '两端都是毛细血管']],
+        desc: ['肠道吸收的糖和氨基酸，先经它送进肝脏', '肝脏处理完，血再经肝静脉回下腔静脉'],
+        facts: ['门静脉是唯一“两头都是毛细血管”的血管', '这也是肠道肿瘤容易先转移到肝脏的原因'],
+        say: '门静脉是一条营养专线。小肠和大肠吸收的糖、氨基酸，不直接进入全身循环，而是先经门静脉送进肝脏。肝脏检查、加工完，血再经肝静脉汇入下腔静脉。所以吃过饭后，肝脏是第一个知道我们吃了什么的人。',
+      },
+      carotid: {
+        id: 'carotid', name: '颈动脉', type: '体循环 · 给大脑供血', kind: 'artery', group: 'systemic', color: 0xff6b7a,
+        stats: [['位置', '脖子两侧'], ['供血', '大脑、面部'], ['特点', '能在喉结旁摸到跳动']],
+        desc: ['从主动脉弓发出，沿脖子向上进入颅腔', '和椎动脉一起，在脑底连成威利斯环'],
+        facts: ['把手指放在喉结旁边，能摸到的搏动就是颈动脉', '颈动脉狭窄是中风的重要原因'],
+        say: '颈动脉从主动脉弓发出，沿着脖子两侧向上，进入颅腔给大脑供血。把手指轻轻放在喉结旁边，能摸到它的跳动。颈动脉和椎动脉在脑底连成一个环，叫做威利斯环。如果颈动脉被斑块堵住，脑供血不足，就可能引起中风。',
+      },
+      capillary: {
+        id: 'capillary', name: '毛细血管', type: '物质交换的终点站', kind: 'capillary', group: 'systemic', color: 0xffb3bd,
+        stats: [['直径', '约 5~10 微米'], ['管壁', '只有一层细胞'], ['总长度', '约 10 万公里'], ['流速', '约 0.03 厘米/秒']],
+        desc: ['动脉在这里细到极致，再汇成静脉', '氧气、营养在这里交给细胞，废物被带走'],
+        facts: ['全身毛细血管接起来，能绕地球两圈半', '它们细到红细胞只能排成一列通过'],
+        say: '毛细血管是血液循环的终点站。动脉一路分支，到这里细得只有一层细胞厚，红细胞只能排成一列通过。氧气和营养在这里交给细胞，二氧化碳和废物被带走。全身的毛细血管接起来大约十万公里，能绕地球两圈半。',
+      },
+    };
+
+    const CYCLES = {
+      all: {
+        id: 'overview', name: '血液循环', type: '两条循环，一套泵', color: 0x8fa4ff,
+        stats: [['血量', '约 4~5 升'], ['绕全身一圈', '约 1 分钟'], ['血管总长', '约 10 万公里'], ['心脏每天跳动', '约 10 万次']],
+        desc: ['体循环把氧和营养送到全身，肺循环负责在肺里换气', '左侧索引可以逐个器官查看'],
+        facts: ['全身血管接起来，能绕地球两圈半'],
+        say: '血液在身体里走两条路线。体循环从心脏出发，把氧气和营养送到全身，再把废物带回来。肺循环路程很短，血液去肺里换一口气就回来。两条循环都靠心脏这个泵推动。安静的时候，血液绕全身一圈大约一分钟。',
+      },
+      systemic: {
+        id: 'systemic', name: '体循环', type: '大循环 · 心脏 ↔ 全身', color: 0xff4d5e,
+        stats: [['路线', '左心室 → 主动脉 → 全身 → 腔静脉 → 右心房'], ['一圈耗时', '约 1 分钟'], ['任务', '送氧送营养、带走废物']],
+        desc: ['血液从左心室出发，最远要走到脚趾', '一路不断分支，最后在毛细血管完成交换'],
+        facts: ['安静时血液绕全身一圈约 1 分钟，运动时会快很多'],
+        say: '体循环也叫大循环。含氧血从左心室出发，进入主动脉，一路分支到全身。在最细的毛细血管里，氧气和营养交给细胞，二氧化碳和废物被收走。缺氧血再汇入小静脉、大静脉，经上腔静脉和下腔静脉回到右心房。安静时走完一圈大约一分钟。',
+      },
+      pulmonary: {
+        id: 'pulmonary', name: '肺循环', type: '小循环 · 心脏 ↔ 肺', color: 0xa855f7,
+        stats: [['路线', '右心室 → 肺动脉 → 肺 → 肺静脉 → 左心房'], ['耗时', '几秒'], ['任务', '排出二氧化碳、补充氧气']],
+        desc: ['血从右心室出发，到肺里换一口气就回来', '这是全身唯一“动脉送缺氧血”的循环'],
+        facts: ['肺循环路程短，几秒钟就能走完', '换气面积有 70 平方米，比皮肤还大'],
+        say: '肺循环也叫小循环，路程很短。缺氧血从右心室出发，经肺动脉进入两肺。在肺泡旁边的毛细血管里，二氧化碳被呼出去，氧气被吸进来，暗红的血变成鲜红。然后经肺静脉回到左心房，再进入左心室，开始下一轮体循环。',
+      },
+    };
+    /* @voice-data-end */
+
+    /* ==================================================================
+       场景
+       ================================================================== */
+    const S = SciVis.init(THREE, { OrbitControls, EffectComposer, RenderPass, UnrealBloomPass });
+
+    const H = 4.6;                 // 人体在世界里的高度
+    const CM = H / 170;            // 1 厘米对应的世界单位
+
+    const scene = S.createScene(0x05070f, new THREE.Fog(0x05070f, 22, 50));
+    const camera = S.createCamera(46, 0.1, 200);
+    camera.position.set(0.45, H * 0.52, 9.4);
 
     const { renderer, composer, renderPass } = S.createRenderer({
-      exposure: 1.15, bloomStrength: 0.9, bloomRadius: 0.6, bloomThreshold: 0.6,
+      exposure: 1.1, bloomStrength: 0.68, bloomRadius: 0.5, bloomThreshold: 0.62,
     });
+
     const labelRenderer = new CSS2DRenderer();
     labelRenderer.setSize(window.innerWidth, window.innerHeight);
     labelRenderer.domElement.style.position = 'absolute';
@@ -644,26 +863,27 @@
     labelRenderer.domElement.style.pointerEvents = 'none';
     document.body.appendChild(labelRenderer.domElement);
 
-    const controls = S.createControls(camera, renderer.domElement, new THREE.Vector3(0, 3.3, 0));
-    controls.minDistance = 2.5;
-    controls.maxDistance = 20;
+    const controls = S.createControls(camera, renderer.domElement, new THREE.Vector3(0, H * 0.5, 0));
+    controls.minDistance = 1.2;
+    controls.maxDistance = 18;
     renderPass.scene = scene;
     renderPass.camera = camera;
 
-    // 灯光
-    scene.add(new THREE.AmbientLight(0x556688, 0.9));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.6);
-    keyLight.position.set(4, 6, 5);
+    scene.add(new THREE.AmbientLight(0x7b88a8, 1.25));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.85);
+    keyLight.position.set(4, 8, 6);
     scene.add(keyLight);
-    const rimLight = new THREE.DirectionalLight(0x7f9fff, 0.9);
-    rimLight.position.set(-5, 3, -4);
+    const rimLight = new THREE.DirectionalLight(0x7f9fff, 0.95);
+    rimLight.position.set(-6, 3, -5);
     scene.add(rimLight);
+    const warmLight = new THREE.PointLight(0xff8877, 0.55, 14);
+    warmLight.position.set(0, H * 0.72, 2.2);
+    scene.add(warmLight);
 
-    // 地面光晕（垫在脚下）
     const floorGlow = new THREE.Mesh(
-      new THREE.CircleGeometry(4, 48),
+      new THREE.CircleGeometry(3.4, 48),
       new THREE.MeshBasicMaterial({
-        map: S.glowTexture('rgba(60,90,180,0.35)', 'rgba(40,60,120,0.12)'),
+        map: S.glowTexture('rgba(60,90,180,0.32)', 'rgba(40,60,120,0.1)'),
         transparent: true, depthWrite: false,
       })
     );
@@ -671,18 +891,707 @@
     floorGlow.position.y = -0.02;
     scene.add(floorGlow);
 
-    /* ================= 器官材质 ================= */
-    const heartMat = new THREE.MeshPhysicalMaterial({
-      color: 0xd23b46, emissive: 0x5c1018, emissiveIntensity: 0.5,
-      roughness: 0.35, clearcoat: 0.8, clearcoatRoughness: 0.25,
-    });
-    const lungMat = new THREE.MeshPhysicalMaterial({
-      color: 0xffb3b8, transparent: true, opacity: 0.55,
-      roughness: 0.5, emissive: 0x552028, emissiveIntensity: 0.25,
-    });
+    /* ==================================================================
+       布局地标（模型加载后由骨骼校准）
+       ================================================================== */
+    const L = {
+      hipY: H * 0.50,
+      neckY: H * 0.855,
+      shoulderY: H * 0.80,
+      shoulderX: H * 0.115,
+      chestY: H * 0.855 - (H * 0.855 - H * 0.50) * 0.22,
+      headY: H * 0.92,
+    };
 
-    /* ================= 霓虹血管（流光 shader） ================= */
-    const vesselShaders = [];
+    // 血管地标：与程序化人体（buildBody）的关节位置保持一致
+    const A = {
+      head: new THREE.Vector3(0, L.headY, 0),
+      neck: new THREE.Vector3(0, L.neckY, 0),
+      chest: new THREE.Vector3(0, L.chestY, 0),
+      hipL: new THREE.Vector3(0.175, L.hipY - 0.02, 0),
+      hipR: new THREE.Vector3(-0.175, L.hipY - 0.02, 0),
+      kneeL: new THREE.Vector3(0.17, L.hipY - 0.9, 0),
+      kneeR: new THREE.Vector3(-0.17, L.hipY - 0.9, 0),
+      ankleL: new THREE.Vector3(0.16, 0.16, 0),
+      ankleR: new THREE.Vector3(-0.16, 0.16, 0),
+      armL: new THREE.Vector3(0.49, L.chestY + 0.28, 0),
+      armR: new THREE.Vector3(-0.49, L.chestY + 0.28, 0),
+      foreL: new THREE.Vector3(0.535, L.chestY - 0.6, 0),
+      foreR: new THREE.Vector3(-0.535, L.chestY - 0.6, 0),
+      handL: new THREE.Vector3(0.55, L.chestY - 0.98, 0),
+      handR: new THREE.Vector3(-0.55, L.chestY - 0.98, 0),
+    };
+
+    /* ==================================================================
+       器官几何
+       ================================================================== */
+    function organMat(hex, opt) {
+      opt = opt || {};
+      return new THREE.MeshPhysicalMaterial({
+        color: hex,
+        roughness: opt.rough != null ? opt.rough : 0.44,
+        metalness: 0.02,
+        clearcoat: 0.55,
+        clearcoatRoughness: 0.32,
+        emissive: hex,
+        emissiveIntensity: opt.emissive != null ? opt.emissive : 0.14,
+        transparent: true,
+        opacity: opt.opacity != null ? opt.opacity : 0.97,
+        depthWrite: opt.depthWrite !== false,
+        side: THREE.DoubleSide,
+      });
+    }
+
+    // 不规则椭球：给器官一点“肉感”，避免完美球体
+    function blob(rx, ry, rz, opt) {
+      opt = opt || {};
+      const g = new THREE.SphereGeometry(1, opt.seg || 24, opt.seg2 || 16);
+      const pos = g.attributes.position;
+      const noise = opt.noise != null ? opt.noise : 0.05;
+      const seed = opt.seed || 0;
+      const v = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i);
+        const k = 1 + (S.fbm2(v.x * 2.7 + seed, v.y * 2.7 + v.z * 1.6 + seed, 3) - 0.5) * 2 * noise;
+        pos.setXYZ(i, v.x * rx * k, v.y * ry * k, v.z * rz * k);
+      }
+      g.computeVertexNormals();
+      return g;
+    }
+
+    function mesh(geo, mat, x, y, z) {
+      const m = new THREE.Mesh(geo, mat);
+      if (x != null) m.position.set(x, y, z);
+      return m;
+    }
+
+    // 半径渐变的管道：胃、肠、胰这些“一头粗一头细”的器官用它
+    function taperedTube(points, r0, r1, tubularSeg, radialSeg, mat) {
+      const curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.5);
+      const geo = new THREE.TubeGeometry(curve, tubularSeg || 96, 1, radialSeg || 8, false);
+      const pos = geo.attributes.position;
+      const perRing = (radialSeg || 8) + 1;
+      const c = new THREE.Vector3();
+      const v = new THREE.Vector3();
+      for (let i = 0; i <= (tubularSeg || 96); i++) {
+        const t = i / (tubularSeg || 96);
+        curve.getPointAt(t, c);
+        const r = r0 + (r1 - r0) * t;
+        for (let j = 0; j < perRing; j++) {
+          const idx = i * perRing + j;
+          v.fromBufferAttribute(pos, idx);
+          const dx = v.x - c.x, dy = v.y - c.y, dz = v.z - c.z;
+          const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+          const k = r / len;
+          pos.setXYZ(idx, c.x + dx * k, c.y + dy * k, c.z + dz * k);
+        }
+      }
+      geo.computeVertexNormals();
+      const m = new THREE.Mesh(geo, mat);
+      m.userData.curve = curve;
+      return m;
+    }
+
+    function tube(points, radius, mat, closed) {
+      const curve = new THREE.CatmullRomCurve3(points, !!closed, 'catmullrom', 0.5);
+      const m = new THREE.Mesh(new THREE.TubeGeometry(curve, 96, radius, 8, !!closed), mat);
+      m.userData.curve = curve;
+      return m;
+    }
+
+    const P = (x, y, z) => new THREE.Vector3(x, y, z);
+
+    /* ==================================================================
+       参数化建模：扫掠 + 分层放样
+       器官不再是“糖豆球”，而是按解剖轮廓逐段定义出来的
+       ================================================================== */
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const smooth = (t) => t * t * (3 - 2 * t);
+
+    // 广义圆柱：沿曲线扫掠，半径可逐点变化、可压扁成椭圆、端头可收圆
+    // 胃、肠、输尿管、血管都靠它
+    function sweep(pts, radFn, opt) {
+      opt = opt || {};
+      const tub = opt.tubular || 120;
+      const rad = opt.radial || 14;
+      const curve = new THREE.CatmullRomCurve3(pts, !!opt.closed, 'catmullrom', opt.tension != null ? opt.tension : 0.5);
+      const frames = curve.computeFrenetFrames(tub, !!opt.closed);
+      const flat = opt.flat != null ? opt.flat : 1;
+      const rs = opt.roundStart != null ? opt.roundStart : 0.05;
+      const re = opt.roundEnd != null ? opt.roundEnd : 0.05;
+      const pos = [], uv = [], idx = [];
+      const c = new THREE.Vector3();
+      for (let i = 0; i <= tub; i++) {
+        const t = i / tub;
+        curve.getPointAt(t, c);
+        const N = frames.normals[i], B = frames.binormals[i];
+        let r = typeof radFn === 'function' ? radFn(t) : radFn;
+        let ra, rb;
+        if (typeof r === 'number') { ra = r; rb = r * flat; } else { ra = r.a != null ? r.a : r.r; rb = r.b != null ? r.b : ra * flat; }
+        let cap = 1;
+        if (rs > 0 && t < rs) cap = Math.sqrt(Math.max(0, 1 - Math.pow(1 - t / rs, 2)));
+        if (re > 0 && t > 1 - re) cap = Math.min(cap, Math.sqrt(Math.max(0, 1 - Math.pow((1 - t) / re, 2))));
+        cap = Math.max(cap, 0.05);
+        for (let j = 0; j <= rad; j++) {
+          const a = (j / rad) * Math.PI * 2;
+          const ca = Math.cos(a) * ra * cap, sa = Math.sin(a) * rb * cap;
+          pos.push(
+            c.x + N.x * ca + B.x * sa,
+            c.y + N.y * ca + B.y * sa,
+            c.z + N.z * ca + B.z * sa
+          );
+          uv.push(t, j / rad);
+        }
+      }
+      for (let i = 0; i < tub; i++) {
+        for (let j = 0; j < rad; j++) {
+          const a = i * (rad + 1) + j, b = a + 1, d = a + rad + 1, e = d + 1;
+          idx.push(a, d, b, b, d, e);
+        }
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      geo.setIndex(idx);
+      geo.computeVertexNormals();
+      const m = new THREE.Mesh(geo, opt.mat || organMat(0xffffff));
+      m.userData.curve = curve;
+      return m;
+    }
+
+    // 分层放样：给出一串水平截面（高度 / 左右半径 / 前后半径 / 偏移），
+    // 肝、肺、肾、脾、膀胱这类实体器官靠它出轮廓
+    function loftRings(rows, opt) {
+      opt = opt || {};
+      const rad = opt.radial || 24;
+      const pos = [], uv = [], idx = [];
+      rows.forEach((r, ri) => {
+        const rzF = r.rzF != null ? r.rzF : (r.rz != null ? r.rz : r.rx);
+        const rzB = r.rzB != null ? r.rzB : (r.rz != null ? r.rz : r.rx);
+        for (let j = 0; j <= rad; j++) {
+          const a = (j / rad) * Math.PI * 2;
+          const ca = Math.cos(a), sa = Math.sin(a);
+          const rz = sa >= 0 ? rzF : rzB;
+          pos.push((r.dx || 0) + ca * r.rx, r.y, (r.dz || 0) + sa * rz);
+          uv.push(j / rad, ri / Math.max(1, rows.length - 1));
+        }
+      });
+      for (let i = 0; i < rows.length - 1; i++) {
+        for (let j = 0; j < rad; j++) {
+          const a = i * (rad + 1) + j, b = a + 1, d = a + rad + 1, e = d + 1;
+          idx.push(a, b, d, b, e, d);
+        }
+      }
+      // 上下封口：否则会露出器官内部，看起来像个破碗
+      if (opt.cap !== false) {
+        [0, rows.length - 1].forEach((ri) => {
+          const base = pos.length / 3;
+          const r0 = rows[ri];
+          pos.push(r0.dx || 0, r0.y, r0.dz || 0);
+          uv.push(0.5, ri === 0 ? 0 : 1);
+          const off = ri * (rad + 1);
+          for (let j = 0; j < rad; j++) {
+            if (ri === 0) idx.push(base, off + j + 1, off + j);
+            else idx.push(base, off + j, off + j + 1);
+          }
+        });
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      geo.setIndex(idx);
+      geo.computeVertexNormals();
+      return new THREE.Mesh(geo, opt.mat || organMat(0xffffff));
+    }
+
+    /* ---- 心脏：心室主体放样 + 右心室鼓包 + 双心房 + 冠状沟 + 大血管根 ---- */
+    function buildHeart() {
+      const g = new THREE.Group();
+      const myo = organMat(0xbe2e3d, { emissive: 0.2, rough: 0.36 });
+      const myoDeep = organMat(0x91202e, { emissive: 0.13, rough: 0.46 });
+      const atriaMat = organMat(0xa3283a, { emissive: 0.12, rough: 0.52 });
+
+      // 心室：心底宽、向左下收成心尖
+      g.add(loftRings([
+        { y: CM * 3.0, rx: CM * 1.5, rz: CM * 1.5 },
+        { y: CM * 2.4, rx: CM * 3.0, rz: CM * 2.9 },
+        { y: CM * 1.0, rx: CM * 4.0, rz: CM * 3.6 },
+        { y: -CM * 1.2, rx: CM * 4.2, rz: CM * 3.8 },
+        { y: -CM * 3.4, rx: CM * 3.5, rz: CM * 3.1, dx: -CM * 0.3 },
+        { y: -CM * 5.2, rx: CM * 2.3, rz: CM * 2.1, dx: -CM * 0.6 },
+        { y: -CM * 6.5, rx: CM * 1.1, rz: CM * 1.1, dx: -CM * 0.9 },
+        { y: -CM * 7.2, rx: CM * 0.3, rz: CM * 0.32, dx: -CM * 1.2 },
+      ], { radial: 30, mat: myo }));
+
+      // 右心室：贴在前方，比左心室更鼓
+      g.add(mesh(blob(CM * 2.2, CM * 3.0, CM * 1.8, { seed: 2.6, noise: 0.06 }), myoDeep, CM * 1.9, -CM * 0.6, CM * 1.6));
+      // 左、右心房
+      g.add(mesh(blob(CM * 1.6, CM * 1.3, CM * 1.5, { seed: 3.4, noise: 0.05 }), atriaMat, -CM * 1.8, CM * 3.1, -CM * 0.4));
+      g.add(mesh(blob(CM * 1.7, CM * 1.4, CM * 1.6, { seed: 4.1, noise: 0.05 }), atriaMat, CM * 1.9, CM * 3.0, CM * 0.3));
+
+      // 冠状沟：心房与心室之间一圈浅沟，心脏不再是一颗“红球”
+      const sulPts = [];
+      for (let i = 0; i <= 56; i++) {
+        const a = (i / 56) * Math.PI * 2;
+        sulPts.push(P(CM * 3.9 * Math.cos(a), CM * 2.1, CM * 3.5 * Math.sin(a)));
+      }
+      g.add(sweep(sulPts, CM * 0.3, {
+        closed: true, tubular: 84, radial: 8, roundStart: 0, roundEnd: 0,
+        mat: organMat(0x67121d, { emissive: 0.02, rough: 0.74 }),
+      }));
+
+      // 冠状动脉：沿心室表面下行
+      const cor = organMat(0xe8626f, { emissive: 0.34, rough: 0.5 });
+      g.add(sweep([
+        P(CM * 0.2, CM * 2.2, CM * 3.5), P(-CM * 1.6, CM * 0.6, CM * 3.4),
+        P(-CM * 2.4, -CM * 2.0, CM * 2.8), P(-CM * 2.2, -CM * 4.4, CM * 1.7),
+      ], CM * 0.26, { tubular: 60, radial: 8, mat: cor, roundStart: 0, roundEnd: 0.02 }));
+      g.add(sweep([
+        P(CM * 2.6, CM * 1.8, CM * 2.7), P(CM * 3.4, -CM * 0.8, CM * 2.4),
+        P(CM * 2.9, -CM * 3.0, CM * 1.8),
+      ], CM * 0.22, { tubular: 50, radial: 8, mat: cor, roundStart: 0, roundEnd: 0.02 }));
+
+      // 升主动脉 / 肺动脉干根部（向上接主血管网）
+      g.add(sweep([
+        P(CM * 0.1, CM * 2.4, -CM * 0.5), P(CM * 0.2, CM * 4.4, -CM * 0.9),
+      ], CM * 0.8, { tubular: 24, radial: 14, mat: organMat(0xd83c4c, { emissive: 0.3 }), roundStart: 0, roundEnd: 0 }));
+      g.add(sweep([
+        P(CM * 1.9, CM * 2.2, CM * 0.7), P(CM * 2.4, CM * 3.8, CM * 0.1), P(CM * 1.6, CM * 5.0, -CM * 0.6),
+      ], CM * 0.72, { tubular: 30, radial: 14, mat: organMat(0x8b5bd6, { emissive: 0.28 }), roundStart: 0, roundEnd: 0 }));
+
+      g.rotation.z = 0.16;
+      return g;
+    }
+
+    /* ---- 肺：上下肺叶 + 斜裂 + 气管支气管树 ---- */
+    function buildLungs() {
+      const g = new THREE.Group();
+      const lobe = organMat(0xe08f9d, { opacity: 0.62, depthWrite: false, emissive: 0.16, rough: 0.52 });
+      const airway = organMat(0xd6bebc, { emissive: 0.08, rough: 0.62 });
+
+      [-1, 1].forEach((s) => {
+        const side = new THREE.Group();
+        // 一整片肺：上下叶之间的“叶裂”用一圈轻微内凹表达，避免两片拼接出现接缝
+        side.add(loftRings([
+          { y: CM * 11.2, rx: CM * 0.5, rz: CM * 0.7 },
+          { y: CM * 10.2, rx: CM * 1.9, rz: CM * 2.4 },
+          { y: CM * 8.4, rx: CM * 3.2, rz: CM * 4.0 },
+          { y: CM * 5.6, rx: CM * 4.2, rz: CM * 5.2 },
+          { y: CM * 2.6, rx: CM * 4.8, rz: CM * 5.8 },
+          { y: CM * 0.6, rx: CM * 5.0, rz: CM * 6.0, rzB: CM * 5.4 },
+          { y: 0, rx: CM * 4.72, rz: CM * 5.68, rzB: CM * 5.1 },
+          { y: -CM * 1.4, rx: CM * 5.3, rz: CM * 6.3, rzB: CM * 5.9 },
+          { y: -CM * 4.0, rx: CM * 5.4, rz: CM * 6.4, rzB: CM * 6.0 },
+          { y: -CM * 7.4, rx: CM * 4.6, rz: CM * 5.4, rzB: CM * 5.0 },
+          { y: -CM * 9.6, rx: CM * 2.8, rz: CM * 3.4, rzB: CM * 3.2 },
+          { y: -CM * 10.8, rx: CM * 0.5, rz: CM * 0.7 },
+        ], { radial: 30, mat: lobe }));
+        side.position.set(s * CM * 7.4, 0, 0);
+        side.scale.x = s;
+        g.add(side);
+      });
+
+      // 气管
+      g.add(sweep([
+        P(0, CM * 14.0, CM * 0.6), P(0, CM * 10.4, CM * 0.4), P(0, CM * 6.2, CM * 0.2),
+      ], CM * 0.7, { tubular: 30, radial: 14, mat: airway, roundStart: 0, roundEnd: 0 }));
+
+      // 主支气管 + 次级支气管（分叉越多越像肺）
+      [-1, 1].forEach((s) => {
+        g.add(sweep([
+          P(0, CM * 6.2, CM * 0.2), P(s * CM * 2.2, CM * 5.0, 0),
+          P(s * CM * 4.2, CM * 3.6, 0), P(s * CM * 5.6, CM * 2.6, CM * 0.2),
+        ], (t) => CM * (0.48 - 0.2 * t), { tubular: 40, radial: 10, mat: airway, roundStart: 0, roundEnd: 0.03 }));
+        g.add(sweep([
+          P(s * CM * 4.2, CM * 3.6, 0), P(s * CM * 5.0, CM * 1.2, CM * 0.4), P(s * CM * 5.2, -CM * 1.0, CM * 0.2),
+        ], (t) => CM * (0.28 - 0.16 * t), { tubular: 30, radial: 8, mat: airway, roundStart: 0, roundEnd: 0.03 }));
+        g.add(sweep([
+          P(s * CM * 4.2, CM * 3.6, 0), P(s * CM * 4.4, CM * 5.8, CM * 0.4), P(s * CM * 4.0, CM * 7.6, CM * 0.2),
+        ], (t) => CM * (0.26 - 0.15 * t), { tubular: 30, radial: 8, mat: airway, roundStart: 0, roundEnd: 0.03 }));
+        g.add(sweep([
+          P(s * CM * 5.0, CM * 1.2, CM * 0.4), P(s * CM * 4.6, -CM * 2.6, CM * 0.6), P(s * CM * 3.8, -CM * 5.4, CM * 0.4),
+        ], (t) => CM * (0.2 - 0.12 * t), { tubular: 30, radial: 8, mat: airway, roundStart: 0, roundEnd: 0.03 }));
+      });
+      return g;
+    }
+
+    /* ---- 大脑：脑回褶皱 + 纵裂 + 颞叶 / 小脑 / 脑干 ---- */
+    function buildBrain() {
+      const g = new THREE.Group();
+      const m = organMat(0xc79aa4, { emissive: 0.07, rough: 0.62 });
+      const deep = organMat(0x9b707a, { emissive: 0.03, rough: 0.72 });
+
+      const geo = new THREE.SphereGeometry(1, 54, 36);
+      const pos = geo.attributes.position;
+      const v = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i);
+        // 两组正弦叠出脑回的起伏
+        const g1 = Math.sin(v.x * 10.5 + v.z * 3.4) * Math.sin(v.y * 8.6 - v.z * 2.2);
+        const g2 = Math.sin(v.y * 16.0 + v.x * 5.4) * 0.45;
+        const k = 1 + g1 * 0.05 + g2 * 0.018;
+        // 纵裂：中线处往里收
+        const pinch = 1 - 0.34 * Math.exp(-Math.pow(v.x / 0.2, 2));
+        pos.setXYZ(
+          i,
+          v.x * CM * 6.4 * k * pinch,
+          v.y * CM * 5.2 * k,
+          v.z * CM * 7.0 * k
+        );
+      }
+      geo.computeVertexNormals();
+      g.add(new THREE.Mesh(geo, m));
+
+      // 颞叶
+      [-1, 1].forEach((s) => {
+        g.add(mesh(blob(CM * 2.2, CM * 1.7, CM * 2.4, { noise: 0.08, seed: 20 + s }), m, s * CM * 3.4, -CM * 2.4, CM * 1.4));
+      });
+      // 小脑
+      g.add(mesh(blob(CM * 3.4, CM * 2.0, CM * 2.5, { noise: 0.09, seed: 11 }), deep, 0, -CM * 3.6, -CM * 4.4));
+      // 脑干
+      const stem = new THREE.Mesh(new THREE.CapsuleGeometry(CM * 1.3, CM * 3.6, 8, 14), deep);
+      stem.position.set(0, -CM * 4.8, -CM * 2.4);
+      stem.rotation.x = 0.24;
+      g.add(stem);
+      return g;
+    }
+
+    /* ---- 肝：右叶主体 + 左叶薄舌 + 肝门 + 胆囊 ---- */
+    function buildLiver() {
+      const g = new THREE.Group();
+      const m = organMat(0x8c392f, { emissive: 0.1, rough: 0.52 });
+      const mDark = organMat(0x6c2923, { emissive: 0.05, rough: 0.62 });
+
+      // 右叶：膈面隆起、下面凹
+      g.add(loftRings([
+        { y: CM * 4.6, rx: CM * 3.4, rz: CM * 3.0, dx: -CM * 4.0, rzF: CM * 4.0 },
+        { y: CM * 3.4, rx: CM * 5.6, rz: CM * 4.4, dx: -CM * 4.2, rzF: CM * 5.4 },
+        { y: CM * 1.6, rx: CM * 7.2, rz: CM * 5.0, dx: -CM * 4.4, rzF: CM * 5.9 },
+        { y: -CM * 0.4, rx: CM * 7.6, rz: CM * 4.8, dx: -CM * 4.4, rzF: CM * 5.6 },
+        { y: -CM * 2.4, rx: CM * 6.2, rz: CM * 3.8, dx: -CM * 4.0, rzF: CM * 4.4 },
+        { y: -CM * 4.0, rx: CM * 3.6, rz: CM * 2.4, dx: -CM * 3.4, rzF: CM * 2.8 },
+        { y: -CM * 4.8, rx: CM * 1.2, rz: CM * 1.0, dx: -CM * 3.0 },
+      ], { radial: 30, mat: m }));
+
+      // 左叶：薄舌状，跨过中线
+      g.add(loftRings([
+        { y: CM * 2.6, rx: CM * 1.8, rz: CM * 1.4, dx: CM * 5.4 },
+        { y: CM * 1.6, rx: CM * 3.4, rz: CM * 2.4, dx: CM * 5.8 },
+        { y: CM * 0.2, rx: CM * 4.2, rz: CM * 2.8, dx: CM * 5.6 },
+        { y: -CM * 1.4, rx: CM * 3.4, rz: CM * 2.2, dx: CM * 5.2 },
+        { y: -CM * 2.6, rx: CM * 1.4, rz: CM * 1.0, dx: CM * 4.8 },
+      ], { radial: 26, mat: m }));
+
+      // 肝门
+      g.add(mesh(blob(CM * 1.6, CM * 1.2, CM * 1.4, { noise: 0.03, seed: 15 }), mDark, -CM * 2.4, -CM * 3.4, CM * 2.2));
+      // 胆囊
+      g.add(mesh(blob(CM * 1.3, CM * 2.2, CM * 1.3, { noise: 0.04, seed: 16 }), organMat(0x5d8c42, { emissive: 0.1, rough: 0.42 }), -CM * 6.2, -CM * 3.8, CM * 2.0));
+      return g;
+    }
+
+    /* ---- 胃：贲门 → 胃底 → 胃体 → 幽门，加食管与十二指肠 ---- */
+    function buildStomach() {
+      const g = new THREE.Group();
+      const m = organMat(0xd0876e, { emissive: 0.1, rough: 0.5 });
+      const cardia = P(CM * 0.6, CM * 7.4, -CM * 0.8);
+      const path = [
+        cardia,
+        P(CM * 2.6, CM * 9.4, -CM * 0.2),   // 胃底穹顶（高于贲门）
+        P(CM * 5.2, CM * 7.6, CM * 0.5),
+        P(CM * 6.2, CM * 3.6, CM * 0.9),
+        P(CM * 5.8, -CM * 0.4, CM * 0.8),
+        P(CM * 3.8, -CM * 3.4, CM * 0.4),
+        P(CM * 1.6, -CM * 4.8, 0),
+        P(-CM * 0.4, -CM * 4.4, -CM * 0.2),
+      ];
+      // 贲门细 → 胃底鼓 → 胃体宽 → 幽门细
+      const rFn = (t) => {
+        if (t < 0.24) return CM * lerp(0.9, 3.1, smooth(t / 0.24));
+        if (t < 0.7) return CM * lerp(3.1, 3.2, smooth((t - 0.24) / 0.46));
+        return CM * lerp(3.2, 0.85, smooth((t - 0.7) / 0.3));
+      };
+      g.add(sweep(path, rFn, { tubular: 90, radial: 22, flat: 0.82, mat: m, roundStart: 0.02, roundEnd: 0.03 }));
+
+      // 食管
+      g.add(sweep([
+        P(CM * 0.2, CM * 16.0, -CM * 1.2), P(CM * 0.4, CM * 11.6, -CM * 1.0), cardia,
+      ], CM * 0.55, { tubular: 36, radial: 12, mat: m, roundStart: 0, roundEnd: 0 }));
+
+      // 幽门 → 十二指肠（C 形，绕向患者右侧）
+      g.add(sweep([
+        P(-CM * 0.4, -CM * 4.4, -CM * 0.2), P(-CM * 2.4, -CM * 4.0, CM * 0.4),
+        P(-CM * 3.6, -CM * 1.0, CM * 0.8), P(-CM * 3.0, CM * 2.4, CM * 1.0),
+        P(-CM * 1.0, CM * 3.4, CM * 1.0),
+      ], CM * 0.82, { tubular: 60, radial: 12, mat: organMat(0xc98a72, { emissive: 0.1, rough: 0.48 }), roundStart: 0, roundEnd: 0.02 }));
+      return g;
+    }
+
+    /* ---- 小肠：蛇形盘曲的空肠 / 回肠袢 ---- */
+    function buildSmallIntestine() {
+      const g = new THREE.Group();
+      const m = organMat(0xe0916b, { emissive: 0.12, rough: 0.48 });
+
+      const pts = [];
+      // 纵向悬挂的肠袢：一列列从上往下垂，末端半圆翻回上一列
+      const COLS = 6;
+      const topY = CM * 4.4;
+      const botY = -CM * 5.4;
+      const colW = CM * 2.22;
+      const x0 = -CM * 5.55;
+      const R = colW / 2;
+      for (let k = 0; k < COLS; k++) {
+        const cx = x0 + k * colW;
+        const down = k % 2 === 0;
+        const z = CM * (1.4 + (k % 3) * 0.5);
+        const n = 7;
+        for (let i = 0; i <= n; i++) {
+          const t = i / n;
+          const y = down ? lerp(topY, botY, t) : lerp(botY, topY, t);
+          pts.push(P(
+            cx + Math.sin(t * Math.PI * 1.5 + k * 1.1) * CM * 0.5,
+            y,
+            z + Math.sin(t * Math.PI) * CM * 0.9
+          ));
+        }
+        // 翻到下一列：向下走的在这一列底部绕半圆，向上走的在顶部绕
+        if (k < COLS - 1) {
+          if (down) {
+            for (let i = 1; i <= 5; i++) {
+              const th = Math.PI + (i / 6) * Math.PI;
+              pts.push(P((cx + R) + R * Math.cos(th), botY + R * Math.sin(th) * 0.82, z + CM * 0.4));
+            }
+          } else {
+            for (let i = 1; i <= 5; i++) {
+              const th = Math.PI - (i / 6) * Math.PI;
+              pts.push(P((cx + R) + R * Math.cos(th), topY + R * Math.sin(th) * 0.82, z + CM * 0.4));
+            }
+          }
+        }
+      }
+      // 回肠末端：向下接盲肠
+      pts.push(P(-CM * 5.4, botY - CM * 0.4, CM * 1.8));
+      pts.push(P(-CM * 6.2, botY - CM * 2.0, CM * 1.5));
+      // 环状襞：半径轻微起伏
+      g.add(sweep(pts, (t) => CM * (1.18 + 0.05 * Math.sin(t * 60)), {
+        tubular: 340, radial: 12, flat: 0.94, mat: m, roundStart: 0.006, roundEnd: 0.02, tension: 0.4,
+      }));
+      return g;
+    }
+
+    /* ---- 大肠：盲肠 → 升 → 横 → 降 → 乙状 → 直肠，加阑尾 ---- */
+    function buildLargeIntestine() {
+      const g = new THREE.Group();
+      const m = organMat(0xa8874a, { emissive: 0.11, rough: 0.52 });
+
+      // 患者右侧在 -x
+      const path = [
+        P(-CM * 6.6, -CM * 7.0, CM * 1.4),   // 盲肠
+        P(-CM * 7.2, -CM * 3.0, CM * 1.0),
+        P(-CM * 7.4, CM * 2.0, CM * 0.6),
+        P(-CM * 6.8, CM * 4.6, CM * 0.4),    // 肝曲
+        P(-CM * 4.0, CM * 5.4, CM * 0.6),
+        P(CM * 1.0, CM * 5.2, CM * 0.8),
+        P(CM * 5.6, CM * 5.6, CM * 0.6),     // 脾曲
+        P(CM * 7.4, CM * 3.0, CM * 0.4),
+        P(CM * 7.6, -CM * 2.0, CM * 0.6),
+        P(CM * 6.9, -CM * 5.6, CM * 1.0),
+        P(CM * 4.4, -CM * 8.0, CM * 1.6),    // 乙状结肠
+        P(CM * 1.4, -CM * 9.4, CM * 1.6),
+        P(0, -CM * 11.0, CM * 1.2),          // 直肠
+        P(0, -CM * 12.4, CM * 0.8),
+      ];
+      // 结肠袋：半径周期性起伏
+      g.add(sweep(path, (t) => CM * (1.9 + 0.11 * Math.sin(t * 46)), {
+        tubular: 260, radial: 14, flat: 0.86, mat: m, roundStart: 0.01, roundEnd: 0.02, tension: 0.4,
+      }));
+
+      // 阑尾：盲肠末端垂下
+      g.add(sweep([
+        P(-CM * 6.4, -CM * 7.2, CM * 1.4),
+        P(-CM * 6.0, -CM * 9.4, CM * 1.8),
+        P(-CM * 5.4, -CM * 10.6, CM * 1.5),
+      ], CM * 0.4, { tubular: 40, radial: 10, mat: m, roundStart: 0.02, roundEnd: 0.05 }));
+      return g;
+    }
+
+    /* ---- 肾（豆形，左低右高）+ 输尿管 ---- */
+    function buildKidneys() {
+      const g = new THREE.Group();
+      const m = organMat(0x88544b, { emissive: 0.12, rough: 0.5 });
+      const hilumMat = organMat(0x5d3933, { emissive: 0.04, rough: 0.66 });
+      const ureter = organMat(0xd1b682, { emissive: 0.08, opacity: 0.92 });
+
+      [-1, 1].forEach((s, i) => {
+        const k = new THREE.Group();
+        k.add(loftRings([
+          { y: CM * 5.0, rx: CM * 1.3, rz: CM * 1.5, dx: CM * 0.4 },
+          { y: CM * 3.8, rx: CM * 2.3, rz: CM * 2.1, dx: CM * 0.8 },
+          { y: CM * 1.6, rx: CM * 2.8, rz: CM * 2.3, dx: CM * 1.0 },
+          { y: -CM * 1.6, rx: CM * 2.8, rz: CM * 2.3, dx: CM * 1.0 },
+          { y: -CM * 3.8, rx: CM * 2.3, rz: CM * 2.1, dx: CM * 0.8 },
+          { y: -CM * 5.0, rx: CM * 1.2, rz: CM * 1.5, dx: CM * 0.4 },
+        ], { radial: 24, mat: m }));
+        // 肾门凹陷朝内侧
+        k.add(mesh(blob(CM * 1.1, CM * 1.5, CM * 1.0, { noise: 0.03, seed: 51 + i }), hilumMat, CM * 1.4, 0, CM * 0.6));
+        k.position.set(s * CM * 4.6, 0, 0);
+        k.scale.x = s;
+        g.add(k);
+
+        g.add(sweep([
+          P(s * CM * 4.0, -CM * 1.0, CM * 0.4), P(s * CM * 3.4, -CM * 8.0, CM * 0.8),
+          P(s * CM * 2.6, -CM * 17.0, CM * 1.0), P(s * CM * 1.2, -CM * 24.0, CM * 1.2),
+          P(s * CM * 0.6, -CM * 28.0, CM * 1.0),
+        ], CM * 0.42, { tubular: 60, radial: 8, mat: ureter, roundStart: 0.02, roundEnd: 0.04 }));
+      });
+      return g;
+    }
+
+    function buildSpleen() {
+      const g = new THREE.Group();
+      g.add(loftRings([
+        { y: CM * 4.4, rx: CM * 1.0, rz: CM * 0.7 },
+        { y: CM * 3.2, rx: CM * 2.2, rz: CM * 1.5 },
+        { y: CM * 1.0, rx: CM * 3.2, rz: CM * 1.9, dx: -CM * 0.4 },
+        { y: -CM * 1.6, rx: CM * 3.0, rz: CM * 1.8, dx: -CM * 0.6 },
+        { y: -CM * 3.8, rx: CM * 1.8, rz: CM * 1.1, dx: -CM * 0.4 },
+        { y: -CM * 4.8, rx: CM * 0.6, rz: CM * 0.5 },
+      ], { radial: 22, mat: organMat(0x74414f, { emissive: 0.1, rough: 0.5 }) }));
+      g.rotation.z = -0.22;
+      return g;
+    }
+
+    /* ---- 胰：头（右）→ 体 → 尾（指向脾） ---- */
+    function buildPancreas() {
+      const g = new THREE.Group();
+      const m = organMat(0xd4ab61, { emissive: 0.1, rough: 0.56 });
+      g.add(sweep([
+        P(-CM * 4.6, -CM * 1.8, CM * 0.6), P(-CM * 3.6, -CM * 0.6, CM * 0.4),
+        P(-CM * 1.0, CM * 0.4, CM * 0.6), P(CM * 2.2, CM * 0.6, CM * 0.6),
+        P(CM * 5.4, CM * 1.4, CM * 0.4), P(CM * 8.2, CM * 2.4, CM * 0.2),
+      ], (t) => CM * (2.0 - 1.5 * t), { tubular: 70, radial: 12, mat: m, roundStart: 0.03, roundEnd: 0.04 }));
+      return g;
+    }
+
+    /* ---- 膀胱：囊状 + 尖顶 ---- */
+    function buildBladder() {
+      const g = new THREE.Group();
+      g.add(loftRings([
+        { y: CM * 3.0, rx: CM * 0.9, rz: CM * 0.9 },
+        { y: CM * 2.2, rx: CM * 2.0, rz: CM * 2.0 },
+        { y: CM * 0.8, rx: CM * 2.6, rz: CM * 2.5 },
+        { y: -CM * 1.0, rx: CM * 2.4, rz: CM * 2.3 },
+        { y: -CM * 2.4, rx: CM * 1.4, rz: CM * 1.3 },
+        { y: -CM * 3.2, rx: CM * 0.5, rz: CM * 0.5 },
+      ], { radial: 24, mat: organMat(0xc8b463, { emissive: 0.07, opacity: 0.95, rough: 0.44 }) }));
+      return g;
+    }
+
+    /* ==================================================================
+       器官注册
+       ================================================================== */
+    const organObjects = {};
+    const pickTargets = [];
+    const labelObjs = [];
+
+    function addLabel(text, hex, pos, key, minor) {
+      const wrap = document.createElement('div');
+      wrap.className = 'cx-label-wrap';
+      const div = document.createElement('div');
+      div.className = 'sv-label' + (minor ? ' is-minor' : '');
+      const c = new THREE.Color(hex);
+      div.style.borderColor = 'rgba(' + Math.round(c.r * 255) + ',' + Math.round(c.g * 255) + ',' + Math.round(c.b * 255) + ',0.6)';
+      div.textContent = text;
+      if (key) {
+        div.addEventListener('click', (e) => {
+          e.stopPropagation();
+          focusOrgan(key);
+        });
+      } else {
+        div.style.pointerEvents = 'none';
+        div.style.cursor = 'default';
+      }
+      wrap.appendChild(div);
+      const obj = new CSS2DObject(wrap);
+      obj.position.copy(pos);
+      obj.userData = { minor: !!minor, key: key, inner: div };
+      scene.add(obj);
+      labelObjs.push(obj);
+      return obj;
+    }
+
+    function addOrgan(key, group, pos, labelOffset, minor) {
+      const def = ORGANS[key];
+      // 器官按解剖尺寸建模（单位 CM），这里只做极轻微放大以便远景辨认
+      const scale = 1.05;
+      group.position.copy(pos);
+      group.scale.setScalar(scale);
+      group.userData = { ...def, kind: 'organ', key: key, baseScale: scale };
+      group.traverse((o) => {
+        if (o.isMesh) {
+          o.userData.key = key;
+          if (o.material) {
+            o.material.userData.baseOpacity = o.material.opacity;
+            o.material.userData.baseEmissive = o.material.emissiveIntensity;
+          }
+        }
+      });
+
+      // 发光描边：器官互相叠在一起时，靠一圈亮边保持边界清晰
+      const outlineMat = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(def.color).offsetHSL(0, 0.05, 0.16),
+        side: THREE.BackSide,
+        transparent: true,
+        opacity: 0.09,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      });
+      const shells = [];
+      group.traverse((o) => { if (o.isMesh) shells.push(o); });
+      shells.forEach((o) => {
+        const ol = new THREE.Mesh(o.geometry, outlineMat);
+        ol.scale.setScalar(1.055);
+        ol.userData.isOutline = true;
+        o.add(ol);
+      });
+      group.userData.outlineMat = outlineMat;
+
+      scene.add(group);
+      organObjects[key] = group;
+      pickTargets.push(group);
+      if (def.label !== false) {
+        const off = labelOffset || new THREE.Vector3(0, CM * 8, 0);
+        addLabel(def.name, def.color, pos.clone().add(off), key, minor);
+      }
+      return group;
+    }
+
+    function buildAll() {
+      const chestY = L.chestY;
+      const hipY = L.hipY;
+
+      addOrgan('heart', buildHeart(), new THREE.Vector3(-CM * 0.8, chestY - CM * 0.6, CM * 0.6), new THREE.Vector3(CM * 11, CM * 9.5, 0));
+      addOrgan('lungs', buildLungs(), new THREE.Vector3(0, chestY + CM * 1.6, -CM * 2.0), new THREE.Vector3(-CM * 17, CM * 11, 0));
+      addOrgan('brain', buildBrain(), new THREE.Vector3(0, L.headY + CM * 7.0, CM * 0.4), new THREE.Vector3(CM * 11, CM * 5.4, 0));
+      addOrgan('liver', buildLiver(), new THREE.Vector3(0, chestY - CM * 14.2, CM * 0.8), new THREE.Vector3(-CM * 15, CM * 2.4, 0));
+      addOrgan('stomach', buildStomach(), new THREE.Vector3(0, chestY - CM * 11.4, -CM * 0.6), new THREE.Vector3(CM * 13, -CM * 1.6, 0));
+      addOrgan('spleen', buildSpleen(), new THREE.Vector3(CM * 7.8, chestY - CM * 11.0, -CM * 1.2), new THREE.Vector3(CM * 6, CM * 4.2, 0), true);
+      addOrgan('pancreas', buildPancreas(), new THREE.Vector3(0, chestY - CM * 14.8, CM * 1.6), new THREE.Vector3(-CM * 10, -CM * 5.4, 0), true);
+      addOrgan('kidney', buildKidneys(), new THREE.Vector3(0, chestY - CM * 19.0, -CM * 3.0), new THREE.Vector3(CM * 13, 0, 0), true);
+      addOrgan('smallIntestine', buildSmallIntestine(), new THREE.Vector3(0, chestY - CM * 25.5, CM * 2.2), new THREE.Vector3(-CM * 15, -CM * 13.0, 0));
+      addOrgan('largeIntestine', buildLargeIntestine(), new THREE.Vector3(0, chestY - CM * 24.0, CM * 0.4), new THREE.Vector3(CM * 16, -CM * 13.0, 0));
+      addOrgan('bladder', buildBladder(), new THREE.Vector3(0, hipY + CM * 3.0, CM * 2.0), new THREE.Vector3(-CM * 6, -CM * 5, 0), true);
+
+      buildVessels();
+      buildParticles();
+    }
+
+    /* ==================================================================
+       血管网络（按骨骼地标走向）
+       ================================================================== */
+    const vesselObjs = [];
+    const vesselGroup = new THREE.Group();
+    scene.add(vesselGroup);
+
     function vesselMaterial(hex) {
       const color = new THREE.Color(hex);
       const mat = new THREE.ShaderMaterial({
@@ -691,8 +1600,8 @@
         depthWrite: false,
         uniforms: {
           uColor: { value: color },
-          uTime: { value: 0 },
-          uOpacity: { value: 0.75 },
+          uTime: { value: Math.random() * 10 },
+          uOpacity: { value: 0.4 },
         },
         vertexShader: `
           varying vec2 vUv;
@@ -706,298 +1615,682 @@
           uniform float uTime;
           uniform float uOpacity;
           void main(){
-            // 沿管道方向流动的光脉冲
-            float flow = fract(vUv.y * 3.0 - uTime * 0.35);
-            float pulse = smoothstep(0.0, 0.25, flow) * smoothstep(0.75, 0.25, flow);
-            vec3 col = uColor * (0.55 + pulse * 2.2);
-            gl_FragColor = vec4(col, uOpacity * (0.35 + pulse * 0.65));
+            // 沿管长推进的柔和脉冲（uv.x 是沿管方向）
+            float flow = fract(vUv.x * 1.5 - uTime * 0.3);
+            float band = smoothstep(0.0, 0.55, flow) * smoothstep(1.0, 0.6, flow);
+            vec3 col = uColor * (0.82 + band * 0.62);
+            gl_FragColor = vec4(col, uOpacity * (0.55 + band * 0.45));
           }`,
       });
-      vesselShaders.push(mat);
       return mat;
     }
 
-    /* ================= 人体加载 + 骨骼定位 ================= */
-    const clickable = [];
-    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/Michelle.glb';
-    const TARGET_HEIGHT = 4.6;
-    let heart = null, chestMid = 3.1, hx = 0.5;
-
-    function makeLabel(text, color) {
-      const div = document.createElement('div');
-      div.className = 'sv-label';
-      div.textContent = text;
-      if (color) div.style.borderColor = 'rgba(' + color + ',0.6)';
-      return new CSS2DObject(div);
-    }
-    function addLabel(text, color, position) {
-      const obj = makeLabel(text, color);
-      obj.position.copy(position);
-      scene.add(obj);
-      return obj;
+    function offset(p, up, side) {
+      return p.clone().add(new THREE.Vector3(side || 0, up || 0, 0));
     }
 
-    function buildOrgans() {
-      // 心脏
-      heart = new THREE.Group();
-      const m = 0.85;
-      const heartBody = new THREE.Mesh(new THREE.SphereGeometry(0.3 * m, 32, 32), heartMat);
-      heartBody.scale.set(1, 1.2, 0.85);
-      const heartTip = new THREE.Mesh(new THREE.ConeGeometry(0.2 * m, 0.5 * m, 20), heartMat);
-      heartTip.rotation.x = Math.PI / 2;
-      heartTip.position.y = -0.62 * m;
-      heart.add(heartBody, heartTip);
-      const heartPos = new THREE.Vector3(-hx * 0.5, chestMid + 0.05, hx * 0.35);
-      heart.position.copy(heartPos);
-      heart.rotation.z = 0.25;
-      heart.userData = INFO['心脏'];
-      scene.add(heart);
-      clickable.push(heart);
-      addLabel('心脏', '255,85,102', heartPos.clone().add(new THREE.Vector3(0, 0.8, 0)));
+    function buildVessels() {
+      const heartC = organObjects.heart.position.clone();
+      const chestY = L.chestY, hipY = L.hipY;
+      const clavY = L.neckY - CM * 1.6;
 
-      // 肺
-      [-1, 1].forEach((side) => {
-        const lung = new THREE.Mesh(new THREE.CapsuleGeometry(0.22 * m, 0.55 * m, 8, 20), lungMat);
-        lung.scale.set(1, 1.1, 0.62);
-        const p = new THREE.Vector3(side * hx * 0.7, chestMid - 0.05, hx * 0.2);
-        lung.position.copy(p);
-        lung.rotation.z = -side * 0.12;
-        lung.userData = INFO['肺'];
-        scene.add(lung);
-        clickable.push(lung);
-        addLabel('肺', '255,179,184', p.clone().add(new THREE.Vector3(side * 0.3, 0.55, 0)));
+      const defs = [];
+      const add = (key, group, opt) => defs.push({ key, group, opt });
+
+      // —— 体循环 · 动脉 ——
+      add('aorta', 'systemic', {
+        r: CM * 1.455, label: '主动脉', labelAt: 0.42,
+        pts: [
+          heartC.clone().add(P(CM * 0.4, CM * 3.2, 0)),
+          P(0, chestY + CM * 5.6, CM * 0.8),
+          P(0, chestY + CM * 8.4, -CM * 0.6),
+          P(0, chestY + CM * 4.0, -CM * 2.6),
+          P(0, chestY - CM * 7.0, -CM * 3.0),
+          P(0, (chestY + hipY) * 0.5 - CM, -CM * 2.8),
+          P(0, hipY + CM * 1.6, -CM * 2.2),
+        ],
+      });
+      add('carotid', 'systemic', {
+        r: CM * 0.475, noLabel: true,
+        pts: [
+          P(0, chestY + CM * 7.4, -CM * 0.6),
+          P(CM * 1.6, chestY + CM * 10.0, -CM * 0.4),
+          P(CM * 2.0, L.neckY + CM * 0.4, 0),
+          P(CM * 2.0, L.headY - CM * 3.0, CM * 0.4),
+          P(CM * 1.2, L.headY - CM * 0.4, CM * 1.2),
+        ],
       });
 
-      // 血管曲线（收在躯干内）
-      const curves = {
-        artery: makeCurve([
-          heartPos.toArray(),
-          [heartPos.x * 0.2, chestMid + 0.28, heartPos.z - 0.06],
-          [-hx * 0.45, chestMid + 0.18, heartPos.z - 0.03],
-          [-hx * 0.62, chestMid - 0.04, heartPos.z],
-          [-hx * 0.55, chestMid - 0.2, heartPos.z],
-          [-hx * 0.2, chestMid - 0.33, heartPos.z],
-          [hx * 0.3, chestMid - 0.2, heartPos.z],
-          [hx * 0.55, chestMid - 0.01, heartPos.z],
-          [hx * 0.5, chestMid + 0.12, heartPos.z - 0.03],
-          [heartPos.x * 0.4, chestMid + 0.08, heartPos.z],
-        ]),
-        vein: makeCurve([
-          heartPos.toArray(),
-          [-hx * 0.4, chestMid + 0.22, heartPos.z - 0.07],
-          [-hx * 0.3, chestMid, heartPos.z - 0.08],
-          [0, chestMid - 0.27, heartPos.z - 0.08],
-          [hx * 0.35, chestMid - 0.06, heartPos.z - 0.08],
-          [hx * 0.42, chestMid + 0.17, heartPos.z - 0.05],
-          [heartPos.x * 0.4, chestMid + 0.1, heartPos.z],
-        ]),
-        pulmonary: makeCurve([
-          heartPos.toArray(),
-          [hx * 0.55, chestMid + 0.1, heartPos.z - 0.04],
-          [hx * 0.72, chestMid, heartPos.z - 0.1],
-          [-hx * 0.2, chestMid + 0.04, heartPos.z - 0.14],
-          [-hx * 0.72, chestMid, heartPos.z - 0.1],
-          [-hx * 0.55, chestMid + 0.1, heartPos.z - 0.04],
-        ]),
-      };
-
-      const colors = { artery: 0xff5566, vein: 0x3b82f6, pulmonary: 0xa855f7 };
-      const flowCurves = [];
-      const labelOffsets = { artery: new THREE.Vector3(-0.9, 0.1, 0), vein: new THREE.Vector3(0.9, -0.25, 0), pulmonary: new THREE.Vector3(0.1, 0.55, 0) };
-      Object.keys(curves).forEach((k) => {
-        scene.add(new THREE.Mesh(
-          new THREE.TubeGeometry(curves[k], 160, 0.04, 8, true),
-          vesselMaterial(colors[k])
-        ));
-        const mid = curves[k].getPointAt(0.5);
-        const labelName = { artery: '动脉', vein: '静脉', pulmonary: '肺循环' }[k];
-        const rgb = new THREE.Color(colors[k]);
-        const rgba = Math.round(rgb.r * 255) + ',' + Math.round(rgb.g * 255) + ',' + Math.round(rgb.b * 255);
-        addLabel(labelName, rgba, mid.clone().add(labelOffsets[k]));
-        flowCurves.push(curves[k]);
+      // 上肢动脉：沿肩 → 上臂 → 前臂走，不横穿画面
+      [1, -1].forEach((s) => {
+        add('aorta', 'systemic', {
+          r: CM * 0.421, noLabel: true,
+          pts: [
+            P(0, chestY + CM * 6.6, -CM * 0.8),
+            P(s * 0.27, clavY + CM * 0.6, 0),
+            P(s * 0.44, chestY + CM * 10 - CM * 2, CM * 0.2),
+            P(s * 0.5, chestY - CM * 6, CM * 0.2),
+            P(s * 0.525, chestY - CM * 20, CM * 0.3),
+            P(s * 0.545, chestY - CM * 32, CM * 0.3),
+          ],
+        });
       });
 
-      // 血液粒子（instanced + additive）
-      buildParticles(flowCurves);
+      // 下肢动脉
+      [['髋', 1, A.hipL, A.kneeL, A.ankleL], ['右', -1, A.hipR, A.kneeR, A.ankleR]].forEach(([tag, s, hip, knee, ankle]) => {
+        add('aorta', 'systemic', {
+          r: CM * 0.727, noLabel: true,
+          pts: [
+            P(0, hipY + CM * 1.4, -CM * 2.0),
+            P(s * 0.175, hipY + CM * 0.4, -CM * 1.2),
+            hip.clone().add(P(s * CM * 0.4, -CM * 1.2, 0)),
+            knee.clone().add(P(0, CM * 1.0, CM * 0.2)),
+            knee.clone().add(P(0, -CM * 4, 0)),
+            ankle.clone().add(P(0, CM * 2.2, CM * 0.4)),
+            ankle.clone().add(P(0, -CM * 0.6, CM * 1.4)),
+          ],
+        });
+      });
+
+      // 肝动脉、肾动脉、肠系膜动脉
+      add('aorta', 'systemic', {
+        r: CM * 0.574, noLabel: true,
+        pts: [
+          P(0, chestY - CM * 8.6, -CM * 2.6),
+          P(-CM * 2.4, chestY - CM * 10.4, -CM * 1.4),
+          P(-CM * 4.4, chestY - CM * 12.2, CM * 1.2),
+        ],
+      });
+      [-1, 1].forEach((s) => {
+        add('aorta', 'systemic', {
+          r: CM * 0.475, noLabel: true,
+          pts: [
+            P(0, chestY - CM * 17.0, -CM * 2.6),
+            P(s * CM * 2.2, chestY - CM * 17.9, -CM * 2.2),
+            P(s * CM * 4.2, chestY - CM * 18.4, -CM * 1.4),
+          ],
+        });
+      });
+      add('aorta', 'systemic', {
+        r: CM * 0.459, noLabel: true,
+        pts: [
+          P(0, chestY - CM * 15.6, -CM * 2.4),
+          P(0, chestY - CM * 18.4, -CM * 1.0),
+          P(0, chestY - CM * 21.0, CM * 1.6),
+        ],
+      });
+
+      // —— 体循环 · 静脉 ——
+      add('venaCava', 'systemic', {
+        r: CM * 1.34, noLabel: true,
+        pts: [
+          P(0, hipY - CM * 2.0, -CM * 1.0),
+          P(0, hipY + CM * 3.0, -CM * 1.0),
+          P(0, chestY - CM * 10.0, -CM * 1.2),
+          P(0, chestY - CM * 2.0, -CM * 0.6),
+          heartC.clone().add(P(-CM * 2.4, -CM * 1.0, -CM * 1.2)),
+        ],
+      });
+      add('venaCava', 'systemic', {
+        r: CM * 0.88, noLabel: true,
+        pts: [
+          P(CM * 1.4, L.headY - CM * 2.0, -CM * 0.4),
+          P(CM * 1.4, L.neckY + CM * 0.2, -CM * 1.2),
+          P(CM * 0.8, chestY + CM * 8.6, -CM * 1.4),
+          heartC.clone().add(P(-CM * 2.2, CM * 2.0, -CM * 1.0)),
+        ],
+      });
+      [1, -1].forEach((s) => {
+        add('venaCava', 'systemic', {
+          r: CM * 0.574, noLabel: true,
+          pts: [
+            P(s * 0.545, chestY - CM * 32, CM * 0.3),
+            P(s * 0.525, chestY - CM * 20, CM * 0.3),
+            P(s * 0.5, chestY - CM * 6, CM * 0.2),
+            P(s * 0.44, chestY + CM * 6, CM * 0.2),
+            P(s * 0.27, clavY + CM * 0.4, CM * 0.4),
+            P(CM * 0.6, chestY + CM * 8.0, -CM * 1.0),
+          ],
+        });
+      });
+      [1, -1].forEach((s) => {
+        add('venaCava', 'systemic', {
+          r: CM * 0.612, noLabel: true,
+          pts: [
+            P(s * 0.16, 0.05, CM * 0.2),
+            P(s * 0.16, hipY - CM * 2, CM * 0.2),
+            P(0, hipY + CM * 1.0, -CM * 1.4),
+            P(0, hipY + CM * 3.4, -CM * 1.2),
+          ],
+        });
+      });
+      add('portal', 'systemic', {
+        r: CM * 0.421, noLabel: true,
+        pts: [
+          P(CM * 2.2, chestY - CM * 21.4, CM * 2.0),
+          P(CM * 1.0, chestY - CM * 17.2, CM * 2.2),
+          P(-CM * 1.6, chestY - CM * 14.2, CM * 2.0),
+          P(-CM * 3.4, chestY - CM * 12.6, CM * 1.8),
+        ],
+      });
+
+      // —— 肺循环：右心室 → 肺动脉干 → 心底分叉 → 左右肺门 → 肺静脉 → 左心房 ——
+      const bif = P(CM * 1.2, chestY + CM * 2.6, CM * 1.8);
+      add('pulmArtery', 'pulmonary', {
+        r: CM * 1.45, noLabel: true,
+        pts: [
+          heartC.clone().add(P(CM * 2.0, CM * 0.4, CM * 0.4)),
+          heartC.clone().add(P(CM * 1.8, CM * 1.6, CM * 1.2)),
+          bif,
+        ],
+      });
+      add('pulmArtery', 'pulmonary', {
+        r: CM * 0.9, noLabel: true,
+        pts: [bif, P(-CM * 2.6, chestY + CM * 1.0, CM * 3.4), P(-CM * 5.0, chestY - CM * 1.6, CM * 4.2)],
+      });
+      add('pulmArtery', 'pulmonary', {
+        r: CM * 0.9, noLabel: true,
+        pts: [bif, P(CM * 3.6, chestY + CM * 1.2, CM * 3.4), P(CM * 5.4, chestY - CM * 1.4, CM * 4.2)],
+      });
+      add('pulmVein', 'pulmonary', {
+        r: CM * 1.15, noLabel: true,
+        pts: [
+          P(-CM * 5.2, chestY - CM * 3.6, CM * 4.4), P(-CM * 3.2, chestY - CM * 2.0, CM * 4.2),
+          P(-CM * 1.2, chestY + CM * 0.6, CM * 3.6), heartC.clone().add(P(-CM * 1.4, CM * 1.6, CM * 1.0)),
+        ],
+      });
+      add('pulmVein', 'pulmonary', {
+        r: CM * 1.15, noLabel: true,
+        pts: [
+          P(CM * 5.6, chestY - CM * 3.2, CM * 4.4), P(CM * 3.4, chestY - CM * 2.0, CM * 4.2),
+          P(CM * 1.4, chestY + CM * 0.6, CM * 3.6), heartC.clone().add(P(-CM * 1.0, CM * 1.6, CM * 1.0)),
+        ],
+      });
+
+      // —— 生成管网 ——
+      defs.forEach((d) => {
+        const def = VESSELS[d.key];
+        const mat = vesselMaterial(def.color);
+        const geo = new THREE.TubeGeometry(
+          new THREE.CatmullRomCurve3(d.opt.pts, false, 'catmullrom', 0.4),
+          64, d.opt.r, 7, false
+        );
+        const m = new THREE.Mesh(geo, mat);
+        m.userData = { ...def, kind: 'vessel' };
+        vesselGroup.add(m);
+        pickTargets.push(m);
+
+        vesselObjs.push({
+          mesh: m, mat, def,
+          group: d.opt.group || def.group,
+          curve: m.geometry.userData.curve || null,
+          samples: m.geometry.parameters.path.getSpacedPoints(90),
+          active: true,
+          key: d.key,
+        });
+
+        if (d.opt.label && !d.opt.noLabel) {
+          const p = m.geometry.parameters.path.getPointAt(d.opt.labelAt || 0.5);
+          addLabel(d.opt.label, def.color, p.clone().add(P(-CM * 10, CM * 2.0, 0)), null, false);
+        }
+      });
     }
 
-    function makeCurve(pts) {
-      return new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p)), true, 'catmullrom', 0.6);
-    }
-
-    /* ================= 血液粒子 ================= */
-    const PARTICLE_COUNT = 240;
+    /* ==================================================================
+       血液粒子
+       ================================================================== */
+    const PCOUNT_RESERVE = 900;
     let particleMesh = null;
-    const particleData = [];
+    const particleStates = [];
 
-    function buildParticles(curves) {
-      const geo = new THREE.SphereGeometry(0.045, 8, 8);
+    function buildParticles() {
+      let total = 0;
+      const planned = [];
+      vesselObjs.forEach((v, vi) => {
+        const len = v.mesh.geometry.parameters.path.getLength();
+        const n = Math.max(5, Math.min(34, Math.round(len * 26)));
+        planned.push(n);
+        total += n;
+      });
+      const count = Math.min(total, PCOUNT_RESERVE);
+
+      const geo = new THREE.SphereGeometry(CM * 0.3, 6, 6);
       const mat = new THREE.MeshBasicMaterial({
-        color: 0xff8899, transparent: true, opacity: 0.9,
+        transparent: true, opacity: 0.72,
         blending: THREE.AdditiveBlending, depthWrite: false,
       });
-      particleMesh = new THREE.InstancedMesh(geo, mat, PARTICLE_COUNT);
+      particleMesh = new THREE.InstancedMesh(geo, mat, count);
       particleMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       scene.add(particleMesh);
 
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        particleData.push({
-          curve: curves[i % curves.length],
-          t: Math.random(),
-          speed: 0.12 + Math.random() * 0.12,
-        });
-      }
+      const col = new THREE.Color();
+      let idx = 0;
+      vesselObjs.forEach((v, vi) => {
+        const n = planned[vi];
+        // 动脉偏亮、静脉偏冷，肺循环偏紫
+        const base = new THREE.Color(v.def.color);
+        for (let k = 0; k < n && idx < count; k++, idx++) {
+          particleStates.push({
+            vi: vi,
+            t: k / n,
+            speed: (v.group === 'pulmonary' ? 0.1 : 0.085) + Math.random() * 0.05,
+          });
+          col.copy(base).offsetHSL(0, 0, (Math.random() - 0.5) * 0.12);
+          particleMesh.setColorAt(idx, col);
+        }
+      });
+      particleMesh.count = idx;
+      if (particleMesh.instanceColor) particleMesh.instanceColor.needsUpdate = true;
     }
 
     const dummy = new THREE.Object3D();
     function updateParticles(dt) {
       if (!particleMesh) return;
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        const p = particleData[i];
-        p.t = (p.t + dt * p.speed) % 1;
-        p.curve.getPointAt(p.t, dummy.position);
+      for (let i = 0; i < particleStates.length; i++) {
+        const s = particleStates[i];
+        const v = vesselObjs[s.vi];
+        s.t += dt * s.speed;
+        if (s.t >= 1) s.t -= 1;
+        const arr = v.samples;
+        const n = arr.length - 1;
+        const f = s.t * n;
+        const i0 = Math.floor(f);
+        const i1 = i0 >= n ? 0 : i0 + 1;
+        dummy.position.lerpVectors(arr[i0], arr[i1], f - i0);
+        const k = v.active ? 1 : 0;
+        dummy.scale.setScalar(k);
         dummy.updateMatrix();
         particleMesh.setMatrixAt(i, dummy.matrix);
       }
       particleMesh.instanceMatrix.needsUpdate = true;
     }
 
-    /* ================= 模型加载 ================= */
-    const loader = new GLTFLoader();
-    loader.load(MODEL_URL, (gltf) => {
-      const body = gltf.scene;
-      scene.add(body);
+    /* ==================================================================
+       人体轮廓（程序化，玻璃质感；不再依赖外部 GLB）
+       ================================================================== */
+    const bodyMats = [];
+    let xray = 0.32;
 
-      // 蒙皮模型：骨骼世界坐标估算身体范围
-      body.updateWorldMatrix(true, true);
-      const box = new THREE.Box3();
-      body.traverse((o) => { if (o.isBone) box.expandByPoint(o.getWorldPosition(new THREE.Vector3())); });
-      if (box.isEmpty()) box.setFromObject(body);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
+    function bodyMaterial() {
+      const m = new THREE.MeshPhysicalMaterial({
+        color: 0x9cc4f5,
+        transparent: true,
+        opacity: 0.1 + xray * 0.62,
+        roughness: 0.26,
+        metalness: 0.0,
+        clearcoat: 0.8,
+        clearcoatRoughness: 0.2,
+        emissive: 0x2257a8,
+        emissiveIntensity: 0.9,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      bodyMats.push(m);
+      return m;
+    }
 
-      const scale = TARGET_HEIGHT / size.y;
-      const FOOT_ALLOWANCE = 0.09;
-      body.scale.setScalar(scale);
-      body.position.set(0, (size.y / 2 + FOOT_ALLOWANCE - center.y) * scale, 0);
-      body.rotation.y = Math.PI;
+    function applyXray() {
+      bodyMats.forEach((m) => { m.opacity = 0.1 + xray * 0.62; });
+      if (xrayVal) xrayVal.textContent = Math.round(xray * 100);
+    }
 
-      // 半透明 X 光质感
-      bodyMats.length = 0;
-      body.traverse((o) => {
-        if (o.isMesh && o.material) {
-          o.material.transparent = true;
-          o.material.opacity = xray;
-          o.material.depthWrite = false;
-          bodyMats.push(o.material);
-        }
+    function buildBody() {
+      const g = new THREE.Group();
+      const mat = bodyMaterial();
+
+      // 头 + 颈
+      g.add(mesh(blob(0.185, 0.26, 0.215, { noise: 0.015, seg: 26, seg2: 18, seed: 2 }), mat, 0, L.headY + 0.09, 0));
+      g.add(mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.22, 16), mat, 0, L.neckY - 0.04, 0));
+      // 胸 / 腰 / 髋
+      g.add(mesh(blob(0.345, 0.4, 0.225, { noise: 0.015, seg: 26, seg2: 18, seed: 4 }), mat, 0, L.chestY + 0.12, 0));
+      g.add(mesh(blob(0.265, 0.26, 0.19, { noise: 0.015, seg: 24, seg2: 16, seed: 6 }), mat, 0, L.chestY - 0.34, 0));
+      g.add(mesh(blob(0.285, 0.2, 0.2, { noise: 0.015, seg: 24, seg2: 16, seed: 8 }), mat, 0, L.hipY - 0.02, 0));
+      // 肩
+      [-1, 1].forEach((s) => {
+        g.add(mesh(new THREE.SphereGeometry(0.092, 16, 12), mat, s * 0.42, L.chestY + 0.3, 0));
+      });
+      // 手臂：上臂 / 前臂 / 手（自然下垂）
+      [-1, 1].forEach((s) => {
+        const up = new THREE.Mesh(new THREE.CapsuleGeometry(0.064, 0.5, 5, 12), mat);
+        up.position.set(s * 0.515, L.chestY + 0.03, 0);
+        up.rotation.z = s * 0.08;
+        g.add(up);
+        const fore = new THREE.Mesh(new THREE.CapsuleGeometry(0.052, 0.46, 5, 12), mat);
+        fore.position.set(s * 0.55, L.chestY - 0.63, 0);
+        fore.rotation.z = s * 0.04;
+        g.add(fore);
+        g.add(mesh(blob(0.05, 0.085, 0.032, { noise: 0.02, seg: 12, seg2: 8 }), mat, s * 0.55, L.chestY - 0.98, 0));
+      });
+      // 腿：大腿 / 小腿 / 足
+      [-1, 1].forEach((s) => {
+        const thigh = new THREE.Mesh(new THREE.CapsuleGeometry(0.118, 0.7, 5, 12), mat);
+        thigh.position.set(s * 0.175, L.hipY - 0.48, 0);
+        g.add(thigh);
+        const shin = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.64, 5, 12), mat);
+        shin.position.set(s * 0.165, L.hipY - 1.24, 0);
+        g.add(shin);
+        const foot = mesh(new THREE.CapsuleGeometry(0.06, 0.14, 4, 10), mat, s * 0.16, 0.08, 0.05);
+        foot.rotation.x = Math.PI / 2;
+        g.add(foot);
       });
 
-      body.userData = { name: '人体', type: '身体', color: 0x8899cc, info: null, desc: ['血液由心脏泵出，流遍全身', '送氧气营养，带走废物', '这就是血液循环'] };
-      clickable.push(body);
-
-      // 用骨骼定位胸腔
-      let neckY = -1e9, hipsY = 1e9, shoulderX = 0;
-      body.traverse((o) => {
-        if (!o.isBone) return;
-        const p = o.getWorldPosition(new THREE.Vector3());
-        if (/neck/i.test(o.name)) neckY = Math.max(neckY, p.y);
-        if (/hips?$/i.test(o.name)) hipsY = Math.min(hipsY, p.y);
-        if (/shoulder/i.test(o.name)) shoulderX = Math.max(shoulderX, Math.abs(p.x));
+      // 轮廓光：远景下也能看清人体边界，内脏不会“飘”在黑底上
+      const rimMat = new THREE.MeshBasicMaterial({
+        color: 0x6aa8ff, side: THREE.BackSide, transparent: true,
+        opacity: 0.12, depthWrite: false, blending: THREE.AdditiveBlending,
       });
-      if (neckY > -1e8 && hipsY < 1e8) {
-        chestMid = (neckY + hipsY) / 2 - 0.15;
-        hx = Math.max(shoulderX * 0.8, 0.35);
-      } else {
-        chestMid = TARGET_HEIGHT * 0.66;
-        hx = 0.5;
-      }
+      const shells = [];
+      g.traverse((o) => { if (o.isMesh) shells.push(o); });
+      shells.forEach((o) => {
+        const ol = new THREE.Mesh(o.geometry, rimMat);
+        ol.scale.setScalar(1.028);
+        o.add(ol);
+      });
 
-      buildOrgans();
+      scene.add(g);
+      return g;
+    }
 
-      // 构图：镜头对准胸腔
-      camera.position.set(0.6, chestMid + 0.35, 6.8);
-      camera.lookAt(0, chestMid, 0);
-      controls.target.set(0, chestMid, 0);
-
+    function finishLoad() {
+      buildAll();
+      buildIndex();
+      applyCycle('all');
+      setView('torso');
       document.getElementById('loader').classList.add('is-done');
-    }, undefined, (err) => {
-      console.error('模型加载失败', err);
-      chestMid = 3.1; hx = 0.5;
-      buildOrgans();
-      camera.position.set(0.6, 3.4, 7);
-      camera.lookAt(0, 3.1, 0);
-      controls.target.set(0, 3.1, 0);
-      document.getElementById('loader').classList.add('is-done');
-    });
+    }
 
-    /* ================= 交互 ================= */
-    const voice = S.createVoice();
+    /* ==================================================================
+       交互
+       ================================================================== */
+    const voice = S.createVoice({ audioBase: '../audio/circulation/' });
     S.bindVoiceButton(document.getElementById('voiceBtn'), voice);
     const card = S.createCard(document.getElementById('card') || document.body);
     const picker = S.makePicker(camera, renderer.domElement);
     const fly = S.makeFly(camera, controls);
+    const clock = new THREE.Clock();
 
-    picker.onHover(clickable, (obj) => {
+    function dimOthers(activeKey) {
+      Object.keys(organObjects).forEach((k) => {
+        const on = !activeKey || k === activeKey;
+        const g = organObjects[k];
+        g.traverse((o) => {
+          if (!o.isMesh || !o.material || o.userData.isOutline) return;
+          const base = o.material.userData.baseOpacity != null ? o.material.userData.baseOpacity : 1;
+          o.material.opacity = on ? base : base * 0.22;
+          o.material.emissiveIntensity = on ? o.material.userData.baseEmissive : 0.02;
+        });
+        const om = g.userData.outlineMat;
+        if (om) om.opacity = on ? 0.09 : 0.02;
+      });
+    }
+
+    function focusOrgan(key) {
+      const obj = organObjects[key];
+      const def = ORGANS[key];
+      if (!obj || !def) return;
+
+      const b = new THREE.Box3().setFromObject(obj);
+      const c = b.getCenter(new THREE.Vector3());
+      const size = b.getSize(new THREE.Vector3()).length();
+      const dist = Math.max(size * 1.9, 1.1);
+      const dir = camera.position.clone().sub(c).normalize();
+      if (dir.lengthSq() < 0.01) dir.set(0.2, 0.15, 1);
+      fly.flyTo(c.clone().add(dir.multiplyScalar(dist)), c, 1.05);
+
+      card.show(def);
+      voice.speak(S.narrate(def), def.id);
+      dimOthers(key);
+      markIndex(key);
+    }
+
+    function focusBody() {
+      setView('full');
+      card.show(CYCLES.all);
+      voice.speak(S.narrate(CYCLES.all), CYCLES.all.id);
+      dimOthers(null);
+      markIndex(null);
+    }
+
+    picker.onHover(() => pickTargets, (obj) => {
       renderer.domElement.style.cursor = obj ? 'pointer' : 'grab';
     });
-    picker.onClick(clickable, (obj) => {
+
+    picker.onClick(() => pickTargets, (obj) => {
       if (!obj) return;
-      const d = obj.userData;
-      if (!d || !d.name) return;
-      card.show(d);
-      voice.speak(d.name + '。' + (d.stats || []).map((s) => s.label + s.value).join('，') + '。' + (d.desc || []).join('，'));
-      const t = new THREE.Vector3();
-      obj.getWorldPosition(t);
-      const dist = d.name === '人体' ? 7 : 2.6;
-      const dir = camera.position.clone().sub(t).normalize();
-      fly.flyTo(t.clone().add(dir.multiplyScalar(dist)), t, 1.0);
+      let o = obj;
+      while (o && !(o.userData && (o.userData.kind === 'organ' || o.userData.kind === 'vessel'))) o = o.parent;
+      if (!o) return;
+      const d = o.userData;
+      if (d.kind === 'organ' && d.key) {
+        focusOrgan(d.key);
+      } else if (d.kind === 'vessel') {
+        const item = vesselObjs.find((v) => v.mesh === o || v.mesh === obj);
+        card.show(d);
+        voice.speak(S.narrate(d), d.id);
+        if (item) {
+          const p = item.mesh.geometry.parameters.path.getPointAt(0.5);
+          const dir = camera.position.clone().sub(p).normalize();
+          fly.flyTo(p.clone().add(dir.multiplyScalar(2.4)), p, 1.0);
+        }
+        dimOthers(null);
+        markIndex(null);
+      }
     });
 
-    /* ================= 控件 ================= */
-    let isPlaying = true;
-    const clock = new THREE.Clock();
-    const playBtn = document.getElementById('playBtn');
-    playBtn.addEventListener('click', () => {
-      isPlaying = !isPlaying;
-      playBtn.innerHTML = isPlaying ? '<span class="sv-btn__icon">⏸</span><span>暂停</span>' : '<span class="sv-btn__icon">▶</span><span>播放</span>';
-      if (!isPlaying) clock.getDelta();
+    /* ---- 器官索引 ---- */
+    const organList = document.getElementById('organList');
+    const indexButtons = {};
+
+    function buildIndex() {
+      const order = ['heart', 'lungs', 'brain', 'liver', 'stomach', 'smallIntestine', 'largeIntestine', 'kidney', 'spleen', 'pancreas', 'bladder'];
+      order.forEach((key) => {
+        const def = ORGANS[key];
+        if (!def) return;
+        const el = document.createElement('div');
+        el.className = 'cx-item';
+        el.dataset.key = key;
+        const dot = document.createElement('span');
+        dot.className = 'cx-item__dot';
+        dot.style.background = '#' + def.color.toString(16).padStart(6, '0');
+        const name = document.createElement('span');
+        name.textContent = def.name;
+        el.appendChild(dot);
+        el.appendChild(name);
+        el.addEventListener('click', () => focusOrgan(key));
+        el.addEventListener('mouseenter', () => {
+          const g = organObjects[key];
+          if (!g) return;
+          g.traverse((o) => {
+            if (o.isMesh && o.material && o.material.userData.baseEmissive != null) {
+              o.material.emissiveIntensity = o.material.userData.baseEmissive + 0.35;
+            }
+          });
+        });
+        el.addEventListener('mouseleave', () => {
+          const g = organObjects[key];
+          if (!g) return;
+          g.traverse((o) => {
+            if (o.isMesh && o.material && o.material.userData.baseEmissive != null) {
+              o.material.emissiveIntensity = o.material.userData.baseEmissive;
+            }
+          });
+        });
+        organList.appendChild(el);
+        indexButtons[key] = el;
+      });
+    }
+
+    function markIndex(key) {
+      Object.keys(indexButtons).forEach((k) => indexButtons[k].classList.toggle('is-on', k === key));
+    }
+
+    /* ---- 循环分层 ---- */
+    let cycleMode = 'all';
+    function applyCycle(mode) {
+      cycleMode = mode;
+      vesselObjs.forEach((v) => {
+        const on = mode === 'all' || v.group === mode;
+        v.active = on;
+        v.mat.uniforms.uOpacity.value = on ? (mode === 'all' ? 0.46 : 0.64) : 0.035;
+      });
+      document.querySelectorAll('#cycleSeg button').forEach((b) => {
+        b.classList.toggle('is-on', b.dataset.cycle === mode);
+      });
+      if (mode === 'systemic' || mode === 'pulmonary') {
+        const c = CYCLES[mode];
+        card.show(c);
+        voice.speak(S.narrate(c), c.id);
+        dimOthers(null);
+        markIndex(null);
+      }
+      // 看肺循环时把肺变成“玻璃肺”，肺内的血管才透得出来
+      const lungs = organObjects.lungs;
+      if (lungs) {
+        lungs.traverse((o) => {
+          if (!o.isMesh || o.userData.isOutline || !o.material || o.material.userData.baseOpacity == null) return;
+          const base = o.material.userData.baseOpacity;
+          o.material.opacity = mode === 'pulmonary' ? Math.min(base, 0.24) : base;
+        });
+      }
+    }
+
+    document.getElementById('cycleSeg').addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const mode = btn.dataset.cycle;
+      applyCycle(mode);
+      if (mode === 'all') {
+        focusBody();
+        applyCycle('all');
+      } else if (mode === 'pulmonary') {
+        setView('chest');
+      } else {
+        setView('full');
+      }
+    });
+
+    /* ---- 视角 ---- */
+    const views = {
+      full: () => ({ pos: P(0.25, H * 0.5, 6.9), target: P(0, H * 0.5, 0) }),
+      torso: () => ({ pos: P(0.22, L.chestY - CM * 8, CM * 144), target: P(0, L.chestY - CM * 8, 0) }),
+      chest: () => ({ pos: P(CM * 12, L.chestY + CM * 2, CM * 82), target: P(0, L.chestY - CM * 1, 0) }),
+      belly: () => ({ pos: P(CM * 10, L.chestY - CM * 22, CM * 84), target: P(0, L.chestY - CM * 24, 0) }),
+      head: () => ({ pos: P(CM * 8, L.headY + CM * 1, CM * 46), target: P(0, L.headY, 0) }),
+    };
+
+    function setView(name) {
+      const v = (views[name] || views.full)();
+      fly.flyTo(v.pos, v.target, 1.2);
+      document.querySelectorAll('#viewSeg button').forEach((b) => {
+        b.classList.toggle('is-on', b.dataset.view === name);
+      });
+    }
+
+    document.getElementById('viewSeg').addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (btn) setView(btn.dataset.view);
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
-      fly.flyTo(new THREE.Vector3(0.6, chestMid + 0.35, 6.8), new THREE.Vector3(0, chestMid, 0), 1.2);
+      focusBody();
+      document.querySelectorAll('#viewSeg button').forEach((b) => b.classList.remove('is-on'));
     });
 
-    let xray = 0.3;
-    const bodyMats = [];
+    /* ---- 播放 / 透视 ---- */
+    let isPlaying = true;
+    const playBtn = document.getElementById('playBtn');
+    playBtn.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      playBtn.innerHTML = isPlaying
+        ? '<span class="sv-btn__icon">⏸</span><span>暂停</span>'
+        : '<span class="sv-btn__icon">▶</span><span>播放</span>';
+      if (!isPlaying) clock.getDelta();
+    });
+
     const xrayBtn = document.getElementById('xrayBtn');
     const xrayVal = document.getElementById('xrayVal');
     xrayBtn.addEventListener('click', () => {
-      xray = xray >= 0.9 ? 0.1 : xray + 0.2;
-      xrayVal.textContent = Math.round(xray * 100);
-      bodyMats.forEach((m) => { m.opacity = xray; });
+      xray = xray >= 0.6 ? 0.08 : xray + 0.13;
+      applyXray();
     });
 
-    /* ================= 动画 ================= */
+    /* ==================================================================
+       动画
+       ================================================================== */
+    const heartGroup = () => organObjects.heart;
+    const labelProbe = new THREE.Vector3();
+    const labelV = new THREE.Vector3();
+    let labelTick = 0;
+    let heartBeat = 0;
+
+    // 器官挨得近时标签会叠在一起，这里做一次简单的屏幕空间避让
+    function layoutLabels() {
+      if ((labelTick++ % 2) !== 0) return;
+      const items = [];
+      labelObjs.forEach((o) => {
+        const el = o.userData.inner;
+        if (!el || o.element.style.opacity === '0') return;
+        o.getWorldPosition(labelV);
+        labelV.project(camera);
+        if (labelV.z > 1) return;
+        const x = (labelV.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-labelV.y * 0.5 + 0.5) * window.innerHeight;
+        const w = el.offsetWidth || 48;
+        const h = el.offsetHeight || 18;
+        items.push({ el, sx: x - w / 2, sy: y - h / 2, w, h });
+      });
+      items.sort((a, b) => a.sy - b.sy);
+      const placed = [];
+      items.forEach((it) => {
+        let shift = 0;
+        for (let k = 0; k < 8; k++) {
+          const box = { x1: it.sx, y1: it.sy + shift, x2: it.sx + it.w, y2: it.sy + it.h + shift };
+          const hit = placed.some((p) => !(box.x2 < p.x1 || box.x1 > p.x2 || box.y2 < p.y1 || box.y1 > p.y2));
+          if (!hit) { placed.push(box); break; }
+          shift += it.h + 2;
+        }
+        it.el.style.transform = shift ? 'translateY(' + shift + 'px)' : '';
+      });
+    }
+
     function animate() {
       const dt = clock.getDelta();
       if (isPlaying) {
-        // 心跳双节拍（lub-dub）
         const t = performance.now() / 1000;
-        const beat = Math.pow(Math.max(0, Math.sin(t * Math.PI * 1.2)), 6) * 0.12
-                   + Math.pow(Math.max(0, Math.sin((t - 0.22) * Math.PI * 1.2)), 6) * 0.07;
-        if (heart) heart.scale.setScalar(1 + beat);
-        // 血管流光
-        vesselShaders.forEach((m) => { m.uniforms.uTime.value += dt; });
-        // 粒子
+        // lub-dub 双节拍
+        const beat = Math.pow(Math.max(0, Math.sin(t * Math.PI * 1.15)), 6) * 0.11
+          + Math.pow(Math.max(0, Math.sin((t - 0.24) * Math.PI * 1.15)), 6) * 0.06;
+        const hg = heartGroup();
+        if (hg) {
+          heartBeat += (beat - heartBeat) * 0.35;
+          hg.scale.setScalar(hg.userData.baseScale * (1 + heartBeat));
+        }
+        const lg = organObjects.lungs;
+        if (lg) {
+          const br = Math.sin(t * 1.5);
+          const bs = lg.userData.baseScale;
+          lg.scale.set(bs * (1 + br * 0.012), bs * (1 + br * 0.02), bs * (1 + br * 0.012));
+        }
+        vesselObjs.forEach((v) => { v.mat.uniforms.uTime.value += dt; });
         updateParticles(dt);
       }
       fly.update(dt);
       controls.update();
+
+      // 次要标签（脾、胰、膀胱）在远景时收起，避免堆叠
+      labelObjs.forEach((o) => {
+        if (!o.userData.minor) return;
+        o.getWorldPosition(labelProbe);
+        o.element.style.opacity = camera.position.distanceTo(labelProbe) > 6.5 ? '0' : '';
+      });
+
+      layoutLabels();
       labelRenderer.render(scene, camera);
       composer.render();
       requestAnimationFrame(animate);
     }
+    buildBody();
+    finishLoad();
     animate();
 
     window.addEventListener('resize', () => {

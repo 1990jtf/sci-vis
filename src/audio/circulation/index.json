@@ -1,0 +1,128 @@
+{
+  "heart": {
+    "file": "v_heart.mp3",
+    "hash": "33325f6c7524",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 175104
+  },
+  "lungs": {
+    "file": "v_lungs.mp3",
+    "hash": "dd16a498e9ff",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 153072
+  },
+  "brain": {
+    "file": "v_brain.mp3",
+    "hash": "81cb13b5d6a1",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 148608
+  },
+  "liver": {
+    "file": "v_liver.mp3",
+    "hash": "b7c0b089cc16",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 164880
+  },
+  "stomach": {
+    "file": "v_stomach.mp3",
+    "hash": "fe30c3486c10",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 147312
+  },
+  "small-intestine": {
+    "file": "v_small-intestine.mp3",
+    "hash": "5bcbdfb246b0",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 148320
+  },
+  "large-intestine": {
+    "file": "v_large-intestine.mp3",
+    "hash": "70b638920ed3",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 140256
+  },
+  "kidney": {
+    "file": "v_kidney.mp3",
+    "hash": "1b89ec766724",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 150192
+  },
+  "spleen": {
+    "file": "v_spleen.mp3",
+    "hash": "7f42e1988e1c",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 136800
+  },
+  "pancreas": {
+    "file": "v_pancreas.mp3",
+    "hash": "09c062763603",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 142560
+  },
+  "bladder": {
+    "file": "v_bladder.mp3",
+    "hash": "ee036de6908e",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 139104
+  },
+  "aorta": {
+    "file": "v_aorta.mp3",
+    "hash": "cac0c791b205",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 129168
+  },
+  "vena-cava": {
+    "file": "v_vena-cava.mp3",
+    "hash": "de785277ed61",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 138816
+  },
+  "pulmonary-artery": {
+    "file": "v_pulmonary-artery.mp3",
+    "hash": "60fc1d177147",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 118656
+  },
+  "pulmonary-vein": {
+    "file": "v_pulmonary-vein.mp3",
+    "hash": "c8617eee01d1",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 102672
+  },
+  "portal-vein": {
+    "file": "v_portal-vein.mp3",
+    "hash": "7a1d6750ba2f",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 130896
+  },
+  "carotid": {
+    "file": "v_carotid.mp3",
+    "hash": "0363d416930c",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 138096
+  },
+  "capillary": {
+    "file": "v_capillary.mp3",
+    "hash": "78239b4bc47f",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 135216
+  },
+  "systemic": {
+    "file": "v_systemic.mp3",
+    "hash": "30804ef31aed",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 156096
+  },
+  "pulmonary": {
+    "file": "v_pulmonary.mp3",
+    "hash": "2f5175292242",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 138384
+  },
+  "overview": {
+    "file": "v_overview.mp3",
+    "hash": "d52fc17f84fd",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 134496
+  }
+}
