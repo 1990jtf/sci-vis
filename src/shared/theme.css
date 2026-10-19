@@ -188,6 +188,15 @@ canvas { display: block; }
   box-shadow: 0 0 10px currentColor;
 }
 .sv-legend__dot--line { width: 16px; height: 3px; border-radius: 2px; }
+.sv-legend__note {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.10);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--sv-text-faint);
+  letter-spacing: 0.3px;
+}
 
 /* ---------- 信息卡片 ---------- */
 .sv-card {
@@ -203,12 +212,18 @@ canvas { display: block; }
   backdrop-filter: var(--sv-blur);
   -webkit-backdrop-filter: var(--sv-blur);
   padding: 18px 20px 16px;
+  max-height: calc(100vh - 190px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   opacity: 0;
   transform: translateX(18px) scale(0.98);
   pointer-events: none;
   transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .sv-card.is-open { opacity: 1; transform: none; pointer-events: auto; }
+.sv-card::-webkit-scrollbar { width: 6px; }
+.sv-card::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.16); border-radius: 3px; }
+.sv-card::-webkit-scrollbar-track { background: transparent; }
 .sv-card__head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
 .sv-card__dot {
   width: 12px; height: 12px; border-radius: 50%; margin-top: 6px; flex-shrink: 0;
@@ -295,6 +310,12 @@ canvas { display: block; }
 .sv-label--value {
   background: none; border: none; backdrop-filter: none;
   font-size: 11px; color: var(--sv-text-dim); font-weight: 500;
+}
+.sv-label--sm {
+  padding: 2px 7px;
+  font-size: 10.5px;
+  letter-spacing: 0.5px;
+  opacity: 0.82;
 }
 
 /* ---------- 加载层 ---------- */

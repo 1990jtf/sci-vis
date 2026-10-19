@@ -10,13 +10,15 @@
 sci-vis/
 ├── index.html                     # 首页导航（星空动效 + 专题卡片）
 ├── tools/
-│   └── inline-kit.js              # 构建脚本：把共享运行时内联进各页面
+│   ├── inline-kit.js              # 构建脚本：把共享运行时内联进各页面
+│   └── gen-voice.js               # 构建脚本：批量生成神经语音包（edge-tts）
 └── src/
     ├── shared/                    # 共享底座
     │   ├── kit.js                 # 共用运行时（渲染器/泛光/运镜/卡片/语音/程序化纹理/噪声）
     │   ├── theme.css              # 设计系统（面板/按钮/图例/卡片/加载层/标签）
     │   └── *.js                   # 旧版参考实现（已被 kit.js 取代）
-    ├── solar-system/solar-system.html   # 太阳系（程序化行星 + 泛光 + 漫游）
+    ├── audio/solar-system/        # 预生成的神经语音讲解（v_<id>.mp3 + index.json）
+    ├── solar-system/solar-system.html   # 太阳系（程序化行星 + 卫星 + 泛光 + 漫游）
     ├── circulation/circulation.html     # 血液循环（霓虹血管 + 心跳动画）
     ├── weather/weather.html             # 水循环（PBR 海面 + 云雨 + 流程聚焦）
     ├── dinosaur/                         # 恐龙年代（真实骨骼动画 + 小行星事件）
@@ -31,29 +33,50 @@ sci-vis/
 - **shared/kit.js**：共用运行时（ES Module）：渲染器（ACES + UnrealBloom）、平滑运镜 makeFly、拾取 makePicker、语音、信息卡片、程序化纹理 planetTexture（fbm 噪声）、星空等。页面通过 SciVis.init(THREE, {OrbitControls, EffectComposer, RenderPass, UnrealBloomPass}) 注入依赖。
 - **单文件交付**：为保证 file:// 双击可用，页面内的 kit 已内联。修改 kit.js 后运行 `node tools/inline-kit.js` 重新内联。
 
+## 语音讲解方案
+
+浏览器自带的 `speechSynthesis` 只能调用操作系统音色（macOS 上的 "Tingting" 等），机械感强、断句生硬。项目因此做了两级方案，`S.createVoice({ audioBase })` 自动选择：
+
+1. **神经语音包（首选）**：用微软 Edge 神经网络音色（`zh-CN-XiaoxiaoNeural`，温柔女声）离线预生成 mp3，放在 `src/audio/<页面>/v_<id>.mp3`。真人感强、无需 API Key、断网也能播；缺失时自动降级。
+2. **浏览器语音（兜底）**：按"云端自然音 > 增强音色 > 本地音色"打分挑最优中文音色，并把长句按标点切成短句依次朗读（句间 90ms 停顿），比直接取第一个中文音色自然得多。
+
+重新生成某页的语音包（改了 `say` 文案后要跑一次）：
+
+```bash
+pip install edge-tts
+node tools/gen-voice.js src/solar-system/solar-system.html
+# 换音色 / 语速：
+VOICE=zh-CN-YunxiNeural RATE=-2% node tools/gen-voice.js src/solar-system/solar-system.html
+```
+
+脚本会读取页面里 `/* @voice-data-begin */ … /* @voice-data-end */` 之间的数据块，逐条取 `say` 文案合成，文案没变就跳过；`index.json` 记录每条文案的哈希，页面上 `S.narrate(info)` 与语音包用的是同一份文案。其他页面想接入，只需给数据块加这两个标记、给实体加 `id` 与 `say`，再把 `voice.speak(text)` 改成 `voice.speak(S.narrate(data), data.id)`。
+
+可选音色：`zh-CN-XiaoxiaoNeural`（女·温柔）、`zh-CN-XiaoyiNeural`（女·童趣）、`zh-CN-YunxiNeural`（男·活泼）、`zh-CN-YunjianNeural`（男·浑厚）。
+
 ## 科普列表
 
 
 ### 🪐 太阳系 · 地球自转与公转（src/solar-system/solar-system.html）
 
-基于 Three.js 制作的交互式太阳系 3D 演示，包含太阳与八大行星（水星、金星、地球、火星、木星、土星、天王星、海王星）。
+基于 Three.js 制作的交互式太阳系 3D 演示，包含太阳、八大行星（水星、金星、地球、火星、木星、土星、天王星、海王星）与 9 颗卫星（月球 + 火卫一/二、木卫一/二/三/四、土卫六、天卫三、海卫一）。
 
 **核心功能：**
 
-- **行星自转与公转**：每颗行星按相对真实的速度绕太阳公转并自转，保留自转轴倾角
-- **交互查看**：点击任意行星或太阳，弹出介绍卡片，展示直径、公转周期、表面温度等科普数据
-- **语音讲解**：使用浏览器 Web Speech API 朗读选中天体的介绍（可开关）
-- **自动漫游**：一键自动漫游，镜头依次飞向各天体并语音介绍
-- **卫星系统**：地球、火星、木星、土星、天王星、海王星带有多颗环绕卫星
-- **轨道可视化**：以半透明圆环展示各行星公转轨道
-- **自由视角**：鼠标拖拽旋转视角，滚轮缩放（OrbitControls）
+- **行星自转与公转**：每颗行星按相对真实的速度绕太阳公转并自转，保留自转轴倾角；卡片里给出真实的自转周期与公转周期
+- **卫星系统**：月球绕地球公转，自转与公转同步（潮汐锁定，永远是同一面朝我们）；火星、木星、土星、天王星、海王星各带代表卫星，可点击查看
+- **距离三件套**：每个天体同时给出「距太阳（公里）」「折合光年」「光行时」——例如地球 1.50 亿 km / 1.58×10⁻⁵ 光年 / 8 分 19 秒，帮孩子建立"光也要跑很久"的尺度感
+- **交互查看**：点击任意天体或标签，弹出介绍卡片（自转周期、公转周期、直径、卫星数、温度等）
+- **语音讲解**：神经语音（晓晓）真人感讲解，选中天体即朗读（可开关）
+- **自动漫游**：一键自动漫游，镜头依次飞向各天体并语音介绍（含月球）
+- **轨道可视化**：半透明圆环展示行星与卫星的轨道
+- **自由视角**：鼠标拖拽旋转视角，滚轮缩放（OrbitControls），选中后镜头上跟随天体
 - **土星环**：为土星绘制了标志性的环
 
 **操作方式：**
 
 | 操作 | 说明 |
 | ---- | ---- |
-| 点击天体 | 查看科普介绍卡片 |
+| 点击天体 / 名称标签 | 查看科普介绍卡片 |
 | 拖拽 | 旋转视角 |
 | 滚轮 | 缩放 |
 | 🔊 按钮 | 开启/关闭语音 |
@@ -65,10 +88,13 @@ sci-vis/
 - 使用 Three.js 0.160（通过 importmap 从 CDN 加载，无需本地构建）
 - 自包含单文件页面，可直接 `file://` 打开
 - `OrbitControls` 实现轨道相机控制
-- `CSS2DRenderer` 实现天体名称标签
+- `CSS2DRenderer` 实现天体名称标签（标签可点击，点小卫星更省事）
 - `Raycaster` 实现点击拾取
-- `Web Speech API`（`speechSynthesis`）实现中文语音讲解
+- `S.createVoice({ audioBase })` 播放预生成的神经语音，缺失时降级到 `speechSynthesis`
+- 光年 / 光行时由公里数实时换算（1 光年 = 9.4607 万亿 km，光速 299792.458 km/s），数据只有一份来源
 - 2000 颗随机分布的点作为星空背景
+
+> 说明：轨道速度按真实周期比例压缩显示（否则海王星一年要等 164 年），但卡片里的周期、直径、距离都是真实值。
 
 ## 科普列表
 
@@ -147,5 +173,6 @@ python3 -m http.server 8000
 ## 技术栈
 
 - [Three.js](https://threejs.org/) — 3D 渲染引擎（importmap 从 CDN 加载）
-- Web Speech API — 语音合成
+- [edge-tts](https://github.com/rany2/edge-tts) — 离线批量生成神经网络语音讲解（构建期使用，运行期只播 mp3）
+- Web Speech API — 语音包缺失时的兜底朗读
 - 原生 HTML / CSS / JavaScript（ES Module，单文件内联）

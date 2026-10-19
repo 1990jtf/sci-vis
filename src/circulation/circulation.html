@@ -58,6 +58,9 @@
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     
 
+
+
+
     // ===== SciVis Kit（由 tools/inline-kit.js 自动内联，勿手改） =====
     const SciVis = (function () {
     
@@ -193,33 +196,159 @@
       return { flyTo, update, cancel, isActive: () => state.active };
     }
     
-    /* ---------------- 语音（中文） --------- */
-    function createVoice() {
-      const synth = window.speechSynthesis;
-      let enabled = true, zhVoice = null;
+    /* ---------------- 讲解文案（卡片 / 语音共用一份） --------- */
+    // 优先用 info.say（写给"耳朵"的口语讲解），没有时用结构化字段拼一句
+    function narrate(info) {
+      if (!info) return '';
+      if (info.say) return info.say;
+      const parts = [info.name + '。'];
+      if (info.type) parts.push(info.type + '。');
+      if (info.stats && info.stats.length) {
+        parts.push(info.stats.map((s) => s.label + '，' + s.value).join('。') + '。');
+      }
+      if (info.desc && info.desc.length) parts.push(info.desc.join('。'));
+      return parts.join('').replace(/。{2,}/g, '。');
+    }
+    
+    /* ---------------- 语音（神经语音包优先，浏览器语音兜底） ---------------- */
+    /**
+     * 两级语音方案：
+     *   1) 预生成的神经语音包（edge-tts 晓晓 / 云希等）—— 音质接近真人，
+     *      文件命名 v_<id>.mp3，放在 audioBase 目录下，离线可用、无密钥。
+     *   2) 浏览器 speechSynthesis —— 语音包里没有这句时兜底，并做了音色排序
+     *      （优先云端自然音 / 增强音色）与按句切分，比直接取第一个中文音色自然得多。
+     *
+     * 用法：const voice = S.createVoice({ audioBase: '../audio/solar-system/' });
+     *       voice.speak(S.narrate(data), data.voiceId);
+     */
+    function createVoice(opts) {
+      opts = opts || {};
+      const audioBase = opts.audioBase || null;   // 语音包目录，留空则纯浏览器语音
+      const synth = window.speechSynthesis || null;
+      let enabled = true;
+      let zhVoice = null;
+      let audioEl = null;
+      let seq = 0;                                 // 打断计数：切天体时丢弃旧队列
+      const missing = Object.create(null);         // 语音包里不存在的 id，只探测一次
+    
+      /* --- 音色挑选：给候选中文音色打分，取最自然的一个 --- */
+      function score(v) {
+        const name = (v.name || '').toLowerCase();
+        const lang = (v.lang || '').toLowerCase();
+        let s = 0;
+        if (/xiaoxiao|xiaoyi|yunxi|yunjian|晓晓|云希|云扬/.test(name)) s += 60;
+        if (/natural|neural|premium|enhanced|自然/.test(name)) s += 40;
+        if (/google/.test(name)) s += 32;                 // Chrome 云端音，韵律较自然
+        if (/ting-?ting|tingting|meijia|sinji|婷婷|美佳|善怡|美嘉/.test(name)) s += 24;
+        if (/^zh[-_]?cn|cmn|^zh$/.test(lang)) s += 18;
+        if (/^zh[-_]?(hk|tw)|yue/.test(lang)) s -= 14;    // 粤语 / 台湾腔，普通话场景降权
+        if (v.localService) s += 6;                       // 本地音：断网也能用
+        return s;
+      }
       function pick() {
-        const vs = synth.getVoices();
-        zhVoice = vs.find((v) => /zh/i.test(v.lang)) || null;
+        if (!synth || !synth.getVoices) return;
+        const all = synth.getVoices() || [];
+        const zh = all.filter((v) => /^zh|cmn|yue/i.test(v.lang || ''));
+        if (!zh.length) return;
+        zhVoice = zh.slice().sort((a, b) => score(b) - score(a))[0] || null;
       }
-      pick();
-      synth.addEventListener('voiceschanged', pick);
-      function speak(text) {
-        if (!enabled || !synth || !text) return;
-        synth.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.02;
-        if (zhVoice) u.voice = zhVoice;
-        synth.speak(u);
+      if (synth) {
+        pick();
+        if (synth.addEventListener) synth.addEventListener('voiceschanged', pick);
       }
-      function toggle() { enabled = !enabled; if (!enabled) synth.cancel(); return enabled; }
-      function stop() { synth.cancel(); }
-      return { speak, toggle, stop, isEnabled: () => enabled };
+    
+      /* --- 兜底：浏览器语音，按句切开逐句念，停顿更自然 --- */
+      function chunk(text) {
+        const parts = String(text).replace(/\s+/g, '').match(/[^。！？；!?]+[。！？；!?]?/g) || [];
+        const out = [];
+        let buf = '';
+        parts.forEach((p) => {
+          if (buf && (buf + p).length > 46) { out.push(buf); buf = p; }
+          else buf += p;
+        });
+        if (buf) out.push(buf);
+        return out.length ? out : [String(text)];
+      }
+      function speakTTS(text) {
+        if (!synth || !text) return;
+        const mySeq = ++seq;
+        const chunks = chunk(text);
+        let i = 0;
+        const next = () => {
+          if (!enabled || mySeq !== seq || i >= chunks.length) return;
+          const u = new SpeechSynthesisUtterance(chunks[i++]);
+          u.lang = 'zh-CN';
+          u.rate = 0.98;
+          u.pitch = 1.0;
+          u.volume = 1.0;
+          if (!zhVoice) pick();
+          if (zhVoice) u.voice = zhVoice;
+          u.onend = () => setTimeout(next, 90);
+          u.onerror = () => {};
+          synth.speak(u);
+        };
+        // Chrome 在 cancel() 之后立刻 speak() 偶发静音，等一小会儿再开口
+        setTimeout(next, 60);
+      }
+    
+      /* --- 首选：播放语音包 --- */
+      function playPack(id, text) {
+        if (!audioEl) {
+          audioEl = new Audio();
+          audioEl.preload = 'auto';
+        }
+        const el = audioEl;
+        let done = false;
+        const fallback = () => {
+          if (done) return;
+          done = true;
+          missing[id] = true;
+          speakTTS(text);
+        };
+        el.onerror = fallback;
+        el.onplaying = () => { el.onerror = null; };
+        el.src = audioBase + 'v_' + id + '.mp3';
+        const p = el.play();
+        if (p && p.catch) p.catch(fallback);
+      }
+    
+      function speak(text, id) {
+        if (!enabled || !text) return;
+        if (id && audioBase && !missing[id]) {
+          seq++;                      // 打断上一句（浏览器语音队列）
+          if (synth) synth.cancel();
+          playPack(id, text);
+          return;
+        }
+        if (audioEl) audioEl.pause();
+        if (synth) synth.cancel();
+        speakTTS(text);
+      }
+      function stop() {
+        seq++;
+        if (audioEl) { try { audioEl.pause(); } catch (e) {} }
+        if (synth) synth.cancel();
+      }
+      function toggle() {
+        enabled = !enabled;
+        if (!enabled) stop();
+        return enabled;
+      }
+      return { speak, stop, toggle, isEnabled: () => enabled, hasPack: !!audioBase };
     }
     
     /* ---------------- 信息卡片（CSS 类 + 结构化字段） --------- */
     function createCard(container) {
-      const el = document.createElement('div');
-      el.className = 'sv-card';
+      // 页面里已有 .sv-card 容器时直接复用，避免套娃出两层透明卡片
+      const host = container && container.nodeType === 1 ? container : document.body;
+      let el;
+      if (host.classList && host.classList.contains('sv-card')) {
+        el = host;
+      } else {
+        el = document.createElement('div');
+        el.className = 'sv-card';
+        host.appendChild(el);
+      }
       el.innerHTML =
         '<div class="sv-card__head">' +
         '  <span class="sv-card__dot"></span>' +
@@ -227,7 +356,6 @@
         '  <button class="sv-card__close" aria-label="关闭">\u00D7</button>' +
         '</div>' +
         '<div class="sv-card__body"></div>';
-      container.appendChild(el);
       const dot = el.querySelector('.sv-card__dot');
       const title = el.querySelector('.sv-card__title');
       const sub = el.querySelector('.sv-card__sub');
@@ -441,7 +569,7 @@
     const exports = {
       init, hash3, valueNoise2, fbm2, clamp, lerp,
       createRenderer, createScene, createCamera, createControls,
-      makeFly, createVoice, createCard, makePicker, makeLabel,
+      makeFly, createVoice, narrate, createCard, makePicker, makeLabel,
       glowTexture, planetTexture, skinTexture, createStarfield,
       toast, bindVoiceButton,
     };
@@ -787,7 +915,7 @@
     /* ================= 交互 ================= */
     const voice = S.createVoice();
     S.bindVoiceButton(document.getElementById('voiceBtn'), voice);
-    const card = S.createCard(document.body);
+    const card = S.createCard(document.getElementById('card') || document.body);
     const picker = S.makePicker(camera, renderer.domElement);
     const fly = S.makeFly(camera, controls);
 

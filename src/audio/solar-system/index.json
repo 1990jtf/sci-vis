@@ -1,0 +1,116 @@
+{
+  "sun": {
+    "file": "v_sun.mp3",
+    "hash": "8237f3e1e3c6",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 102240
+  },
+  "mercury": {
+    "file": "v_mercury.mp3",
+    "hash": "b10367ae7f4a",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 75456
+  },
+  "venus": {
+    "file": "v_venus.mp3",
+    "hash": "fe3115320584",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 99216
+  },
+  "earth": {
+    "file": "v_earth.mp3",
+    "hash": "54d519b90f96",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 91728
+  },
+  "mars": {
+    "file": "v_mars.mp3",
+    "hash": "96690b5721b6",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 84096
+  },
+  "jupiter": {
+    "file": "v_jupiter.mp3",
+    "hash": "1aafe50dbd65",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 89568
+  },
+  "saturn": {
+    "file": "v_saturn.mp3",
+    "hash": "afa0f3e0b90d",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 94752
+  },
+  "uranus": {
+    "file": "v_uranus.mp3",
+    "hash": "1cb2dd39829d",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 79488
+  },
+  "neptune": {
+    "file": "v_neptune.mp3",
+    "hash": "ec07841eba86",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 74304
+  },
+  "moon": {
+    "file": "v_moon.mp3",
+    "hash": "43fb497a66f7",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 124560
+  },
+  "phobos": {
+    "file": "v_phobos.mp3",
+    "hash": "936c0509b658",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 78048
+  },
+  "deimos": {
+    "file": "v_deimos.mp3",
+    "hash": "6b8411da9c87",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 61056
+  },
+  "io": {
+    "file": "v_io.mp3",
+    "hash": "0e20efe5bed3",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 53856
+  },
+  "europa": {
+    "file": "v_europa.mp3",
+    "hash": "bbc9fdab138b",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 61488
+  },
+  "ganymede": {
+    "file": "v_ganymede.mp3",
+    "hash": "648d0a85f479",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 54720
+  },
+  "callisto": {
+    "file": "v_callisto.mp3",
+    "hash": "641298e63e98",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 46368
+  },
+  "titan": {
+    "file": "v_titan.mp3",
+    "hash": "051bc7508c55",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 58176
+  },
+  "titania": {
+    "file": "v_titania.mp3",
+    "hash": "ee2b7f26c0aa",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 44784
+  },
+  "triton": {
+    "file": "v_triton.mp3",
+    "hash": "7908160d6791",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 70560
+  }
+}
