@@ -261,6 +261,18 @@ canvas { display: block; }
 .sv-card__stat:last-child { border-bottom: none; }
 .sv-card__stat b { font-size: 15px; color: #fff; font-weight: 600; }
 
+/* 冷知识：给孩子看的“哇”点，浅底 + 左侧强调线，和普通描述区分开 */
+.sv-card__fact {
+  display: flex; gap: 8px; align-items: flex-start;
+  font-size: 12.5px; line-height: 1.65; color: #e6ecfb;
+  background: rgba(255, 255, 255, 0.055);
+  border-left: 2px solid var(--sv-accent);
+  border-radius: 0 8px 8px 0;
+  padding: 8px 10px;
+}
+.sv-card__fact i { font-style: normal; flex-shrink: 0; line-height: 1.5; }
+.sv-card__fact span { flex: 1; }
+
 /* ---------- 浮动提示 ---------- */
 .sv-tooltip {
   position: absolute;

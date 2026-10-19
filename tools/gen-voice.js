@@ -45,15 +45,39 @@ const html = fs.readFileSync(pageFile, 'utf8');
 const m = html.match(/\/\* @voice-data-begin \*\/([\s\S]*?)\/\* @voice-data-end \*\//);
 if (!m) fail(rel + ' 里找不到 @voice-data-begin / @voice-data-end 标记');
 
-let BODIES;
-try {
-  BODIES = new Function(m[1] + '\nreturn BODIES;')();
-} catch (e) {
-  fail('数据块求值失败：' + e.message);
+const block = m[1];
+// 数据块里可以有多组顶层变量（数组或对象映射），把带 say 的条目全挑出来。
+// 注意块里也可能有辅助函数内部的局部 const，逐个求值、失败就跳过。
+const names = [...new Set(
+  [...block.matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/g)].map((x) => x[1]),
+)];
+const scope = [];
+names.forEach((name) => {
+  try {
+    scope.push({ name, value: new Function(block + '\nreturn ' + name + ';')() });
+  } catch (e) {
+    // 只存在于内层作用域的变量（如工具函数里的临时值），跳过
+  }
+});
+if (!scope.length) fail('数据块求值失败，没有可用的顶层变量');
+
+const items = [];
+scope.forEach(({ name: key, value: v }) => {
+  if (Array.isArray(v)) {
+    v.forEach((it) => { if (it && it.say) addItem(it, it.name || key); });
+  } else if (v && typeof v === 'object') {
+    // 对象映射（如 SPECIES）：变量名是分类，键名才是条目名
+    Object.entries(v).forEach(([k, it]) => { if (it && it.say) addItem(it, it.name || k); });
+  }
+});
+
+function addItem(it, fallbackName) {
+  const id = it.id || it.voiceId;
+  if (!id) return;
+  items.push({ id, name: fallbackName, text: it.say });
 }
 
-const items = BODIES.filter((b) => b.say).map((b) => ({ id: b.id, name: b.name, text: b.say }));
-if (!items.length) fail('数据块里没有带 say 文案的天体');
+if (!items.length) fail('数据块里没有带 say 文案的条目');
 console.log(`页面：${rel}\n音色：${VOICE}    语速：${RATE}\n共 ${items.length} 条讲解 → ${path.relative(ROOT, outDir)}`);
 
 /* --- 2. 准备环境 --- */

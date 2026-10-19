@@ -17,7 +17,9 @@ sci-vis/
     │   ├── kit.js                 # 共用运行时（渲染器/泛光/运镜/卡片/语音/程序化纹理/噪声）
     │   ├── theme.css              # 设计系统（面板/按钮/图例/卡片/加载层/标签）
     │   └── *.js                   # 旧版参考实现（已被 kit.js 取代）
-    ├── audio/solar-system/        # 预生成的神经语音讲解（v_<id>.mp3 + index.json）
+    ├── audio/                     # 预生成的神经语音讲解（v_<id>.mp3 + index.json）
+    │   ├── solar-system/          # 太阳系 19 段
+    │   └── dinosaur/              # 恐龙 12 段
     ├── solar-system/solar-system.html   # 太阳系（程序化行星 + 卫星 + 泛光 + 漫游）
     ├── circulation/circulation.html     # 血液循环（霓虹血管 + 心跳动画）
     ├── weather/weather.html             # 水循环（PBR 海面 + 云雨 + 流程聚焦）
@@ -49,7 +51,14 @@ node tools/gen-voice.js src/solar-system/solar-system.html
 VOICE=zh-CN-YunxiNeural RATE=-2% node tools/gen-voice.js src/solar-system/solar-system.html
 ```
 
-脚本会读取页面里 `/* @voice-data-begin */ … /* @voice-data-end */` 之间的数据块，逐条取 `say` 文案合成，文案没变就跳过；`index.json` 记录每条文案的哈希，页面上 `S.narrate(info)` 与语音包用的是同一份文案。其他页面想接入，只需给数据块加这两个标记、给实体加 `id` 与 `say`，再把 `voice.speak(text)` 改成 `voice.speak(S.narrate(data), data.id)`。
+脚本会读取页面里 `/* @voice-data-begin */ … /* @voice-data-end */` 之间的数据块，把里头的顶层数组 / 对象映射摊平，逐条取带 `id` 与 `say` 的条目合成，文案没变就跳过；`index.json` 记录每条文案的哈希。已接入语音包的页面：
+
+| 页面 | 音频目录 | 条数 |
+| --- | --- | --- |
+| 太阳系 | `src/audio/solar-system/` | 19 |
+| 恐龙 | `src/audio/dinosaur/` | 12 |
+
+其他页面想接入，只需给数据块加这两个标记、给实体加 `id` 与 `say`，再 `S.createVoice({ audioBase: '../audio/<页面>/' })` + `voice.speak(data.say, data.id)`。
 
 可选音色：`zh-CN-XiaoxiaoNeural`（女·温柔）、`zh-CN-XiaoyiNeural`（女·童趣）、`zh-CN-YunxiNeural`（男·活泼）、`zh-CN-YunjianNeural`（男·浑厚）。
 
@@ -134,11 +143,13 @@ VOICE=zh-CN-YunxiNeural RATE=-2% node tools/gen-voice.js src/solar-system/solar-
 **核心功能：**
 
 - **真实 3D 恐龙**：使用 CC0 授权的 Gobkit 恐龙模型（GLB），带完整骨骼与 idle / walk / attack / dead 四段动画
-- **地质年代漫游**：三叠纪（翼龙、兽脚类）→ 侏罗纪（剑龙）→ 白垩纪（霸王龙、三角龙、甲龙）
-- **骨骼动画**：恐龙按 idle 待机、绕圈巡游时切换 walk、被点击时触发 attack
-- **小行星撞击事件**：白垩纪点击「小行星撞击」，火球坠落、天空被尘埃遮蔽，所有恐龙应声倒下（dead 动画）
+- **地质年代漫游**：三叠纪（真双型齿翼龙、腔骨龙）→ 侏罗纪（剑龙一家、翼手龙）→ 白垩纪（霸王龙、三角龙、甲龙、食肉牛龙）
+- **8 种史前生物档案**：每种 6 条数据（体长 / 体重 / 年代 / 食性 …）+ 4 条描述 + 2~3 条「冷知识」，全部按适合孩子听的口语写
+- **神经语音讲解**：进入每一纪自动讲这一纪的故事，点恐龙讲这只恐龙；`🎧 再讲一遍` 可以重听。音频由 edge-tts 预生成在 `src/audio/dinosaur/`（12 段，约 2 MB），缺失时自动回退浏览器语音
+- **小行星撞击事件**：白垩纪点击「小行星撞击」，火球坠落、天空被尘埃遮蔽，所有恐龙应声倒下（dead 动画），并播放灭绝旁白
 - **环境变迁**：渐变天空穹顶、噪声起伏地形、蕨类 / 针叶林 / 阔叶林随年代更替，实时软阴影
-- **交互与讲解**：点击恐龙查看品种资料卡、镜头平滑聚焦、中文语音讲解
+- **交互与讲解**：点恐龙身体或点名字标签都能选中，镜头平滑聚焦、恐龙做一次攻击动作
+- **时间漫游**：自动依次播放三个纪，每纪停留 26 秒，刚好听完讲解
 
 > 模型来源：Gobkit Free Dinosaur Pack（CC0 1.0，可商用、无需署名），存放于 `src/dinosaur/models/`。
 

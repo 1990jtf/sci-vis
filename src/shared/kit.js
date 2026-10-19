@@ -315,9 +315,14 @@ export function createCard(container) {
     body.innerHTML = '';
     if (data.stats && data.stats.length) {
       data.stats.forEach((s) => {
+        // 兼容两种写法：[label, value] 数组 或 { label, value } 对象
+        const label = Array.isArray(s) ? s[0] : s.label;
+        const value = Array.isArray(s) ? s[1] : s.value;
         const row = document.createElement('div');
         row.className = 'sv-card__stat';
-        row.innerHTML = '<span>' + s.label + '</span><b>' + s.value + '</b>';
+        row.innerHTML = '<span></span><b></b>';
+        row.querySelector('span').textContent = label == null ? '' : label;
+        row.querySelector('b').textContent = value == null ? '' : value;
         body.appendChild(row);
       });
     }
@@ -326,6 +331,15 @@ export function createCard(container) {
         const row = document.createElement('div');
         row.className = 'sv-card__row';
         row.textContent = line;
+        body.appendChild(row);
+      });
+    }
+    if (data.facts && data.facts.length) {
+      data.facts.forEach((line) => {
+        const row = document.createElement('div');
+        row.className = 'sv-card__fact';
+        row.innerHTML = '<i>\uD83D\uDCA1</i><span></span>';
+        row.querySelector('span').textContent = line;
         body.appendChild(row);
       });
     }
@@ -340,6 +354,8 @@ export function createCard(container) {
 export function makePicker(camera, dom) {
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
+  // targets 可以是数组，也可以是返回数组的函数（换场景后数组会被整体替换）
+  const resolve = (targets) => (typeof targets === 'function' ? targets() : targets) || [];
   function setFromEvent(e) {
     const r = dom.getBoundingClientRect();
     ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
@@ -348,7 +364,8 @@ export function makePicker(camera, dom) {
   }
   function pick(e, targets) {
     setFromEvent(e);
-    const hits = raycaster.intersectObjects(targets, true);
+    const list = resolve(targets);
+    const hits = raycaster.intersectObjects(list, true);
     return hits.length ? hits[0].object : null;
   }
   function onHover(targets, cb) {
