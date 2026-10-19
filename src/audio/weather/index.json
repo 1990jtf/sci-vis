@@ -1,0 +1,104 @@
+{
+  "evap": {
+    "file": "v_evap.mp3",
+    "hash": "76812a771c0b",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 139392
+  },
+  "transp": {
+    "file": "v_transp.mp3",
+    "hash": "12ba2b257454",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 140832
+  },
+  "cond": {
+    "file": "v_cond.mp3",
+    "hash": "b79d34921b4d",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 133344
+  },
+  "precip": {
+    "file": "v_precip.mp3",
+    "hash": "d5003de9cd3e",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 143856
+  },
+  "runoff": {
+    "file": "v_runoff.mp3",
+    "hash": "8ab3ffa1b772",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 142272
+  },
+  "infil": {
+    "file": "v_infil.mp3",
+    "hash": "11f650a22b39",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 152208
+  },
+  "collect": {
+    "file": "v_collect.mp3",
+    "hash": "7a254a6abc2c",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 138672
+  },
+  "sun": {
+    "file": "v_sun.mp3",
+    "hash": "79a01cbfbe72",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 93168
+  },
+  "ocean": {
+    "file": "v_ocean.mp3",
+    "hash": "72bd6d55d329",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 125568
+  },
+  "cloud": {
+    "file": "v_cloud.mp3",
+    "hash": "3a79d48699e0",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 116064
+  },
+  "peak": {
+    "file": "v_peak.mp3",
+    "hash": "45be42a58c04",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 136368
+  },
+  "forest": {
+    "file": "v_forest.mp3",
+    "hash": "dd34a0b83b77",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 132048
+  },
+  "lake": {
+    "file": "v_lake.mp3",
+    "hash": "ee1fd3ad1ab6",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 113760
+  },
+  "overview": {
+    "file": "v_overview.mp3",
+    "hash": "9f021720097c",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 123120
+  },
+  "seg-ocean": {
+    "file": "v_seg-ocean.mp3",
+    "hash": "54d3995e87b1",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 82080
+  },
+  "seg-air": {
+    "file": "v_seg-air.mp3",
+    "hash": "c5ac09f1bdeb",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 87696
+  },
+  "seg-land": {
+    "file": "v_seg-land.mp3",
+    "hash": "a3c238a265d4",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 90432
+  }
+}

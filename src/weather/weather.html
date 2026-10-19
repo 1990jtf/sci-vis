@@ -6,27 +6,90 @@
   <title>天气系统 · 水循环</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJnIiBjeD0iMzUlIiBjeT0iMzAlIiByPSI3NSUiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2M3ZDJmZSIvPjxzdG9wIG9mZnNldD0iLjU1IiBzdG9wLWNvbG9yPSIjNjM2NmYxIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMzEyZTgxIi8+PC9yYWRpYWxHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwYjEwMjAiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNyIgZmlsbD0idXJsKCNnKSIvPjxlbGxpcHNlIGN4PSIzMiIgY3k9IjMyIiByeD0iMjUiIHJ5PSI4IiBmaWxsPSJub25lIiBzdHJva2U9IiNhNWI0ZmMiIHN0cm9rZS13aWR0aD0iMi42IiBvcGFjaXR5PSIuOSIgdHJhbnNmb3JtPSJyb3RhdGUoLTIyIDMyIDMyKSIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjE3IiBmaWxsPSJub25lIiBzdHJva2U9IiNlMGU3ZmYiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iLjUiLz48L3N2Zz4=" />
   <link rel="stylesheet" href="../shared/theme.css" />
+  <style>
+    /* 环节索引：左侧竖排，颜色点与场景里的粒子/标签对应 */
+    .wx-index {
+      position: absolute;
+      left: 24px;
+      top: 118px;
+      width: 178px;
+      z-index: 12;
+      padding: 14px 12px 12px;
+    }
+    .wx-list { display: flex; flex-direction: column; gap: 3px; margin-top: 10px; }
+    .wx-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 9px;
+      border-radius: 9px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--sv-text-dim);
+      font-family: inherit;
+      font-size: 12.5px;
+      letter-spacing: 0.4px;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    }
+    .wx-item:hover { background: rgba(255, 255, 255, 0.07); color: #eef6ff; }
+    .wx-item.is-on {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: rgba(56, 189, 248, 0.45);
+      color: #e8f7ff;
+    }
+    .wx-item__dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+      box-shadow: 0 0 9px currentColor;
+    }
+    . wx-note { display: none; }
+
+    /* 分段 / 天气按钮的选中态 */
+    .sv-btn.is-on {
+      background: rgba(56, 189, 248, 0.18);
+      border-color: rgba(56, 189, 248, 0.42);
+      color: #eaf8ff;
+    }
+
+    /* 次级标签（湖泊、森林等）压小一号，不抢主环节 */
+    .sv-label.is-minor { font-size: 10.5px; opacity: 0.7; padding: 2px 7px; }
+
+    .sv-label-wrap { pointer-events: none; }
+    .sv-hint { bottom: 108px !important; color: rgba(10, 40, 60, 0.72); text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45); }
+    .sv-toast { bottom: 132px !important; }
+
+    @media (max-width: 1080px) {
+      .wx-index { display: none; }
+    }
+    @media (max-width: 900px) {
+      .sv-dock {
+        padding: 5px 6px; gap: 2px;
+        flex-wrap: wrap; max-width: calc(100vw - 24px);
+      }
+      .sv-dock .sv-btn { font-size: 11px; padding: 6px 8px; }
+      .sv-dock__sep { margin: 0 2px; }
+      .sv-card { max-height: 44vh; overflow-y: auto; }
+    }
+  </style>
 </head>
 <body>
   <div class="sv-loader" id="loader">
     <div class="sv-loader__ring"></div>
-    <div class="sv-loader__text">正在汇聚云层…</div>
+    <div class="sv-loader__text">正在凝聚水汽…</div>
   </div>
 
   <div class="sv-brand sv-in" style="--sv-accent:#38bdf8">
     <div class="sv-brand__eyebrow">Water Cycle</div>
     <div class="sv-brand__title">天气系统 · 水循环</div>
-    <div class="sv-brand__sub">蒸发 → 冷凝 → 降水 → 径流 · 一滴水的旅行</div>
+    <div class="sv-brand__sub">蒸发 → 蒸腾 → 凝结 → 降水 → 径流 → 下渗 · 一滴水的旅行</div>
   </div>
 
   <button class="sv-iconbtn sv-iconbtn--top" id="voiceBtn" title="语音开关">🔊</button>
 
-  <div class="sv-legend sv-panel sv-in">
-    <div class="sv-panel__title">水循环过程</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#ffb347;color:#ffb347"></span>蒸发 · 水汽受热上升</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#e8f4ff;color:#e8f4ff"></span>冷凝 · 水汽聚成云</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#5eb8ff;color:#5eb8ff"></span>降水 · 雨滴落回大地</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#8ecae6;color:#8ecae6"></span>径流 · 汇入江河海洋</div>
+  <div class="sv-panel sv-in wx-index">
+    <div class="sv-panel__title">水循环环节</div>
+    <div class="wx-list" id="stageList"></div>
   </div>
 
   <div class="sv-card" id="card"></div>
@@ -34,13 +97,16 @@
   <div class="sv-dock sv-in">
     <button class="sv-btn" id="playBtn"><span class="sv-btn__icon">⏸</span><span>暂停</span></button>
     <span class="sv-dock__sep"></span>
-    <button class="sv-btn sv-btn--ghost" data-focus="太阳">☀️ 太阳</button>
-    <button class="sv-btn sv-btn--ghost" data-focus="云">☁️ 云</button>
-    <button class="sv-btn sv-btn--ghost" data-focus="海洋">🌊 海洋</button>
-    <button class="sv-btn sv-btn--ghost" id="resetBtn">🔄 全景</button>
+    <button class="sv-btn sv-btn--ghost is-on" data-seg="overview">全景</button>
+    <button class="sv-btn sv-btn--ghost" data-seg="ocean">海洋段</button>
+    <button class="sv-btn sv-btn--ghost" data-seg="air">大气段</button>
+    <button class="sv-btn sv-btn--ghost" data-seg="land">陆地段</button>
+    <span class="sv-dock__sep"></span>
+    <button class="sv-btn sv-btn--ghost" id="weatherBtn"><span class="sv-btn__icon">☀️</span><span>晴朗</span></button>
+    <button class="sv-btn sv-btn--ghost" id="resetBtn"><span class="sv-btn__icon">🔄</span><span>重置</span></button>
   </div>
 
-  <div class="sv-hint">点击太阳 / 云 / 海洋查看介绍 · 拖拽旋转 · 滚轮缩放</div>
+  <div class="sv-hint">点击任意环节或场景物体查看介绍 · 拖拽旋转 · 滚轮缩放</div>
 
   <script type="importmap">
   {
@@ -57,13 +123,7 @@
     import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
     import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
     import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-    import { CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
-    
-
-
-
-
-
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
     // ===== SciVis Kit（由 tools/inline-kit.js 自动内联，勿手改） =====
     const SciVis = (function () {
@@ -599,329 +659,1308 @@
     return exports;
     })();
 
+    /* ==================================================================
+       科普数据
+       7 个环节 + 6 个实体 + 3 个分段，每条都带口语讲解（给语音包用）
+       ================================================================== */
+    /* @voice-data-begin */
+    const STAGES = [
+      {
+        id: 'evap', name: '蒸发', en: 'Evaporation', color: '#ffb45c',
+        type: '水循环 · 第 1 环（海洋段）',
+        stats: [
+          ['全球年蒸发', '约 50 万 km³'],
+          ['其中来自海洋', '约 86%'],
+          ['汽化热', '约 2260 kJ/kg'],
+          ['海水盐度', '约 35‰'],
+        ],
+        desc: [
+          '太阳晒热海面，表层水分子获得足够能量挣脱液面，变成看不见的水汽升入空中。',
+          '蒸发只带走水、把盐留在海里——这正是海水变咸、雨水却是淡的原因。',
+        ],
+        facts: [
+          '全球每分钟约有 950 万吨水从海面升空。',
+          '蒸发同时带走大量热量，所以出汗、喷水都能降温。',
+        ],
+        say: '太阳一出来，海面就开始冒看不见的水汽。海水被晒热，表面的水分子跑得飞快，一个个挣脱水面飞到空中，这就是蒸发。全世界每年从海面和地面升空的水，大约有五十万立方公里。有意思的是，盐留在了海里，升上去的全是淡水。',
+      },
+      {
+        id: 'transp', name: '蒸腾', en: 'Transpiration', color: '#7ed957',
+        type: '水循环 · 第 2 环（陆地段）',
+        stats: [
+          ['一棵大树每天', '100 ~ 400 L'],
+          ['森林蒸腾占比', '陆地蒸发的 6 成'],
+          ['叶片气孔', '每平方毫米数百个'],
+          ['亚马逊自产降雨', '约一半'],
+        ],
+        desc: [
+          '树根从土壤吸水，经树干送到叶片，再从气孔变成水汽散入大气——植物也在"出汗"。',
+          '森林蒸腾的水汽会被风带回陆地，再次变成雨，所以雨林能给自己造雨。',
+        ],
+        facts: [
+          '一片成熟森林一天蒸腾的水，可以超过一座中型水库的放水量。',
+          '砍掉森林，蒸腾减少、降雨跟着减少，地表也更容易被冲走。',
+        ],
+        say: '森林也在偷偷出汗。树根从土里吸水，顺着树干送到叶子，再从叶子上的小孔变成水汽飘走，这叫蒸腾。一棵大树一天能蒸腾一百到四百升水。亚马逊雨林蒸腾出去的水汽，又被风吹回来变成雨，所以人们说雨林会自己造雨。',
+      },
+      {
+        id: 'cond', name: '凝结', en: 'Condensation', color: '#cfe6ff',
+        type: '水循环 · 第 3 环（大气段）',
+        stats: [
+          ['云滴直径', '约 0.02 mm'],
+          ['1 m³ 云含水量', '约 0.5 g'],
+          ['必需条件', '凝结核 + 降温'],
+          ['一朵积云质量', '约 500 吨'],
+        ],
+        desc: [
+          '水汽升到高空，遇冷后附着在尘埃、海盐、花粉等凝结核上，凝成微小水滴或冰晶，聚成云。',
+          '云滴小到几乎不往下掉，被上升气流托在空中——所以云其实是悬在空中的雾。',
+        ],
+        facts: [
+          '云滴要长大约 100 万倍，才能凑成一滴雨。',
+          '没有凝结核，水汽在洁净空气里很难凝结，云就长不出来。',
+        ],
+        say: '水汽升到高空，那里又冷又稀薄，水汽就赖在尘埃、海盐这些小颗粒上，凝成一颗颗小水滴，聚在一起就是云。云滴特别小，直径只有两百分之一毫米，要一百多万颗才凑成一滴雨。所以你看到的云，其实是悬在空中的雾。',
+      },
+      {
+        id: 'precip', name: '降水', en: 'Precipitation', color: '#5eb8ff',
+        type: '水循环 · 第 4 环（大气段）',
+        stats: [
+          ['全球年降水', '约 50 万 km³'],
+          ['雨滴最大直径', '约 6 mm'],
+          ['下落速度', '约 9 m/s'],
+          ['雪花基本形态', '六重对称'],
+        ],
+        desc: [
+          '云滴在云中不断碰撞合并，长到空气托不住时便下落；途中若一路暖湿就是雨，遇厚冷层则成雪或冰雹。',
+          '降水把大气中的水送回地面，是水循环里"从上往下"的那一半。',
+        ],
+        facts: [
+          '雨滴长到 6 毫米左右就会被气流撕碎，所以不存在"拳头大的雨滴"。',
+          '一片雪花从云到地面，可能要花一小时，因为它的下落速度只有约 1 m/s。',
+        ],
+        say: '云滴在云里撞来撞去，越撞越大。等到长到几毫米、重得空气托不住，就掉下来了，这就是降水。下落的时候如果一路都是暖空气，就是雨；如果半路遇到厚厚的冷层，就变成雪或者冰雹。雨滴最大只能长到六毫米左右，再大就会被空气撕碎。',
+      },
+      {
+        id: 'runoff', name: '径流', en: 'Runoff', color: '#59d2ff',
+        type: '水循环 · 第 5 环（陆地段）',
+        stats: [
+          ['全球河流入海', '约 3.7 万 km³/年'],
+          ['亚马逊河流量', '约 20 万 m³/s'],
+          ['世界最长河流', '尼罗河 6650 km'],
+          ['搬运泥沙', '约 200 亿吨/年'],
+        ],
+        desc: [
+          '降到山地的雨雪，未被土壤吸收的部分汇成细流、溪涧、江河，沿地势一路奔回海洋。',
+          '径流不只是"水流走"，它还搬运泥沙和养分，切出峡谷、堆出三角洲，塑造着地表。',
+        ],
+        facts: [
+          '亚马逊河入海流量，相当于一秒钟灌满 80 个标准泳池。',
+          '河流把陆地上的盐分一点点带进海洋——海洋变咸，是几十亿年径流的结果。',
+        ],
+        say: '落到山上的雨雪，一部分渗进土里，剩下的顺着坡往下流，汇成小溪、小河，一路奔向大海。亚马逊河每秒往大西洋里倒二十万立方米的水，相当于一秒钟灌满八十个标准泳池。全世界河流每年搬进海里的水，大约三万七千立方公里。',
+      },
+      {
+        id: 'infil', name: '下渗', en: 'Infiltration', color: '#8f7bff',
+        type: '水循环 · 第 6 环（陆地段）',
+        stats: [
+          ['全球地下水', '约 2340 万 km³'],
+          ['占全球淡水', '约 30%'],
+          ['土壤下渗率', '砂土 > 黏土'],
+          ['地下水滞留时间', '数十年 ~ 上万年'],
+        ],
+        desc: [
+          '落到地面的水一部分渗入土壤和岩石缝隙，慢慢向下走，补给地下含水层。',
+          '地下水流动极慢，是水循环里最"慢"的一环，也是干旱地区最可靠的淡水来源。',
+        ],
+        facts: [
+          '全球地下水总量，比所有湖泊和河流加起来还要多几十倍。',
+          '你今天打上来的井水，可能是几十年前、甚至上万年前渗下去的雨水。',
+        ],
+        say: '雨水落到地面，不会全部流走。一部分渗进土壤和岩石的缝隙，慢慢往下走，这叫下渗。渗下去的水存在地下，就是地下水，全世界的地下水比所有湖泊和河流加起来还多几十倍。很多地方的井水、泉水，都是几十年前甚至几千年前渗下去的雨水。',
+      },
+      {
+        id: 'collect', name: '汇流', en: 'Collection', color: '#4aa8d8',
+        type: '水循环 · 第 7 环（海洋段）',
+        stats: [
+          ['海洋储水', '约 13.4 亿 km³'],
+          ['占地球总水', '约 96.5%'],
+          ['一滴水留在大气', '平均约 9 天'],
+          ['循环已运行', '约 40 亿年'],
+        ],
+        desc: [
+          '江河与地下水最终回到海洋、湖泊，水体重新汇集，等待下一次被太阳蒸发，循环闭合。',
+          '水既不会凭空产生也不会消失，只是不断在海洋、大气、陆地之间换地方。',
+        ],
+        facts: [
+          '一个水分子平均每隔 9 天就会在大气里待一次，从海面到云再回到地面。',
+          '你喝下的这杯水，其中的氢原子可能比太阳系的年龄还老。',
+        ],
+        say: '最后，所有的水都回到海洋和湖泊，等着下一次被太阳晒起来。一滴水从海面蒸发，到变成雨落回大海，平均只要九天。也就是说，你今天喝的水，可能九天前还在太平洋上空飘着。这个循环已经转了四十多亿年，从来没有停过。',
+      },
+    ];
 
-    const S = SciVis.init(THREE, { OrbitControls, EffectComposer, RenderPass, UnrealBloomPass });
+    const ENTITIES = [
+      {
+        id: 'sun', name: '太阳', en: 'The Sun', color: '#ffd166',
+        type: '水循环的总动力',
+        stats: [
+          ['表面温度', '约 5500 ℃'],
+          ['能量来源', '氢核聚变'],
+          ['地日距离', '约 1.5 亿 km'],
+          ['到达地表功率', '约 1.36 kW/m²'],
+        ],
+        desc: [
+          '太阳是水循环唯一的总开关：它加热海面与陆地，把液态水送上天。',
+          '没有太阳，水会全部躺在地上，天空不会有云，也不会下雨。',
+        ],
+        facts: [
+          '地球接收到的太阳能，大约有一半最终用于驱动蒸发与大气环流。',
+          '阳光从太阳到地球要走 8 分 20 秒。',
+        ],
+        say: '太阳是水循环唯一的总开关。它把热量送到地球，晒热了海面，让水变成水汽飞起来。如果没有太阳，水会全部躺在地上，天空不会有云，也不会下雨。',
+      },
+      {
+        id: 'ocean', name: '海洋', en: 'Ocean', color: '#2f7fb5',
+        type: '最大的水体 · 最大的水汽来源',
+        stats: [
+          ['占地球总水', '约 96.5%'],
+          ['平均深度', '约 3700 m'],
+          ['最大深度', '约 11000 m'],
+          ['贡献全球蒸发', '约 86%'],
+        ],
+        desc: [
+          '海洋是水循环的起点与终点，蒸发从这儿开始，径流也回到这儿。',
+          '海面看似平静，其实每一秒都有成吨的水在悄悄离开。',
+        ],
+        facts: [
+          '如果地球表面全部抹平，海水能淹到 2.7 公里深。',
+          '海水蒸发只带走水，盐留下来——这是海水咸、雨水淡的根本原因。',
+        ],
+        say: '海洋存着地球百分之九十七的水，也是最大的水汽来源。全世界蒸发上去的水，八成六来自海洋。海面看起来平静，其实每一秒都有成吨的水在悄悄离开。也正因为蒸发只带走水、留下盐，海水才是咸的。',
+      },
+      {
+        id: 'cloud', name: '云', en: 'Cloud', color: '#e8f4ff',
+        type: '水汽的临时旅馆',
+        stats: [
+          ['成分', '小水滴 / 小冰晶'],
+          ['云滴直径', '约 0.02 mm'],
+          ['一朵积云质量', '约 500 吨'],
+          ['生命史', '十几分钟 ~ 数小时'],
+        ],
+        desc: [
+          '水汽上升遇冷凝结成云，云是水在大气中的可见形态。',
+          '云滴太小，下落速度还比不过上升气流，所以几百吨的云能飘在空中。',
+        ],
+        facts: [
+          '一朵积云的重量相当于 100 头大象，却因为水滴极小而悬浮。',
+          '云变厚、变暗，说明水滴在长大，离下雨不远了。',
+        ],
+        say: '云是水汽的临时旅馆。一朵普通的积云，重量大约五百吨，相当于一百头大象，却能在天上飘着，因为云滴太小，下落的速度还没有空气上升快。云变厚变黑，说明水滴在长大，离下雨不远了。',
+      },
+      {
+        id: 'peak', name: '雪山', en: 'Snow Peak', color: '#eaf2ff',
+        type: '天然水塔',
+        stats: [
+          ['雪线高度', '随纬度而变'],
+          ['积雪反射率', '高达 80~90%'],
+          ['冰川储淡水', '约 2400 万 km³'],
+          ['长江源头', '唐古拉山冰川'],
+        ],
+        desc: [
+          '空气被山体抬升、冷却，水汽在山坡凝成云、降下雨雪，高山因此成为水塔。',
+          '积雪压成冰，夏天慢慢融化，一点点补给下游河流，让江河不至于忽干忽涝。',
+        ],
+        facts: [
+          '全球约 1/6 的人口，饮用水来自高山冰川和积雪的融水。',
+          '雪面反射阳光，因此雪山比同高度的裸岩冷得多。',
+        ],
+        say: '高山是水循环里的天然水塔。空气被山推着往上爬，越爬越冷，水汽就在山坡上凝成云、变成雨雪。山顶常年零度以下，雪积下来压成冰，到夏天慢慢融化，一点点放水给下游的河流。很多大江大河，源头都是雪山。',
+      },
+      {
+        id: 'forest', name: '森林', en: 'Forest', color: '#5cad4a',
+        type: '陆地上的水土保持器',
+        stats: [
+          ['全球森林覆盖', '约 31% 陆地'],
+          ['截留降水', '林冠可截留 10~30%'],
+          ['枯枝落叶持水', '可达自身数倍'],
+          ['蒸腾贡献', '陆地蒸发的 6 成'],
+        ],
+        desc: [
+          '森林用根系抓牢土壤，用落叶像海绵一样蓄水，让雨水慢慢下渗而不是一次冲走。',
+          '树木蒸腾的水汽又会变成云和雨，森林因此既是"蓄水池"，也是"造雨机"。',
+        ],
+        facts: [
+          '一场暴雨落在裸地上，大部分水会变成洪流；落在森林里，多数会被慢慢吸收。',
+          '毁林会让山洪更猛、旱季更干，这两种灾害往往同时加重。',
+        ],
+        say: '森林是陆地上最会调节水的地方。树根把土抓牢，落叶像海绵一样吸水，下雨时不会一下子全冲走。树木蒸腾出去的水汽又能变成云，所以有大片森林的地方，往往雨也更多。砍掉森林，山洪和干旱都会跟着来。',
+      },
+      {
+        id: 'lake', name: '湖泊', en: 'Lake', color: '#63c7d8',
+        type: '水循环的中转站',
+        stats: [
+          ['全球湖泊储水', '约 17.6 万 km³'],
+          ['占淡水', '约 0.5%（易取用）'],
+          ['最深湖泊', '贝加尔湖 1642 m'],
+          ['换水周期', '数月至数百年'],
+        ],
+        desc: [
+          '河流把水带进湖里，湖泊再慢慢放出去，起到调蓄洪枯的作用。',
+          '湖水流动缓慢，泥沙和养分在这里沉降，湖泊因此也是天然的水质净化器。',
+        ],
+        facts: [
+          '贝加尔湖存着全球约 20% 的不冻淡水。',
+          '湖泊储存的水量虽只占淡水一小部分，却是人类最容易取用的那一部分。',
+        ],
+        say: '湖泊是水循环里的中转站。河流把水带进湖里，湖慢慢再把水放出去，所以下游的河不会一会儿干、一会儿发大水。湖里存的水虽然只占全球淡水的一小部分，却是我们最容易取用的那一部分。',
+      },
+    ];
 
-    /* ================= 科普数据 ================= */
-    const INFO = {
-      太阳: {
-        color: 0xffd166, type: '能量来源',
-        stats: [['表面温度','约 5500 ℃'],['能量来源','氢核聚变'],['地日距离','1.5 亿 km']],
-        desc: ['水循环的全部动力来源', '阳光加热海洋，驱动蒸发'],
+    const SEGMENTS = {
+      overview: {
+        id: 'overview', name: '全景', en: 'Whole Cycle', color: '#8ecae6',
+        type: '一滴水的完整旅程',
+        stats: [
+          ['完整环节', '共 7 环'],
+          ['驱动力', '太阳能 + 重力'],
+          ['大气停留', '平均约 9 天'],
+          ['循环历史', '约 40 亿年'],
+        ],
+        desc: [
+          '水在海洋、大气、陆地之间不断换地方，总量几乎不变。',
+          '太阳负责把水送上天，重力负责把它拉回地面——这个闭环就叫水循环。',
+        ],
+        facts: [
+          '地球上的水总量约 13.9 亿立方公里，几十亿年来几乎没变过。',
+          '同样的水分子，可能当过恐龙的血、冰川的冰、你杯里的茶。',
+        ],
+        say: '水从来没有真正消失过，它只是在海洋、天空和陆地之间不停地搬家。太阳负责把它送上天，重力负责把它拉回地面。这个循环叫做水循环，它已经运转了四十多亿年，我们喝的每一口水，都在其中转过无数圈。',
       },
-      云: {
-        color: 0xe8f4ff, type: '天气现象',
-        stats: [['成分','小水滴 / 小冰晶'],['云滴大小','约 0.02 mm'],['成雨条件','水滴足够大、足够重']],
-        desc: ['水汽上升遇冷凝结成云', '云朵聚集变重就会下雨'],
+      ocean: {
+        id: 'seg-ocean', name: '海洋段', en: 'Ocean Leg', color: '#ffb45c',
+        type: '水循环 · 出发',
+        stats: [
+          ['核心动作', '蒸发 + 汇流'],
+          ['贡献全球蒸发', '约 86%'],
+          ['海洋储水', '13.4 亿 km³'],
+          ['每平方米年蒸发', '约 1.2 m 水深'],
+        ],
+        desc: [
+          '太阳把海面晒热，水汽升空，这是整个循环的起点，也是水量最大的一环。',
+          '绕地球一圈的水，最终又以径流和地下水的形式回到这里，闭合循环。',
+        ],
+        facts: [
+          '海洋每年蒸发掉的水层厚度约 1.2 米，相当于一层楼高。',
+          '蒸发吸热让海洋成为地球最大的"空调"。',
+        ],
+        say: '先看海洋这一站。太阳把海面晒热，水变成水汽升空，这是整个循环的起点，也是水量最大的一环。全球八成六的蒸发都发生在这里。',
       },
-      海洋: {
-        color: 0x2f7fb5, type: '水体',
-        stats: [['占地球水','约 97%'],['平均深度','约 3700 m'],['最大深度','约 11000 m']],
-        desc: ['水循环最大的水汽来源', '蒸发留下盐分，所以海水是咸的'],
+      air: {
+        id: 'seg-air', name: '大气段', en: 'Atmosphere Leg', color: '#cfe6ff',
+        type: '水循环 · 搬运',
+        stats: [
+          ['核心动作', '凝结 + 降水'],
+          ['大气储水', '约 1.29 万 km³'],
+          ['停留时间', '平均约 9 天'],
+          ['云移动速度', '可达 100 km/h'],
+        ],
+        desc: [
+          '水汽升空遇冷凝成云，风把云从海面推向陆地，完成水的水平搬运。',
+          '云滴碰撞长大后落下，变成雨或雪，把水交还给陆地与海洋。',
+        ],
+        facts: [
+          '大气里的水只占全球总水的十万分之一，却支撑了所有天气。',
+          '一朵云平均只能活几十分钟到几小时，水在不断进出。',
+        ],
+        say: '再看大气这一站。水汽升到高空遇冷凝成云，风把云从海面推向陆地。云里的水滴不断碰撞长大，重到托不住的时候，就变成雨或雪落下来。',
       },
-      水循环: {
-        color: 0x8ecae6, type: '自然过程',
-        stats: [['环节','蒸发→冷凝→降水→径流'],['驱动力','太阳能 + 重力'],['特点','周而复始，永不停歇']],
-        desc: ['水在海洋、天空、陆地之间旅行', '让地球上的水用之不竭'],
+      land: {
+        id: 'seg-land', name: '陆地段', en: 'Land Leg', color: '#7ed957',
+        type: '水循环 · 回归',
+        stats: [
+          ['核心动作', '径流 + 下渗'],
+          ['全球河流入海', '3.7 万 km³/年'],
+          ['地下水', '2340 万 km³'],
+          ['陆地蒸发占比', '全球的 14%'],
+        ],
+        desc: [
+          '落到山地的雨雪，一部分渗入地下，一部分汇成江河，沿地势回到海洋。',
+          '这一路带走泥沙与养分，切出峡谷、堆出三角洲，参与塑造地表。',
+        ],
+        facts: [
+          '陆地蒸发虽然只占全球 14%，却几乎全部来自森林与土壤。',
+          '河流每年搬运约 200 亿吨泥沙入海。',
+        ],
+        say: '最后是陆地这一站。雨水落到山上，一部分渗进地下，剩下的汇成溪流、河流，一路流回大海。这一路同时带走泥沙和养分，也塑造了地表的样子。',
       },
     };
 
-    /* ================= 场景 ================= */
-    const scene = new THREE.Scene();
+    const WEATHERS = {
+      clear: { name: '晴朗', icon: '☀️', cloudWhite: 1.0, cloudDark: 0.0, rain: 0.0, sun: 1.0, fog: 0.0008, sky: 0.0 },
+      cloudy: { name: '多云', icon: '⛅', cloudWhite: 0.86, cloudDark: 0.3, rain: 0.0, sun: 0.82, fog: 0.0016, sky: 0.25 },
+      rain: { name: '降雨', icon: '🌧️', cloudWhite: 0.22, cloudDark: 0.9, rain: 0.55, sun: 0.55, fog: 0.0034, sky: 0.62 },
+      storm: { name: '暴雨', icon: '⛈️', cloudWhite: 0.08, cloudDark: 1.0, rain: 1.0, sun: 0.34, fog: 0.0052, sky: 0.88 },
+    };
+    /* @voice-data-end */
 
-    const camera = S.createCamera(48, 0.1, 400);
-    camera.position.set(16, 9, 20);
+    const S = SciVis.init(THREE, { OrbitControls, EffectComposer, RenderPass, UnrealBloomPass });
+
+    /* ==================================================================
+       场景骨架
+       ================================================================== */
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0xc2dbee, 0.0011);
+
+    const camera = S.createCamera(50, 0.1, 500);
+    camera.position.set(28, 16, 34);
 
     const { renderer, composer, renderPass } = S.createRenderer({
-      exposure: 1.0, bloomStrength: 0.25, bloomRadius: 0.6, bloomThreshold: 0.9,
+      exposure: 1.02, bloomStrength: 0.3, bloomRadius: 0.62, bloomThreshold: 0.82,
     });
     renderPass.scene = scene;
     renderPass.camera = camera;
 
-    const controls = S.createControls(camera, renderer.domElement, new THREE.Vector3(0, 3, 0));
-    controls.maxPolarAngle = Math.PI * 0.49;
-    controls.minDistance = 6;
-    controls.maxDistance = 60;
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.body.appendChild(labelRenderer.domElement);
 
-    // 灯光
-    const sunDir = new THREE.Vector3(-14, 16, -10);
-    const hemi = new THREE.HemisphereLight(0xbfe0ff, 0x507040, 0.95);
-    scene.add(hemi);
-    const sunLight = new THREE.DirectionalLight(0xfff0d5, 2.0);
-    sunLight.position.copy(sunDir);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.set(2048, 2048);
-    Object.assign(sunLight.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22 });
-    scene.add(sunLight);
+    const controls = S.createControls(camera, renderer.domElement, new THREE.Vector3(0, 4, 0));
+    controls.minDistance = 12;
+    controls.maxDistance = 96;
+    controls.maxPolarAngle = Math.PI * 0.495;
 
-    /* ================= 渐变天空穹顶 ================= */
-    const skyMat = new THREE.ShaderMaterial({
-      side: THREE.BackSide, depthWrite: false,
-      uniforms: {
-        topColor: { value: new THREE.Color(0x2a63a8) },
-        bottomColor: { value: new THREE.Color(0xa8cbe8) },
-        sunDirection: { value: sunDir.clone().normalize() },
-      },
-      vertexShader: `
-        varying vec3 vDir;
-        void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
-      fragmentShader: `
-        varying vec3 vDir;
-        uniform vec3 topColor, bottomColor, sunDirection;
-        void main(){
-          float h = clamp(vDir.y, 0.0, 1.0);
-          vec3 col = mix(bottomColor, topColor, pow(h, 0.5));
-          float s = pow(max(dot(vDir, sunDirection), 0.0), 32.0);
-          col += vec3(1.0, 0.85, 0.55) * s * 0.5;
-          col = mix(col, vec3(0.82, 0.9, 0.96), pow(1.0 - h, 6.0) * 0.35);
-          gl_FragColor = vec4(col, 1.0);
-        }`,
-    });
-    scene.add(new THREE.Mesh(new THREE.SphereGeometry(180, 32, 20), skyMat));
+    const P = (x, y, z) => new THREE.Vector3(x, y, z);
+    const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+    const lerp = (a, b, t) => a + (b - a) * t;
 
-    /* ================= 太阳（盘 + 光晕） ================= */
-    const sunGroup = new THREE.Group();
-    const sunDisc = new THREE.Mesh(
-      new THREE.CircleGeometry(2.2, 48),
-      new THREE.MeshBasicMaterial({ color: 0xfff3b0, fog: false })
-    );
-    sunDisc.position.copy(sunDir);
-    sunDisc.lookAt(0, 3, 0);
-    sunGroup.add(sunDisc);
-    const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: S.glowTexture('rgba(255,244,200,1)', 'rgba(255,220,140,0.4)'),
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+    /* ==================================================================
+       地形：一座有雪山、森林、湖泊、河流的岛
+       ================================================================== */
+    const ISLAND_R = 33;
+    const LAKE = { x: 5.5, z: 6.6, r: 3.3 };
+    const SEA_Y = 0;
+
+    // 河道折线（雪山 → 湖 → 出湖 → 入海），地形会沿它下切出河谷
+    const RIVER = [
+      [-3.6, -3.2], [-2.4, -2.4], [-1.0, -1.4], [0.6, -0.2], [2.2, 1.2],
+      [3.6, 2.8], [4.8, 4.6],
+      [5.4, 6.4], [6.1, 8.4], [6.5, 10.2], [6.0, 11.6], [5.2, 12.6],
+    ];
+
+    function segDist(px, pz, ax, az, bx, bz) {
+      const vx = bx - ax, vz = bz - az;
+      const wx = px - ax, wz = pz - az;
+      const t = clamp((wx * vx + wz * vz) / (vx * vx + vz * vz || 1), 0, 1);
+      return Math.hypot(px - (ax + vx * t), pz - (az + vz * t));
+    }
+    function riverDist(x, z) {
+      let d = 1e9;
+      for (let i = 0; i < RIVER.length - 1; i++) {
+        const d2 = segDist(x, z, RIVER[i][0], RIVER[i][1], RIVER[i + 1][0], RIVER[i + 1][1]);
+        if (d2 < d) d = d2;
+      }
+      return d;
+    }
+
+    function landMask(x, z) {
+      const ang = Math.atan2(z, x);
+      // 沿角度调制的海岸线：做出岬角、海湾，不再是一个圆
+      const angNoise = (S.fbm2(Math.cos(ang) * 2.6 + 7.2, Math.sin(ang) * 2.6 - 3.4, 3) - 0.5) * 8.0;
+      const r = Math.hypot(x * 1.02, z * 1.18);
+      const edge = 20.0 + angNoise + (S.fbm2(x * 0.11 + 31.7, z * 0.11 + 17.3, 3) - 0.5) * 5.5;
+      let m = 1 - clamp((r - edge * 0.62) / (edge * 0.58), 0, 1);
+      return Math.pow(clamp(m, 0, 1), 1.05);
+    }
+
+    function heightAt(x, z) {
+      const m = landMask(x, z);
+      const g = (cx, cz, h, s) => h * Math.exp(-((x - cx) * (x - cx) + (z - cz) * (z - cz)) / (2 * s * s));
+      // 主峰 + 两座次峰，构成一条西北—东南走向的山脊
+      const mount = g(-7.2, -6.2, 11.6, 4.2) + g(-2.4, -10.6, 7.2, 3.4) + g(-13.0, -3.4, 6.8, 3.2);
+      const ridge = 2.2 * Math.exp(-Math.pow((x * 0.46 - z * 0.52 + 3.2) / 6.4, 2));
+      const rough = (S.fbm2(x * 0.33 + 3.1, z * 0.33 - 8.4, 4) - 0.5) * 3.4;
+      // 山腰以上加一层岩石棱角，山不是一个光滑的馒头
+      const crag = (S.fbm2(x * 0.62 + 11.4, z * 0.62 + 3.7, 3) - 0.5) * 2.0 * clamp((mount - 2.6) / 5.0, 0, 1);
+
+      // 河床 / 湖盆范围内把噪声压平，水面才贴得住
+      const dl = Math.hypot(x - LAKE.x, z - LAKE.z);
+      const rd = riverDist(x, z);
+      const lakeW = Math.exp(-Math.pow(dl / (LAKE.r * 0.78), 2));
+      const riverW = Math.exp(-Math.pow(rd / 1.3, 2));
+      const flatten = 1 - clamp(lakeW * 0.85 + riverW * 0.7, 0, 0.92);
+
+      let h = m * (1.15 + mount + ridge + crag + rough * (0.45 + 0.55 * m) * flatten);
+
+      // 湖盆
+      h -= lakeW * 2.6 * m;
+      // 河谷
+      h -= riverW * 1.75 * m * (1 - lakeW * 0.88);
+
+      // 海岸：先压成缓滩，再向海床快速下沉，避免出现“蛋糕边”
+      const shore = Math.pow(1 - m, 1.6);
+      h = h * m - shore * 6.0 + (1 - m) * 0.5;
+      return h;
+    }
+
+    /* ---- 地形网格 + 顶点色（深海→沙滩→草地→岩石→积雪） ---- */
+    const TERRAIN_SIZE = 74;
+    const SEGS = 150;
+    const terrainGeo = new THREE.PlaneGeometry(TERRAIN_SIZE, TERRAIN_SIZE, SEGS, SEGS);
+    terrainGeo.rotateX(-Math.PI / 2);
+    const tpos = terrainGeo.attributes.position.array;
+    const tcol = new Float32Array(tpos.length);
+
+    const C_DEEP = new THREE.Color(0x07293c);
+    const C_SHALLOW = new THREE.Color(0x2a8fa6);
+    const C_SAND = new THREE.Color(0xd4bc86);
+    const C_GRASS = new THREE.Color(0x548f3d);
+    const C_GRASS2 = new THREE.Color(0x83b356);
+    const C_ROCK = new THREE.Color(0x867c6c);
+    const C_ROCKD = new THREE.Color(0x6f6556);
+    const C_MUD = new THREE.Color(0x6b6450);
+    const C_SNOW = new THREE.Color(0xffffff);
+
+    const hCache = new Float32Array((SEGS + 1) * (SEGS + 1));
+    for (let i = 0; i < tpos.length; i += 3) {
+      const x = tpos[i], z = tpos[i + 2];
+      const h = heightAt(x, z);
+      tpos[i + 1] = h;
+      hCache[i / 3] = h;
+    }
+    // 第二遍：用高度差算坡度，再上色
+    const stride = SEGS + 1;
+    for (let i = 0, vi = 0; i < tpos.length; i += 3, vi++) {
+      const x = tpos[i], z = tpos[i + 2], h = hCache[vi];
+      const ix = vi % stride, iz = Math.floor(vi / stride);
+      const hx = hCache[vi + (ix < SEGS ? 1 : 0)] - hCache[vi - (ix > 0 ? 1 : 0)];
+      const hz = hCache[vi + (iz < SEGS ? stride : 0)] - hCache[vi - (iz > 0 ? stride : 0)];
+      const slope = Math.min(Math.hypot(hx, hz) / (TERRAIN_SIZE / SEGS), 2.2);
+      const grain = S.fbm2(x * 0.55 + 7, z * 0.55 - 2, 3);
+
+      let c = new THREE.Color();
+      if (h < -0.6) {
+        // 水下：浅滩青 → 深海
+        c.copy(C_SHALLOW).lerp(C_DEEP, clamp((-h - 0.6) / 3.4, 0, 1));
+      } else if (h < 0.75) {
+        c.copy(C_SHALLOW).lerp(C_SAND, clamp((h + 0.6) / 1.35, 0, 1));
+      } else if (h < 1.7) {
+        c.copy(C_SAND).lerp(C_GRASS, clamp((h - 0.75) / 0.95, 0, 1));
+      } else if (h < 5.0) {
+        c.copy(C_GRASS).lerp(C_GRASS2, clamp(grain * 1.1, 0, 1));
+        c.lerp(C_ROCK, clamp((slope - 0.9) / 1.0, 0, 1) * 0.5);
+      } else if (h < 6.6) {
+        c.copy(C_GRASS2).lerp(C_ROCKD, clamp((h - 5.0) / 3.0, 0, 1));
+        c.lerp(C_SNOW, clamp((h - 6.0) / 1.0, 0, 1) * clamp(1.35 - slope * 0.65, 0, 1) * 0.85);
+      } else {
+        // 雪线以上：缓坡积雪，陡壁露岩
+        c.copy(C_ROCK).lerp(C_ROCKD, clamp(slope * 0.42, 0, 1));
+        c.lerp(C_SNOW, clamp((h - 6.2) / 1.0, 0, 1) * clamp(1.55 - slope * 0.38, 0, 1));
+      }
+      // 河谷 / 湖岸：湿土色压一压，避免整条谷底泛白
+      const rd = riverDist(x, z);
+      if (h > -0.4 && rd < 3.2) c.lerp(C_MUD, (1 - rd / 3.2) * 0.5);
+      const dl2 = Math.hypot(x - LAKE.x, z - LAKE.z);
+      if (h > -0.4 && dl2 < LAKE.r * 1.5) c.lerp(C_MUD, (1 - dl2 / (LAKE.r * 1.5)) * 0.38);
+      tcol[i] = c.r; tcol[i + 1] = c.g; tcol[i + 2] = c.b;
+    }
+    terrainGeo.setAttribute('color', new THREE.BufferAttribute(tcol, 3));
+    terrainGeo.computeVertexNormals();
+
+    const terrain = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({
+      vertexColors: true, roughness: 0.94, metalness: 0, flatShading: false,
     }));
-    sunGlow.scale.set(13, 13, 1);
-    sunGlow.position.copy(sunDir);
-    sunGroup.add(sunGlow);
-    sunGroup.userData = INFO['太阳'];
-    scene.add(sunGroup);
+    terrain.receiveShadow = true;
+    terrain.castShadow = true;
+    terrain.userData = { name: '陆地', ...SEGMENTS.land, kind: 'segment', key: 'land' };
+    scene.add(terrain);
 
-    /* ================= 海洋（PBR 波浪 shader） ================= */
-    const waterGeo = new THREE.PlaneGeometry(90, 90, 96, 96);
+    /* ---- 湖泊水面 ---- */
+    const lakeBed = heightAt(LAKE.x, LAKE.z);
+    const lakeY = lakeBed + 1.5;
+    const lakeGeo = new THREE.CircleGeometry(LAKE.r * 1.0, 48);
+    lakeGeo.rotateX(-Math.PI / 2);
+    const lake = new THREE.Mesh(lakeGeo, new THREE.MeshPhysicalMaterial({
+      color: 0x2d8fa8, roughness: 0.12, metalness: 0.1, transparent: true, opacity: 0.88,
+      clearcoat: 1, clearcoatRoughness: 0.06, emissive: 0x0d3f52, emissiveIntensity: 0.35,
+    }));
+    lake.position.set(LAKE.x, lakeY, LAKE.z);
+    lake.userData = { ...ENTITIES.find((e) => e.id === 'lake'), kind: 'entity', key: 'lake' };
+    scene.add(lake);
+
+    /* ==================================================================
+       海洋：波浪 + 菲涅尔 + 太阳高光
+       ================================================================== */
+    const waterGeo = new THREE.PlaneGeometry(220, 220, 150, 150);
     waterGeo.rotateX(-Math.PI / 2);
-    const waterBase = waterGeo.attributes.position.array.slice();
     const waterMat = new THREE.ShaderMaterial({
       transparent: true,
-      uniforms: { uTime: { value: 0 }, uSun: { value: sunDir.clone().normalize() } },
+      uniforms: {
+        uTime: { value: 0 },
+        uSun: { value: new THREE.Vector3(0.62, 0.42, 0.18).normalize() },
+        uDeep: { value: new THREE.Color(0x07293d) },
+        uShallow: { value: new THREE.Color(0x1d7c92) },
+        uSky: { value: new THREE.Color(0xa8cbe8) },
+        uGloom: { value: 0 },
+      },
       vertexShader: `
-        varying vec3 vPos; varying vec3 vNormal; varying vec3 vWorld;
+        varying vec3 vNormal; varying vec3 vWorld; varying float vH;
         uniform float uTime;
         float wave(vec2 p, float t){
-          return sin(p.x * 0.8 + t * 1.4) * 0.14
-               + sin(p.y * 1.1 + t * 1.1) * 0.12
-               + sin((p.x + p.y) * 0.5 + t * 0.8) * 0.1;
+          return sin(p.x * 0.34 + t * 0.95) * 0.30
+               + sin(p.y * 0.46 + t * 0.72) * 0.24
+               + sin((p.x + p.y) * 0.21 + t * 0.55) * 0.20
+               + sin((p.x - p.y) * 0.62 + t * 1.35) * 0.10;
         }
         void main(){
           vec3 p = position;
-          float t = uTime;
-          float h = wave(p.xz, t);
+          float h = wave(p.xz, uTime);
           p.y += h;
-          float e = 0.4;
-          float hx = wave(p.xz + vec2(e,0.0), t);
-          float hz = wave(p.xz + vec2(0.0,e), t);
+          float e = 0.6;
+          float hx = wave(p.xz + vec2(e, 0.0), uTime);
+          float hz = wave(p.xz + vec2(0.0, e), uTime);
           vNormal = normalize(vec3(h - hx, e, h - hz));
-          vPos = p;
-          vWorld = (modelMatrix * vec4(p, 1.0)).xyz;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+          vec4 wp = modelMatrix * vec4(p, 1.0);
+          vWorld = wp.xyz;
+          vH = h;
+          gl_Position = projectionMatrix * viewMatrix * wp;
         }`,
       fragmentShader: `
-        varying vec3 vPos; varying vec3 vNormal; varying vec3 vWorld;
-        uniform vec3 uSun;
+        varying vec3 vNormal; varying vec3 vWorld; varying float vH;
+        uniform vec3 uSun, uDeep, uShallow, uSky;
+        uniform float uGloom;
         void main(){
           vec3 N = normalize(vNormal);
           vec3 V = normalize(cameraPosition - vWorld);
-          float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.5);
-          vec3 deep = vec3(0.05, 0.22, 0.42);
-          vec3 shallow = vec3(0.15, 0.5, 0.65);
-          vec3 col = mix(deep, shallow, clamp(N.y, 0.0, 1.0) * 0.6 + fresnel * 0.4);
-          // 太阳镜面反射
+          float fres = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+          vec3 col = mix(uDeep, uShallow, clamp(N.y * 0.9 + 0.28, 0.0, 1.0));
           vec3 L = normalize(uSun);
           vec3 H = normalize(L + V);
-          float spec = pow(max(dot(N, H), 0.0), 90.0) * 1.6;
-          col += vec3(1.0, 0.9, 0.7) * spec;
-          col = mix(col, vec3(0.7, 0.85, 0.95), fresnel * 0.35);
-          gl_FragColor = vec4(col, 0.96);
+          float spec = pow(max(dot(N, H), 0.0), 320.0) * 1.15;
+          float sheen = pow(max(dot(N, H), 0.0), 26.0) * 0.13;
+          col += vec3(1.0, 0.95, 0.82) * (spec + sheen);
+          col = mix(col, uSky, fres * 0.55);
+          // 波峰泛白
+          col += vec3(0.5, 0.65, 0.72) * smoothstep(0.36, 0.62, vH) * 0.16;
+          col = mix(col, col * vec3(0.62, 0.68, 0.74), uGloom * 0.7);
+          gl_FragColor = vec4(col, 0.965);
         }`,
     });
     const water = new THREE.Mesh(waterGeo, waterMat);
-    water.position.y = 0.25;
-    water.userData = INFO['海洋'];
+    water.position.y = SEA_Y;
+    water.userData = { ...ENTITIES.find((e) => e.id === 'ocean'), kind: 'entity', key: 'ocean' };
     scene.add(water);
 
-    /* ================= 岛屿地形（顶点色：沙滩→草地→岩石） ================= */
-    const terrainGeo = new THREE.PlaneGeometry(34, 34, 90, 90);
-    terrainGeo.rotateX(-Math.PI / 2);
-    const tp = terrainGeo.attributes.position.array;
-    const tColors = new Float32Array(tp.length);
-    const sandC = new THREE.Color(0xdcc894), grassC = new THREE.Color(0x5fae5a), rockC = new THREE.Color(0x8a8578);
-    for (let i = 0; i < tp.length; i += 3) {
-      const x = tp[i], z = tp[i + 2];
-      const r = Math.sqrt(x * x + z * z);
-      const falloff = 1 - Math.min(Math.max((r - 8) / 6, 0), 1);
-      let h = 2.2 * Math.exp(-(x * x + z * z) / 42)
-            + 0.7 * S.fbm2(x * 0.3 + 5, z * 0.3 - 2, 4)
-            + 0.25 * Math.sin(x * 1.4) * Math.cos(z * 1.2);
-      h = Math.max(h * falloff - (1 - falloff) * 0.6, -0.6);
-      tp[i + 1] = h;
-      // 顶点色按海拔
-      let c;
-      if (h < 0.25) c = sandC;
-      else if (h < 1.4) c = sandC.clone().lerp(grassC, (h - 0.25) / 1.15);
-      else c = grassC.clone().lerp(rockC, Math.min((h - 1.4) / 1.2, 1));
-      tColors[i] = c.r; tColors[i + 1] = c.g; tColors[i + 2] = c.b;
-    }
-    terrainGeo.setAttribute('color', new THREE.BufferAttribute(tColors, 3));
-    terrainGeo.computeVertexNormals();
-    const terrain = new THREE.Mesh(terrainGeo, new THREE.MeshStandardMaterial({
-      vertexColors: true, roughness: 0.9, metalness: 0,
-      flatShading: false,
-    }));
-    terrain.receiveShadow = true;
-    scene.add(terrain);
-
-    /* ================= 云（多层柔光精灵） ================= */
-    function cloudSpriteTexture() {
-      const c = document.createElement('canvas');
-      c.width = 256; c.height = 128;
-      const ctx = c.getContext('2d');
-      for (let i = 0; i < 26; i++) {
-        const x = 30 + Math.random() * 196, y = 45 + Math.random() * 45;
-        const r = 18 + Math.random() * 26;
-        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-        g.addColorStop(0, 'rgba(255,255,255,0.55)');
-        g.addColorStop(1, 'rgba(255,255,255,0)');
-        ctx.fillStyle = g;
-        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    /* ==================================================================
+       河流：沿地形下切的河谷铺一条压扁的水带
+       ================================================================== */
+    function riverPoints() {
+      const pts = [];
+      let prevY = 999;
+      for (let i = 0; i < RIVER.length; i++) {
+        const [x, z] = RIVER[i];
+        let y = heightAt(x, z) + 0.42;
+        // 湖段：水面与湖面齐平，避免河比湖低一截
+        if (Math.hypot(x - LAKE.x, z - LAKE.z) < LAKE.r * 1.8) y = lakeY + 0.02;
+        y = Math.min(y, prevY);                                // 顺流只降不升
+        prevY = y;
+        pts.push(P(x, Math.max(y, 0.04), z));
       }
-      const t = new THREE.CanvasTexture(c);
-      return t;
+      return pts;
     }
-    const cloudTex = cloudSpriteTexture();
-    const clouds = [];
-    const cloudDefs = [
-      [-6, 9.5, -6, 4.5], [2, 10.5, -2, 5], [-10, 9, -1, 4], [7, 9.2, -5, 4],
-      [0, 12, -9, 4.5], [10, 10.5, -3, 4], [-4, 11.5, 2, 3.5], [6, 12.5, -8, 4],
-    ];
-    cloudDefs.forEach(([x, y, z, s]) => {
-      const sp = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: cloudTex, transparent: true, opacity: 0.72, depthWrite: false,
-      }));
-      sp.scale.set(s * 1.5, s * 0.75, 1);
-      sp.position.set(x, y, z);
-      sp.userData = INFO['云'];
-      sp.userData._isCloud = true;
-      scene.add(sp);
-      clouds.push(sp);
-    });
+    const riverCurvePts = riverPoints();
 
-    /* ================= 蒸发粒子（上升水汽，Points） ================= */
-    const EVAP_N = 140;
-    const evapGeo = new THREE.BufferGeometry();
-    const evapPos = new Float32Array(EVAP_N * 3);
-    const evapPhase = new Float32Array(EVAP_N);
-    for (let i = 0; i < EVAP_N; i++) {
-      evapPhase[i] = Math.random() * Math.PI * 2;
+    function buildSweep(pts, radFn, opt) {
+      opt = opt || {};
+      const tub = opt.tubular || 120;
+      const rad = opt.radial || 14;
+      const curve = new THREE.CatmullRomCurve3(pts, !!opt.closed, 'catmullrom', opt.tension != null ? opt.tension : 0.5);
+      const frames = curve.computeFrenetFrames(tub, !!opt.closed);
+      const flat = opt.flat != null ? opt.flat : 1;
+      const rs = opt.roundStart != null ? opt.roundStart : 0.02;
+      const re = opt.roundEnd != null ? opt.roundEnd : 0.02;
+      const pos = [], uv = [], idx = [];
+      const c = new THREE.Vector3();
+      for (let i = 0; i <= tub; i++) {
+        const t = i / tub;
+        curve.getPointAt(t, c);
+        const N = frames.normals[i], B = frames.binormals[i];
+        let r = typeof radFn === 'function' ? radFn(t) : radFn;
+        let ra, rb;
+        if (typeof r === 'number') { ra = r; rb = r * flat; }
+        else { ra = r.a != null ? r.a : r.r; rb = r.b != null ? r.b : ra * flat; }
+        let cap = 1;
+        if (rs > 0 && t < rs) cap = Math.sqrt(Math.max(0, 1 - Math.pow(1 - t / rs, 2)));
+        if (re > 0 && t > 1 - re) cap = Math.min(cap, Math.sqrt(Math.max(0, 1 - Math.pow((1 - t) / re, 2))));
+        cap = Math.max(cap, 0.04);
+        for (let j = 0; j <= rad; j++) {
+          const a = (j / rad) * Math.PI * 2;
+          const ca = Math.cos(a) * ra * cap, sa = Math.sin(a) * rb * cap;
+          pos.push(
+            c.x + N.x * ca + B.x * sa,
+            c.y + N.y * ca + B.y * sa,
+            c.z + N.z * ca + B.z * sa
+          );
+          uv.push(t, j / rad);
+        }
+      }
+      for (let i = 0; i < tub; i++) {
+        for (let j = 0; j < rad; j++) {
+          const a = i * (rad + 1) + j, b = a + 1, d = a + rad + 1, e = d + 1;
+          idx.push(a, d, b, b, d, e);
+        }
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+      geo.setIndex(idx);
+      geo.computeVertexNormals();
+      const m = new THREE.Mesh(geo, opt.mat);
+      m.userData.curve = curve;
+      return m;
     }
-    evapGeo.setAttribute('position', new THREE.BufferAttribute(evapPos, 3));
-    const evapMat = new THREE.PointsMaterial({
-      color: 0xffcf8a, size: 0.22, transparent: true, opacity: 0.7,
-      blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true,
-    });
-    const evap = new THREE.Points(evapGeo, evapMat);
-    scene.add(evap);
 
-    /* ================= 雨滴（线段雨 + additive） ================= */
-    const RAIN_N = 320;
-    const rainGeo = new THREE.BufferGeometry();
-    const rainPos = new Float32Array(RAIN_N * 6);
-    const rainData = [];
-    for (let i = 0; i < RAIN_N; i++) {
-      rainData.push({ x: (Math.random() - 0.5) * 16, z: (Math.random() - 0.5) * 12 - 1, y: 4 + Math.random() * 7, v: 7 + Math.random() * 5 });
-    }
-    rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
-    const rainMat = new THREE.LineBasicMaterial({
-      color: 0x8cc9ff, transparent: true, opacity: 0.4,
-      blending: THREE.AdditiveBlending, depthWrite: false,
-    });
-    const rain = new THREE.LineSegments(rainGeo, rainMat);
-    scene.add(rain);
-
-    /* ================= 径流（流光小溪） ================= */
-    const runoffCurve = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(3.2, 2.6, -2.2),
-      new THREE.Vector3(2.0, 1.6, -1.2),
-      new THREE.Vector3(0.8, 0.8, -0.4),
-      new THREE.Vector3(-0.2, 0.32, 0.2),
-      new THREE.Vector3(-0.9, 0.28, 0.8),
-    ]);
-    const runoffMat = new THREE.ShaderMaterial({
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-      uniforms: { uTime: { value: 0 } },
+    // 河流水面：沿管长推进的流动条纹
+    const riverMat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false,
+      uniforms: { uTime: { value: 0 }, uGloom: { value: 0 } },
       vertexShader: `
-        varying vec2 vUv;
-        void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
-      fragmentShader: `
-        varying vec2 vUv; uniform float uTime;
+        varying vec2 vUv; varying vec3 vWorld;
         void main(){
-          float flow = fract(vUv.y * 2.5 - uTime * 0.5);
-          float pulse = smoothstep(0.0, 0.3, flow) * smoothstep(0.8, 0.3, flow);
-          vec3 col = vec3(0.35, 0.75, 1.0) * (0.5 + pulse * 1.8);
-          gl_FragColor = vec4(col, 0.45 + pulse * 0.5);
+          vUv = uv;
+          vec4 wp = modelMatrix * vec4(position, 1.0);
+          vWorld = wp.xyz;
+          gl_Position = projectionMatrix * viewMatrix * wp;
+        }`,
+      fragmentShader: `
+        varying vec2 vUv; varying vec3 vWorld;
+        uniform float uTime, uGloom;
+        void main(){
+          float flow = fract(vUv.x * 9.0 - uTime * 0.6);
+          float streak = smoothstep(0.0, 0.12, flow) * smoothstep(0.5, 0.12, flow);
+          vec3 deep = vec3(0.09, 0.40, 0.62);
+          vec3 foam = vec3(0.55, 0.86, 1.0);
+          vec3 col = mix(deep, foam, streak * 0.5);
+          col = mix(col, col * vec3(0.66, 0.72, 0.78), uGloom * 0.6);
+          gl_FragColor = vec4(col, 0.94);
         }`,
     });
-    scene.add(new THREE.Mesh(new THREE.TubeGeometry(runoffCurve, 48, 0.09, 10, false), runoffMat));
+    const river = buildSweep(riverCurvePts, (t) => lerp(0.55, 1.05, Math.pow(t, 0.72)), {
+      tubular: 220, radial: 10, flat: 0.3, mat: riverMat, roundStart: 0.01, roundEnd: 0.02,
+    });
+    river.userData = { name: '河流', en: 'River', color: '#59d2ff', kind: 'entity', key: 'river', ...STAGES[4] };
+    scene.add(river);
 
-    /* ================= 交互 ================= */
-    const voice = S.createVoice();
+    /* ==================================================================
+       森林：圆锥树冠 + 圆柱树干，按高度与坡度撒点
+       ================================================================== */
+    const TREES = 205;
+    const treeData = [];
+    let tries = 0;
+    while (treeData.length < TREES && tries < 20000) {
+      tries++;
+      const x = (Math.random() - 0.5) * 40;
+      const z = (Math.random() - 0.5) * 40;
+      const h = heightAt(x, z);
+      if (h < 1.15 || h > 5.9) continue;
+      if (Math.hypot(x - LAKE.x, z - LAKE.z) < LAKE.r * 1.45) continue;
+      if (riverDist(x, z) < 2.2) continue;
+      const slope = Math.abs(heightAt(x + 0.8, z) - h) + Math.abs(heightAt(x, z + 0.8) - h);
+      if (slope > 1.5) continue;
+      // 用噪声做森林聚落，避免均匀撒胡椒面
+      const dens = S.fbm2(x * 0.15 + 5, z * 0.15 - 3, 3);
+      if (dens < 0.47 && Math.random() > 0.22) continue;
+      treeData.push({ x, y: h, z, s: 0.6 + Math.random() * 0.68, rot: Math.random() * 6.28 });
+    }
+
+    const trunkGeo = new THREE.CylinderGeometry(0.055, 0.085, 1.0, 5);
+    trunkGeo.translate(0, 0.5, 0);
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x7a5a3e, roughness: 0.95 });
+    const crownGeo = new THREE.ConeGeometry(0.62, 1.9, 7);
+    crownGeo.translate(0, 1.62, 0);
+    const crownMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.88, flatShading: true });
+
+    const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, treeData.length);
+    const crowns = new THREE.InstancedMesh(crownGeo, crownMat, treeData.length);
+    const dummy = new THREE.Object3D();
+    const treeColor = new THREE.Color();
+    treeData.forEach((t, i) => {
+      dummy.position.set(t.x, t.y - 0.15, t.z);
+      dummy.rotation.set(0, t.rot, 0);
+      dummy.scale.set(t.s, t.s * (0.85 + Math.random() * 0.4), t.s);
+      dummy.updateMatrix();
+      trunks.setMatrixAt(i, dummy.matrix);
+      crowns.setMatrixAt(i, dummy.matrix);
+      // 每棵树一个色相：深墨绿 → 黄绿，森林不再是一块平面色
+      const hue = 0.255 + (Math.random() - 0.5) * 0.07;
+      const sat = 0.34 + Math.random() * 0.2;
+      const lig = 0.12 + Math.random() * 0.1;
+      treeColor.setHSL(hue, sat, lig);
+      crowns.setColorAt(i, treeColor);
+    });
+    if (crowns.instanceColor) crowns.instanceColor.needsUpdate = true;
+    trunks.castShadow = true; crowns.castShadow = true;
+    trunks.receiveShadow = true;
+    const forest = new THREE.Group();
+    forest.add(trunks, crowns);
+    forest.userData = { ...ENTITIES.find((e) => e.id === 'forest'), kind: 'entity', key: 'forest' };
+    scene.add(forest);
+    // 拾取用：给 instancedMesh 挂上实体数据
+    trunks.userData = forest.userData;
+    crowns.userData = forest.userData;
+
+    /* ==================================================================
+       太阳：圆盘 + 光晕 + 体积光锥
+       ================================================================== */
+    const SUN_DIR = new THREE.Vector3(0.62, 0.42, 0.18).normalize();
+    const sunGroup = new THREE.Group();
+    sunGroup.position.copy(SUN_DIR).multiplyScalar(120);
+
+    const sunDisc = new THREE.Mesh(
+      new THREE.CircleGeometry(3.0, 64),
+      new THREE.MeshBasicMaterial({ color: 0xfff6cf, fog: false })
+    );
+    sunDisc.lookAt(0, 0, 0);
+    sunGroup.add(sunDisc);
+
+    const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: S.glowTexture('rgba(255,250,220,1)', 'rgba(255,208,120,0.32)', 256),
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+    }));
+    sunGlow.scale.set(26, 26, 1);
+    sunGroup.add(sunGlow);
+    const sunGlow2 = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: S.glowTexture('rgba(255,236,190,0.55)', 'rgba(255,180,90,0.06)', 256),
+      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+    }));
+    sunGlow2.scale.set(64, 64, 1);
+    sunGroup.add(sunGlow2);
+    sunGroup.userData = { ...ENTITIES.find((e) => e.id === 'sun'), kind: 'entity', key: 'sun' };
+    scene.add(sunGroup);
+
+    /* ==================================================================
+       天空穹顶（随天气从湛蓝转向铅灰）
+       ================================================================== */
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false,
+      uniforms: {
+        uTop: { value: new THREE.Color(0x2a6ec4) },
+        uBottom: { value: new THREE.Color(0xbfd8ea) },
+        uGloom: { value: 0 },
+        uSunDir: { value: SUN_DIR.clone() },
+      },
+      vertexShader: `
+        varying vec3 vDir;
+        void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+      fragmentShader: `
+        varying vec3 vDir;
+        uniform vec3 uTop, uBottom, uSunDir;
+        uniform float uGloom;
+        void main(){
+          float h = clamp(vDir.y, 0.0, 1.0);
+          vec3 col = mix(uBottom, uTop, pow(h, 0.62));
+          // 地平线雾带
+          col = mix(col, vec3(0.86, 0.9, 0.94), pow(1.0 - h, 7.0) * 0.42);
+          // 日晕
+          float s = pow(max(dot(vDir, uSunDir), 0.0), 26.0);
+          col += vec3(1.0, 0.88, 0.6) * s * 0.55 * (1.0 - uGloom);
+          // 阴天：整体压灰
+          vec3 grey = mix(vec3(0.52, 0.57, 0.62), vec3(0.72, 0.76, 0.8), h);
+          col = mix(col, grey, uGloom * 0.82);
+          gl_FragColor = vec4(col, 1.0);
+        }`,
+    });
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(240, 40, 24), skyMat));
+
+    /* ==================================================================
+       光照
+       ================================================================== */
+    const hemi = new THREE.HemisphereLight(0xdcefff, 0x53663f, 1.7);
+    scene.add(hemi);
+    const sunLight = new THREE.DirectionalLight(0xfff2d8, 2.5);
+    sunLight.position.copy(SUN_DIR).multiplyScalar(60);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    sunLight.shadow.camera.left = -34;
+    sunLight.shadow.camera.right = 34;
+    sunLight.shadow.camera.top = 34;
+    sunLight.shadow.camera.bottom = -34;
+    sunLight.shadow.camera.near = 1;
+    sunLight.shadow.camera.far = 160;
+    sunLight.shadow.bias = -0.0006;
+    scene.add(sunLight);
+    // 补光：从相机一侧打回来，避免逆光时山体糊成一团剪影
+    const fillLight = new THREE.DirectionalLight(0xb9d4ff, 1.35);
+    fillLight.position.set(-26, 14, 28);
+    scene.add(fillLight);
+
+    /* ==================================================================
+       云：每朵由数个噪声球组成，分“晴云”和“雨云”两组
+       ================================================================== */
+    const cloudWhiteMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff, roughness: 1, metalness: 0,
+      transparent: true, opacity: 1, depthWrite: false,
+      emissive: 0xbcd6ec, emissiveIntensity: 0.28,
+    });
+    const cloudDarkMat = new THREE.MeshStandardMaterial({
+      color: 0x8d99a6, roughness: 1, metalness: 0,
+      transparent: true, opacity: 0, depthWrite: false,
+      emissive: 0x39434f, emissiveIntensity: 0.12,
+    });
+
+    function cloudPuffGeo(seed, r) {
+      const g = new THREE.SphereGeometry(1, 20, 14);
+      const pos = g.attributes.position;
+      const v = new THREE.Vector3();
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i);
+        const n = S.fbm2(v.x * 2.3 + seed, v.y * 2.3 + v.z * 1.7 + seed, 3);
+        const k = 1 + (n - 0.5) * 0.62;
+        pos.setXYZ(i, v.x * k * r, v.y * k * r * 0.78, v.z * k * r);
+      }
+      g.computeVertexNormals();
+      return g;
+    }
+
+    function makeCloud(cx, cy, cz, scale, seed, mat, puffs) {
+      const g = new THREE.Group();
+      const n = puffs || 6;
+      for (let i = 0; i < n; i++) {
+        const r = (0.9 + Math.random() * 0.85) * scale;
+        const geo = cloudPuffGeo(seed + i * 3.7, r);
+        const m = new THREE.Mesh(geo, mat);
+        const k = scale * 1.55;
+        m.position.set(
+          (Math.random() - 0.5) * k * 1.5,
+          (Math.random() - 0.42) * k * 0.5,
+          (Math.random() - 0.5) * k * 1.05
+        );
+        g.add(m);
+      }
+      g.position.set(cx, cy, cz);
+      g.userData = { ...ENTITIES.find((e) => e.id === 'cloud'), kind: 'entity', key: 'cloud' };
+      g.userData._baseY = cy;
+      g.userData._seed = seed;
+      return g;
+    }
+
+    const fairClouds = [];
+    const fairDefs = [
+      [-22, 18.5, -14, 1.5], [2, 21, -19, 1.7], [19, 17.5, 1, 1.35], [-10, 19.5, 13, 1.55],
+      [25, 20, -13, 1.45], [-27, 16.5, 7, 1.25], [11, 22, 15, 1.6],
+    ];
+    fairDefs.forEach(([x, y, z, s], i) => {
+      const c = makeCloud(x, y, z, s, i * 11.3, cloudWhiteMat, 6 + (i % 3));
+      c.userData._cx = x;
+      scene.add(c);
+      fairClouds.push(c);
+    });
+
+    const stormClouds = [];
+    const stormDefs = [
+      [-7, 17.0, -4, 2.1], [5, 16.6, 2, 2.0], [-13, 16.2, 5, 1.8], [11, 16.4, -7, 1.9],
+      [0, 17.4, 9, 1.9],
+    ];
+    stormDefs.forEach(([x, y, z, s], i) => {
+      const c = makeCloud(x, y, z, s, 40 + i * 7.1, cloudDarkMat, 7);
+      c.userData._cx = x;
+      scene.add(c);
+      stormClouds.push(c);
+    });
+
+    /* ==================================================================
+       雨：实例化细长条，落点高度预先算好，避免穿模
+       ================================================================== */
+    const RAIN_MAX = 900;
+    const rainGeo = new THREE.BoxGeometry(0.03, 0.62, 0.03);
+    const rainMat = new THREE.MeshBasicMaterial({
+      color: 0xa8d8ff, transparent: true, opacity: 0.55, depthWrite: false,
+    });
+    const rainMesh = new THREE.InstancedMesh(rainGeo, rainMat, RAIN_MAX);
+    rainMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    rainMesh.frustumCulled = false;
+    const rainDrops = [];
+    for (let i = 0; i < RAIN_MAX; i++) {
+      const x = (Math.random() - 0.5) * 26;
+      const z = (Math.random() - 0.5) * 24;
+      rainDrops.push({
+        x, z,
+        y: 14 + Math.random() * 6,
+        v: 11 + Math.random() * 9,
+        ground: Math.max(heightAt(x, z), SEA_Y) + 0.1,
+      });
+    }
+    scene.add(rainMesh);
+
+    // 雨云底部到地面的"雨帘"整体位置
+    const RAIN_ORIGIN = new THREE.Vector3(-2, 0, 0);
+
+    /* ==================================================================
+       水汽粒子：海面蒸发（金）+ 森林蒸腾（绿）
+       ================================================================== */
+    function makeVapor(opts) {
+      const n = opts.count;
+      const pos = new Float32Array(n * 3);
+      const phase = new Float32Array(n);
+      const size = new Float32Array(n);
+      const seed = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        let x = 0, z = 0, guard = 0;
+        do {
+          x = opts.cx + (Math.random() - 0.5) * opts.rx;
+          z = opts.cz + (Math.random() - 0.5) * opts.rz;
+          guard++;
+        } while (opts.onlySea && heightAt(x, z) > 0.12 && guard < 60);
+        pos[i * 3] = x;
+        pos[i * 3 + 1] = opts.y0 + Math.random() * 0.6;
+        pos[i * 3 + 2] = z;
+        phase[i] = Math.random();
+        size[i] = 3.0 + Math.random() * 4.2;
+        seed[i] = Math.random() * 6.28;
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
+      geo.setAttribute('aSize', new THREE.BufferAttribute(size, 1));
+      geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+      const mat = new THREE.ShaderMaterial({
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+        uniforms: {
+          uTime: { value: 0 },
+          uRise: { value: opts.rise },
+          uColor: { value: new THREE.Color(opts.color) },
+          uOpacity: { value: opts.opacity != null ? opts.opacity : 0.85 },
+        },
+        vertexShader: `
+          attribute float aPhase; attribute float aSize; attribute float aSeed;
+          uniform float uTime, uRise;
+          varying float vA;
+          void main(){
+            float cyc = fract(aPhase + uTime * uRise);
+            vec3 p = position;
+            p.y += cyc * 9.5;
+            p.x += sin(cyc * 5.2 + aSeed * 3.1) * 1.5 * cyc;
+            p.z += cos(cyc * 4.1 + aSeed * 2.3) * 1.3 * cyc;
+            vA = sin(cyc * 3.14159) * 0.95;
+            vec4 mv = modelViewMatrix * vec4(p, 1.0);
+            gl_PointSize = aSize * (72.0 / max(-mv.z, 1.0));
+            gl_Position = projectionMatrix * mv;
+          }`,
+        fragmentShader: `
+          uniform vec3 uColor; uniform float uOpacity;
+          varying float vA;
+          void main(){
+            vec2 d = gl_PointCoord - 0.5;
+            float r = length(d);
+            if (r > 0.5) discard;
+            float a = smoothstep(0.5, 0.02, r) * vA * uOpacity;
+            gl_FragColor = vec4(uColor, a);
+          }`,
+      });
+      const p = new THREE.Points(geo, mat);
+      p.frustumCulled = false;
+      return p;
+    }
+
+    const evapVapor = makeVapor({
+      count: 520, cx: 20, cz: 2, rx: 46, rz: 44, y0: 0.2, rise: 0.055, onlySea: true,
+      color: 0xffd49a, opacity: 0.8,
+    });
+    evapVapor.userData = { ...STAGES[0], kind: 'stage', key: 'evap' };
+    scene.add(evapVapor);
+
+    const transpVapor = makeVapor({
+      count: 320, cx: -3, cz: -1, rx: 16, rz: 14, y0: 1.4, rise: 0.075,
+      color: 0xa8f593, opacity: 0.72,
+    });
+    transpVapor.userData = { ...STAGES[1], kind: 'stage', key: 'transp' };
+    scene.add(transpVapor);
+
+    /* ==================================================================
+       下渗 + 地下水：贴地的暗色渗流带 + 向下钻的蓝色粒子
+       ================================================================== */
+    const infilPts = [];
+    for (let i = 0; i < 130; i++) {
+      const t = Math.random();
+      const idx = Math.floor(t * (riverCurvePts.length - 2));
+      const a = riverCurvePts[idx], b = riverCurvePts[idx + 1];
+      const f = Math.random();
+      const off = (Math.random() - 0.5) * 5.0;
+      const x = lerp(a.x, b.x, f) + off;
+      const z = lerp(a.z, b.z, f) + off * 0.5;
+      infilPts.push({ x, z, y: Math.max(heightAt(x, z), 0.3) + 0.05, ph: Math.random() });
+    }
+    const infilGeo = new THREE.BufferGeometry();
+    const infilPos = new Float32Array(infilPts.length * 3);
+    infilGeo.setAttribute('position', new THREE.BufferAttribute(infilPos, 3));
+    const infilMat = new THREE.PointsMaterial({
+      color: 0x9c8bff, size: 0.3, transparent: true, opacity: 0.85,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const infil = new THREE.Points(infilGeo, infilMat);
+    infil.frustumCulled = false;
+    infil.userData = { ...STAGES[5], kind: 'stage', key: 'infil' };
+    scene.add(infil);
+
+    // 地下水：贴地的一条半透明暗蓝带（示意地下水流向海洋）
+    const gwPts = [
+      P(6.4, 0, 7.2), P(7.2, 0, 9.0), P(7.4, 0, 10.8),
+      P(7.0, 0, 12.6), P(6.0, 0, 14.2), P(4.4, 0, 15.6), P(2.4, 0, 16.8),
+    ].map((v) => {
+      const h = heightAt(v.x, v.z);
+      return P(v.x, Math.max(h, 0.2) + 0.08, v.z);
+    });
+    const gwMat = new THREE.MeshBasicMaterial({
+      color: 0x6f5bd8, transparent: true, opacity: 0.55,
+      blending: THREE.AdditiveBlending, depthWrite: false,
+    });
+    const gw = buildSweep(gwPts, 0.34, { tubular: 60, radial: 6, flat: 0.4, mat: gwMat, roundStart: 0.06, roundEnd: 0.06 });
+    gw.userData = { ...STAGES[5], kind: 'stage', key: 'infil' };
+    gw.visible = false;   // 默认隐藏，聚焦"下渗"时出现
+
+    /* ==================================================================
+       3D 标签
+       ================================================================== */
+    const labelObjs = [];
+    const labelTick = { v: 0 };
+    const labelV = new THREE.Vector3();
+
+    function addLabel(text, pos, opt) {
+      opt = opt || {};
+      const obj = S.makeLabel(CSS2DObject, text, pos, 'sv-label' + (opt.minor ? ' is-minor' : ''));
+      obj.userData.inner = obj.element;
+      obj.userData.key = opt.key || null;
+      obj.userData.follow = opt.follow || null;
+      obj.userData.offset = opt.offset ? opt.offset.clone() : null;
+      scene.add(obj);
+      labelObjs.push(obj);
+      return obj;
+    }
+
+    const peakLabelPos = (() => {
+      // 找山脊最高点
+      let best = { h: -99, x: 0, z: 0 };
+      for (let x = -16; x <= 2; x += 0.5) {
+        for (let z = -16; z <= 2; z += 0.5) {
+          const h = heightAt(x, z);
+          if (h > best.h) best = { h, x, z };
+        }
+      }
+      return P(best.x, best.h + 1.6, best.z);
+    })();
+
+    addLabel('☀ 太阳', sunGroup.position.clone().multiplyScalar(0.55), { key: 'sun' });
+    addLabel('蒸发', P(20, 4.6, 6), { key: 'evap' });
+    addLabel('蒸腾', P(-4, 6.4, -2), { key: 'transp', minor: true });
+    const cloudLabelObj = addLabel('云 · 凝结', P(-4, 20.5, -6), { key: 'cloud' });
+    addLabel('降水', P(-6, 9.2, 4), { key: 'precip' });
+    addLabel('雪山', peakLabelPos, { key: 'peak' });
+    addLabel('森林', P(-8.5, 4.6, 4.5), { key: 'forest', minor: true });
+    addLabel('湖泊', P(LAKE.x + 3.4, lakeY + 2.2, LAKE.z), { key: 'lake', minor: true });
+    const riverLabelPt = riverCurvePts[Math.floor(riverCurvePts.length * 0.72)];
+    addLabel('河流 · 径流', riverLabelPt.clone().add(P(0, 1.7, 0)), { key: 'runoff' });
+    addLabel('海洋', P(26, 1.4, 14), { key: 'ocean' });
+    const infilLabelPt = riverCurvePts[Math.floor(riverCurvePts.length * 0.38)];
+    addLabel('下渗 · 地下水', infilLabelPt.clone().add(P(-2.6, 1.4, 0)), { key: 'infil', minor: true });
+
+    /* ==================================================================
+       交互：卡片 / 语音 / 聚焦
+       ================================================================== */
+    const voice = S.createVoice({ audioBase: '../audio/weather/' });
     S.bindVoiceButton(document.getElementById('voiceBtn'), voice);
-    const card = S.createCard(document.getElementById('card') || document.body);
+    const card = S.createCard(document.getElementById('card'));
     const picker = S.makePicker(camera, renderer.domElement);
     const fly = S.makeFly(camera, controls);
 
-    const clickable = [sunDisc, ...clouds, water];
-    picker.onHover(clickable, (obj) => {
-      renderer.domElement.style.cursor = obj ? 'pointer' : 'grab';
+    function defByKey(key) {
+      const st = STAGES.find((s) => s.id === key);
+      if (st) return st;
+      const en = ENTITIES.find((e) => e.id === key);
+      if (en) return en;
+      return null;
+    }
+
+    function showInfo(def) {
+      if (!def) return;
+      card.show(def);
+      voice.speak(S.narrate(def), def.id);
+    }
+
+    function markStage(key) {
+      document.querySelectorAll('.wx-item').forEach((b) => {
+        b.classList.toggle('is-on', b.dataset.key === key);
+      });
+    }
+
+    /* ---- 聚焦某个对象 ---- */
+    function focusKey(key) {
+      const def = defByKey(key);
+      if (!def) return;
+      showInfo(def);
+      markStage(key);
+      const spots = {
+        sun: { pos: P(52, 40, 22), target: P(74, 50, 22) },
+        ocean: { pos: P(34, 8, 26), target: P(12, 0.5, 8) },
+        cloud: { pos: P(-2, 20, 30), target: P(-3, 17, -2) },
+        peak: { pos: P(7, 18, 25), target: peakLabelPos.clone().setY(peakLabelPos.y - 1.6) },
+        forest: { pos: P(-13, 9, 18), target: P(-3, 3, 4) },
+        lake: { pos: P(16, 8, 15), target: P(LAKE.x, lakeY, LAKE.z) },
+        river: { pos: P(17, 10, 23), target: P(4, 3, 9) },
+        evap: { pos: P(26, 10, 26), target: P(15, 3, 6) },
+        transp: { pos: P(-14, 9, 10), target: P(-4, 2.6, -1) },
+        cond: { pos: P(-2, 21, 30), target: P(-3, 17, -2) },
+        precip: { pos: P(-8, 8, 18), target: P(-5, 7, 0) },
+        runoff: { pos: P(17, 10, 23), target: P(4, 3, 9) },
+        infil: { pos: P(18, 9, 20), target: P(5, 2.5, 11) },
+        collect: { pos: P(34, 8, 26), target: P(12, 0.5, 8) },
+      };
+      const s = spots[key];
+      if (s) fly.flyTo(s.pos, s.target, 1.15);
+      // 地下水只在聚焦下渗时露出来
+      gw.visible = key === 'infil';
+      highlightRelated(key);
+    }
+
+    function highlightRelated(key) {
+      const related = {
+        evap: ['evap'], transp: ['transp'], cond: ['cloud'], precip: ['precip'],
+        runoff: ['runoff'], infil: ['infil'], collect: ['ocean'],
+        sun: ['sun'], ocean: ['ocean'], cloud: ['cloud'], peak: ['peak'],
+        forest: ['forest'], lake: ['lake'], river: ['runoff'],
+      }[key] || [];
+      labelObjs.forEach((o) => {
+        const k = o.userData.key;
+        const on = !k || related.indexOf(k) >= 0 || related.indexOf(key) >= 0;
+        o.element.style.opacity = related.length ? (on ? '1' : '0.18') : '1';
+      });
+    }
+
+    /* ---- 可拾取对象 ---- */
+    function pickTargets() {
+      return [sunDisc, sunGlow, water, lake, terrain, river, trunks, crowns,
+        evapVapor, transpVapor, infil, ...fairClouds, ...stormClouds];
+    }
+    function resolveOwner(obj) {
+      let o = obj;
+      while (o && !(o.userData && o.userData.name)) o = o.parent;
+      return o ? o.userData : null;
+    }
+
+    picker.onHover(() => pickTargets(), (obj) => {
+      renderer.domElement.style.cursor = resolveOwner(obj) ? 'pointer' : 'grab';
     });
-    picker.onClick(clickable, (obj) => {
-      if (!obj) return;
-      // 云的 userData 挂在 sprite 上
-      let data = obj.userData, target = new THREE.Vector3();
-      obj.getWorldPosition(target);
-      if (!data || !data.name) return;
-      card.show(data);
-      voice.speak(data.name + '。' + (data.stats || []).map((s) => s.label + s.value).join('，') + '。' + (data.desc || []).join('，'));
-      const dist = 6;
-      const dir = camera.position.clone().sub(target).normalize();
-      fly.flyTo(target.clone().add(dir.multiplyScalar(dist)), target, 1.1);
+    picker.onClick(() => pickTargets(), (obj) => {
+      const owner = resolveOwner(obj);
+      if (!owner) return;
+      if (owner.key) focusKey(owner.key);
+      else if (owner.name) showInfo(owner);
     });
 
-    // 流程聚焦按钮
-    const focusSpots = {
-      '太阳': { pos: [-8, 12, 6], target: [-14, 14, -10] },
-      '云': { pos: [0, 10, 14], target: [0, 9, 0] },
-      '海洋': { pos: [8, 4, 12], target: [0, 0.5, 0] },
+    /* ---- 环节索引 ---- */
+    const stageList = document.getElementById('stageList');
+    STAGES.forEach((st) => {
+      const b = document.createElement('button');
+      b.className = 'wx-item';
+      b.dataset.key = st.id;
+      b.innerHTML = '<span class="wx-item__dot" style="background:' + st.color + ';color:' + st.color + '"></span>' + st.name;
+      b.addEventListener('click', () => focusKey(st.id));
+      b.addEventListener('mouseenter', () => { if (gw) gw.visible = gw.visible || st.id === 'infil'; });
+      stageList.appendChild(b);
+    });
+
+    /* ==================================================================
+       分段：全景 / 海洋段 / 大气段 / 陆地段
+       ================================================================== */
+    const views = {
+      overview: { pos: P(28, 16, 34), target: P(0, 4, 0) },
+      ocean: { pos: P(33, 11, 31), target: P(7, 2, 7) },
+      air: { pos: P(6, 17, 32), target: P(-2, 14, -3) },
+      land: { pos: P(29, 19, 35), target: P(3, 3, 8) },
     };
-    document.querySelectorAll('[data-focus]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const name = btn.dataset.focus;
-        const f = focusSpots[name];
-        if (!f) return;
-        fly.flyTo(new THREE.Vector3(...f.pos), new THREE.Vector3(...f.target), 1.2);
-        const d = INFO[name];
-        if (d) {
-          setTimeout(() => {
-            card.show(d);
-            voice.speak(name + '。' + (d.stats || []).map((s) => s.label + s.value).join('，'));
-          }, 900);
-        }
+
+    let currentSeg = 'overview';
+
+    function applySegment(name) {
+      currentSeg = name;
+      const v = views[name] || views.overview;
+      fly.flyTo(v.pos, v.target, 1.25);
+      const def = name === 'overview' ? SEGMENTS.overview
+        : name === 'ocean' ? SEGMENTS.ocean
+        : name === 'air' ? SEGMENTS.air : SEGMENTS.land;
+      showInfo(def);
+      markStage(null);
+      document.querySelectorAll('[data-seg]').forEach((b) => {
+        b.classList.toggle('is-on', b.dataset.seg === name);
       });
+      // 分段只高亮本段元素
+      const dim = (obj, on) => {
+        obj.traverse((c) => {
+          if (!c.material) return;
+          const mats = Array.isArray(c.material) ? c.material : [c.material];
+          mats.forEach((m) => {
+            if (m.userData._baseOpacity == null) m.userData._baseOpacity = m.opacity != null ? m.opacity : 1;
+            m.transparent = true;
+            m.opacity = on ? m.userData._baseOpacity : m.userData._baseOpacity * 0.16;
+          });
+        });
+      };
+      dim(evapVapor, name === 'overview' || name === 'ocean');
+      dim(transpVapor, name === 'overview' || name === 'land');
+      dim(fairCloudsGroup, name === 'overview' || name === 'air');
+      dim(stormCloudsGroup, name === 'overview' || name === 'air' || name === 'ocean');
+      dim(forest, name === 'overview' || name === 'land');
+      dim(lake, name === 'overview' || name === 'land');
+      river.visible = name !== 'air';
+      gw.visible = name === 'land' ? gw.visible : false;
+    }
+
+    // 把云打包成组，方便整体调透明度
+    const fairCloudsGroup = new THREE.Group();
+    fairClouds.forEach((c) => fairCloudsGroup.add(c));
+    scene.add(fairCloudsGroup);
+    const stormCloudsGroup = new THREE.Group();
+    stormClouds.forEach((c) => stormCloudsGroup.add(c));
+    scene.add(stormCloudsGroup);
+
+    /* ==================================================================
+       天气：晴朗 / 多云 / 降雨 / 暴雨 渐变过渡
+       ================================================================== */
+    const weatherKeys = ['clear', 'cloudy', 'rain', 'storm'];
+    let weatherIdx = 0;
+    const wxTarget = { ...WEATHERS.clear };
+    const wxNow = { cloudWhite: 1, cloudDark: 0, rain: 0, sun: 1, fog: 0.0008, sky: 0 };
+
+    function setWeather(key) {
+      weatherIdx = Math.max(0, weatherKeys.indexOf(key));
+      const w = WEATHERS[key];
+      Object.assign(wxTarget, w);
+      const btn = document.getElementById('weatherBtn');
+      if (btn) btn.innerHTML = '<span class="sv-btn__icon">' + w.icon + '</span><span>' + w.name + '</span>';
+      S.toast('天气：' + w.name);
+    }
+
+    /* ==================================================================
+       UI 绑定
+       ================================================================== */
+    // 用 createCard 的容器
+    document.querySelectorAll('[data-seg]').forEach((btn) => {
+      btn.addEventListener('click', () => applySegment(btn.dataset.seg));
+    });
+
+    document.getElementById('weatherBtn').addEventListener('click', () => {
+      const next = weatherKeys[(weatherIdx + 1) % weatherKeys.length];
+      setWeather(next);
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
-      fly.flyTo(new THREE.Vector3(16, 9, 20), new THREE.Vector3(0, 3, 0), 1.2);
+      applySegment('overview');
       card.hide();
+      gw.visible = false;
+      labelObjs.forEach((o) => { o.element.style.opacity = '1'; });
+      markStage(null);
     });
 
     let isPlaying = true;
@@ -929,58 +1968,164 @@
     const playBtn = document.getElementById('playBtn');
     playBtn.addEventListener('click', () => {
       isPlaying = !isPlaying;
-      playBtn.innerHTML = isPlaying ? '<span class="sv-btn__icon">⏸</span><span>暂停</span>' : '<span class="sv-btn__icon">▶</span><span>播放</span>';
+      playBtn.innerHTML = isPlaying
+        ? '<span class="sv-btn__icon">⏸</span><span>暂停</span>'
+        : '<span class="sv-btn__icon">▶</span><span>播放</span>';
       if (!isPlaying) clock.getDelta();
     });
 
-    /* ================= 动画 ================= */
+    /* ==================================================================
+       标签避让
+       ================================================================== */
+    function layoutLabels() {
+      if ((labelTick.v++ % 2) !== 0) return;
+      const items = [];
+      labelObjs.forEach((o) => {
+        const el = o.userData.inner;
+        if (!el || parseFloat(el.style.opacity || '1') < 0.3) return;
+        o.getWorldPosition(labelV);
+        labelV.project(camera);
+        if (labelV.z > 1) return;
+        const x = (labelV.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-labelV.y * 0.5 + 0.5) * window.innerHeight;
+        const w = el.offsetWidth || 56;
+        const h = el.offsetHeight || 18;
+        items.push({ el, sx: x - w / 2, sy: y - h / 2, w, h });
+      });
+      items.sort((a, b) => a.sy - b.sy);
+      const placed = [];
+      items.forEach((it) => {
+        let shift = 0;
+        for (let k = 0; k < 8; k++) {
+          const box = { x1: it.sx, y1: it.sy + shift, x2: it.sx + it.w, y2: it.sy + it.h + shift };
+          const hit = placed.some((p) => !(box.x2 < p.x1 || box.x1 > p.x2 || box.y2 < p.y1 || box.y1 > p.y2));
+          if (!hit) { placed.push(box); break; }
+          shift += it.h + 3;
+        }
+        it.el.style.transform = shift ? 'translateY(' + shift + 'px)' : '';
+      });
+    }
+
+    /* ==================================================================
+       动画
+       ================================================================== */
+    let elapsed = 0;
+
     function animate() {
-      const dt = clock.getDelta();
+      const dt = Math.min(clock.getDelta(), 0.05);
       if (isPlaying) {
-        waterMat.uniforms.uTime.value += dt;
-        runoffMat.uniforms.uTime.value += dt;
-        // 云飘动
-        clouds.forEach((c, i) => {
-          c.position.x += dt * (0.25 + i * 0.04);
-          if (c.position.x > 16) c.position.x = -16;
+        elapsed += dt;
+        const t = elapsed;
+        waterMat.uniforms.uTime.value = t;
+        riverMat.uniforms.uTime.value = t;
+        evapVapor.material.uniforms.uTime.value = t;
+        transpVapor.material.uniforms.uTime.value = t;
+
+        // 云标签跟着云走
+        if (cloudLabelObj) {
+          const anchor = fairClouds[1] || fairClouds[0];
+          if (anchor) cloudLabelObj.position.copy(anchor.position).add(P(0, 1.6, 0));
+        }
+        // 云飘
+        fairClouds.forEach((c, i) => {
+          c.position.x += dt * (0.28 + i * 0.03);
+          if (c.position.x > 30) c.position.x = -30;
+          c.position.y = c.userData._baseY + Math.sin(t * 0.32 + i) * 0.22;
         });
-        // 蒸发粒子：从海面升起
-        const t = performance.now() / 1000;
-        for (let i = 0; i < EVAP_N; i++) {
-          const ph = evapPhase[i] + t * (0.4 + (i % 7) * 0.05);
-          const cycle = (ph % (Math.PI * 2)) / (Math.PI * 2); // 0..1
-          const y = 0.5 + cycle * 6;
-          const spread = cycle * 2.5;
-          evapPos[i * 3] = Math.sin(i * 2.1) * (2 + spread) + Math.sin(ph * 0.7) * 0.8;
-          evapPos[i * 3 + 1] = y;
-          evapPos[i * 3 + 2] = Math.cos(i * 1.7) * (2 + spread * 0.7) + Math.cos(ph * 0.6) * 0.8;
-        }
-        evapGeo.attributes.position.needsUpdate = true;
+        stormClouds.forEach((c, i) => {
+          c.position.x += dt * 0.16;
+          if (c.position.x > 30) c.position.x = -30;
+          c.position.y = c.userData._baseY + Math.sin(t * 0.22 + i * 1.7) * 0.16;
+        });
+
         // 雨
-        for (let i = 0; i < RAIN_N; i++) {
-          const r = rainData[i];
-          r.y -= dt * r.v;
-          if (r.y < 0.2) r.y = 4 + Math.random() * 7;
-          rainPos[i * 6] = r.x; rainPos[i * 6 + 1] = r.y; rainPos[i * 6 + 2] = r.z;
-          rainPos[i * 6 + 3] = r.x; rainPos[i * 6 + 4] = r.y - 0.35; rainPos[i * 6 + 5] = r.z;
+        const rainOn = wxNow.rain > 0.02;
+        if (rainOn) {
+          const activeN = Math.floor(RAIN_MAX * wxNow.rain);
+          for (let i = 0; i < RAIN_MAX; i++) {
+            const r = rainDrops[i];
+            if (i < activeN) {
+              r.y -= dt * r.v;
+              if (r.y < r.ground) {
+                r.y = 15 + Math.random() * 4;
+                r.x = (Math.random() - 0.5) * 26 + RAIN_ORIGIN.x;
+                r.z = (Math.random() - 0.5) * 24 + RAIN_ORIGIN.z;
+                r.ground = Math.max(heightAt(r.x, r.z), SEA_Y) + 0.1;
+              }
+              dummy.position.set(r.x, r.y, r.z);
+              dummy.scale.set(1, 1, 1);
+            } else {
+              dummy.position.set(0, -999, 0);
+              dummy.scale.set(0.001, 0.001, 0.001);
+            }
+            dummy.updateMatrix();
+            rainMesh.setMatrixAt(i, dummy.matrix);
+          }
+          rainMesh.instanceMatrix.needsUpdate = true;
         }
-        rainGeo.attributes.position.needsUpdate = true;
+        rainMesh.visible = rainOn;
+
+        // 下渗粒子：往下钻，到地下消失
+        for (let i = 0; i < infilPts.length; i++) {
+          const p = infilPts[i];
+          const cyc = (p.ph + t * 0.22) % 1;
+          infilPos[i * 3] = p.x;
+          infilPos[i * 3 + 1] = p.y - cyc * 1.1;
+          infilPos[i * 3 + 2] = p.z;
+        }
+        infilGeo.attributes.position.needsUpdate = true;
+        infilMat.opacity = 0.25 + wxNow.rain * 0.65;
+
+        // 天气渐变
+        wxNow.cloudWhite = lerp(wxNow.cloudWhite, wxTarget.cloudWhite, dt * 1.6);
+        wxNow.cloudDark = lerp(wxNow.cloudDark, wxTarget.cloudDark, dt * 1.6);
+        wxNow.rain = lerp(wxNow.rain, wxTarget.rain, dt * 1.1);
+        wxNow.sun = lerp(wxNow.sun, wxTarget.sun, dt * 1.6);
+        wxNow.fog = lerp(wxNow.fog, wxTarget.fog, dt * 1.2);
+        wxNow.sky = lerp(wxNow.sky, wxTarget.sky, dt * 1.4);
+
+        cloudWhiteMat.opacity = wxNow.cloudWhite;
+        cloudDarkMat.opacity = wxNow.cloudDark;
+        cloudWhiteMat.color.setRGB(
+          lerp(1.0, 0.72, wxNow.sky), lerp(1.0, 0.78, wxNow.sky), lerp(1.0, 0.84, wxNow.sky)
+        );
+        skyMat.uniforms.uGloom.value = wxNow.sky;
+        waterMat.uniforms.uGloom.value = wxNow.sky;
+        riverMat.uniforms.uGloom.value = wxNow.sky;
+        scene.fog.density = wxNow.fog;
+        scene.fog.color.setRGB(
+          lerp(0.74, 0.55, wxNow.sky), lerp(0.84, 0.59, wxNow.sky), lerp(0.92, 0.64, wxNow.sky)
+        );
+        sunLight.intensity = 0.55 + 1.95 * wxNow.sun;
+        hemi.intensity = 0.42 + 0.58 * wxNow.sun;
+        sunGlow.material.opacity = 0.35 + 0.65 * wxNow.sun;
+        sunDisc.material.color.setRGB(1, lerp(0.96, 0.86, 1 - wxNow.sun), lerp(0.82, 0.62, 1 - wxNow.sun));
+        renderer.toneMappingExposure = lerp(1.02, 0.82, wxNow.sky * 0.8);
       }
+
       fly.update(dt);
       controls.update();
+      layoutLabels();
+      labelRenderer.render(scene, camera);
       if (composer) composer.render();
       else renderer.render(scene, camera);
       requestAnimationFrame(animate);
     }
-    animate();
 
-    setTimeout(() => document.getElementById('loader').classList.add('is-done'), 400);
+    /* ==================================================================
+       启动
+       ================================================================== */
+    applySegment('overview');
+    setWeather('clear');
+    document.getElementById('loader').classList.add('is-done');
+    animate();
 
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       composer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
     });
   </script>
 </body>
