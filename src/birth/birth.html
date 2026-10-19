@@ -4,37 +4,58 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>中国大陆出生人口 · 1985-2025</title>
+  <link rel="stylesheet" href="../shared/theme.css" />
   <style>
-    body { margin: 0; overflow: hidden; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      background: radial-gradient(circle at 50% 40%, #16223a, #050510 80%); }
-    #info {
-      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-      color: #fff; background: rgba(0,0,0,0.55); padding: 10px 18px;
-      border-radius: 8px; font-size: 14px; letter-spacing: 1px; pointer-events: none; white-space: nowrap;
-    }
-    #hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-      color: #ccc; font-size: 12px; pointer-events: none; white-space: nowrap; }
-    #tooltip {
-      position: absolute; display: none; pointer-events: none; z-index: 20;
-      color: #fff; background: rgba(10,15,30,0.92); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px; padding: 8px 14px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-    }
-    #tooltip b { font-size: 16px; }
-    #voiceBtn {
-      position: absolute; top: 16px; right: 20px; width: 44px; height: 44px;
-      border-radius: 50%; border: none; cursor: pointer; font-size: 20px;
-      background: rgba(10,15,30,0.85); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-      z-index: 10; transition: transform 0.2s, background 0.2s;
-    }
-    #voiceBtn:hover { transform: scale(1.1); }
-    #voiceBtn.off { opacity: 0.45; }
+    /* 数据面板专属 */
+    .insight-row { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 0; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+    .insight-row:last-child { border-bottom: none; }
+    .insight-row span { font-size: 12.5px; color: var(--sv-text-dim); }
+    .insight-row b { font-size: 16px; font-weight: 600; }
+    .insight-row b.up { color: var(--sv-warn); }
+    .insight-row b.down { color: var(--sv-accent); }
   </style>
 </head>
 <body>
-  <div id="info">中国大陆 · 每年出生人口（柱）与出生率（线，1985-2025）</div>
-  <div id="hint">鼠标悬停查看数据 · 拖拽旋转视角 · 滚轮缩放 · 粉色折线为出生率‰</div>
-  <button id="voiceBtn" title="语音开关">🔊</button>
-  <div id="tooltip"></div>
+  <div class="sv-loader" id="loader">
+    <div class="sv-loader__ring"></div>
+    <div class="sv-loader__text">正在整理 40 年数据…</div>
+  </div>
+
+  <div class="sv-brand sv-in" style="--sv-accent:#f6b73c">
+    <div class="sv-brand__eyebrow">Birth Population · 1985-2025</div>
+    <div class="sv-brand__title">人口 · 出生人口四十年</div>
+    <div class="sv-brand__sub">中国大陆每年出生人口与出生率 · 三维数据雕塑</div>
+  </div>
+
+  <button class="sv-iconbtn sv-iconbtn--top" id="voiceBtn" title="语音开关">🔊</button>
+
+  <!-- 数据洞察面板 -->
+  <div class="sv-panel sv-in" style="right:24px; top:96px; width:250px;">
+    <div class="sv-panel__title">数据洞察</div>
+    <div class="insight-row"><span>峰值 1987</span><b class="up sv-num">2529 万</b></div>
+    <div class="insight-row"><span>低谷 2025</span><b class="down sv-num">792 万</b></div>
+    <div class="insight-row"><span>缩水幅度</span><b class="down sv-num">-69%</b></div>
+    <div class="insight-row"><span>出生率 2025</span><b class="down sv-num">5.63‰</b></div>
+  </div>
+
+  <!-- 图例 -->
+  <div class="sv-legend sv-panel sv-in">
+    <div class="sv-panel__title">图例</div>
+    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:linear-gradient(90deg,#1d4ed8,#f6b73c)"></span>柱高 = 出生人口（万人）</div>
+    <div class="sv-legend__row"><span class="sv-legend__dot sv-legend__dot--line" style="background:#ff5c8a"></span>折线 = 出生率（‰）</div>
+  </div>
+
+  <div class="sv-tooltip" id="tooltip"></div>
+
+  <div class="sv-dock sv-in">
+    <button class="sv-btn sv-btn--ghost" id="view3d">3D 视角</button>
+    <button class="sv-btn sv-btn--ghost" id="viewFront">正视</button>
+    <button class="sv-btn sv-btn--ghost" id="viewTop">俯视</button>
+    <span class="sv-dock__sep"></span>
+    <button class="sv-btn sv-btn--ghost" id="replayBtn">▶ 重播动画</button>
+  </div>
+
+  <div class="sv-hint">鼠标悬停查看数据 · 拖拽旋转 · 滚轮缩放</div>
 
   <script type="importmap">
   {
@@ -48,8 +69,408 @@
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+    
 
-    // ---- 数据（万人）----
+    // ===== SciVis Kit（由 tools/inline-kit.js 自动内联，勿手改） =====
+    const SciVis = (function () {
+    
+    // THREE / addons 依赖占位，由 init() 注入
+    let THREE = null;
+    let OrbitControls = null;
+    let EffectComposer = null;
+    let RenderPass = null;
+    let UnrealBloomPass = null;
+    
+    function init(_THREE, addons) {
+      THREE = _THREE;
+      addons = addons || {};
+      OrbitControls = addons.OrbitControls;
+      EffectComposer = addons.EffectComposer;
+      RenderPass = addons.RenderPass;
+      UnrealBloomPass = addons.UnrealBloomPass;
+      return exports;
+    }
+    
+    /* ---------------- 确定性噪声（替代 Math.random 做程序化纹理） --------- */
+    function hash3(x, y, z) {
+      let n = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453123;
+      return n - Math.floor(n);
+    }
+    function smooth(t) { return t * t * (3 - 2 * t); }
+    function valueNoise2(x, y) {
+      const ix = Math.floor(x), iy = Math.floor(y);
+      const fx = x - ix, fy = y - iy;
+      const a = hash3(ix, iy, 0), b = hash3(ix + 1, iy, 0);
+      const c = hash3(ix, iy + 1, 0), d = hash3(ix + 1, iy + 1, 0);
+      return a + (b - a) * smooth(fx) + (c - a) * smooth(fy) * (1 - smooth(fx)) + (d - b) * smooth(fx) * smooth(fy);
+    }
+    function fbm2(x, y, oct) {
+      let v = 0, amp = 0.5, f = 1;
+      for (let i = 0; i < (oct || 5); i++) { v += amp * valueNoise2(x * f, y * f); f *= 2; amp *= 0.5; }
+      return v;
+    }
+    function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    
+    /* ---------------- 渲染器：ACES 色调映射 + UnrealBloom --------- */
+    function createRenderer(opts) {
+      opts = opts || {};
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: opts.alpha !== false,
+        powerPreference: 'high-performance',
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = opts.exposure != null ? opts.exposure : 1.1;
+      if (opts.shadow !== false) {
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      }
+      document.body.appendChild(renderer.domElement);
+    
+      let composer = null, bloom = null, renderPass = null;
+      if (opts.bloom !== false) {
+        composer = new EffectComposer(renderer);
+        renderPass = new RenderPass(new THREE.Scene(), new THREE.Camera());
+        composer.addPass(renderPass);
+        bloom = new UnrealBloomPass(
+          new THREE.Vector2(window.innerWidth, window.innerHeight),
+          opts.bloomStrength != null ? opts.bloomStrength : 0.55,
+          opts.bloomRadius != null ? opts.bloomRadius : 0.7,
+          opts.bloomThreshold != null ? opts.bloomThreshold : 0.85
+        );
+        composer.addPass(bloom);
+      }
+      // 页面需将真实场景/相机绑定到 renderPass：renderPass.scene = scene; renderPass.camera = camera;
+      return { renderer, composer, bloom, renderPass };
+    }
+    
+    /* ---------------- 基础场景 + 相机 + 轨道控制 --------- */
+    function createScene(bg, fog) {
+      const scene = new THREE.Scene();
+      if (bg) scene.background = new THREE.Color(bg);
+      if (fog) scene.fog = fog;
+      return scene;
+    }
+    function createCamera(fov, near, far) {
+      return new THREE.PerspectiveCamera(fov || 50, window.innerWidth / window.innerHeight, near || 0.1, far || 1000);
+    }
+    function createControls(camera, dom, target) {
+      const c = new OrbitControls(camera, dom);
+      c.enableDamping = true;
+      c.dampingFactor = 0.08;
+      c.rotateSpeed = 0.7;
+      if (target) c.target.copy(target);
+      return c;
+    }
+    
+    /* ---------------- 平滑运镜（点击聚焦 / 漫游） --------- */
+    function makeFly(camera, controls) {
+      const state = {
+        active: false,
+        from: new THREE.Vector3(), to: new THREE.Vector3(),
+        fromTarget: new THREE.Vector3(), toTarget: new THREE.Vector3(),
+        t: 0, dur: 1, onDone: null,
+      };
+      function flyTo(pos, target, dur, onDone) {
+        state.from.copy(camera.position);
+        state.to.copy(pos);
+        state.fromTarget.copy(controls.target);
+        state.toTarget.copy(target);
+        state.t = 0;
+        state.dur = dur || 1;
+        state.onDone = onDone || null;
+        state.active = true;
+        controls.enabled = false;
+      }
+      function update(dt) {
+        if (!state.active) return;
+        state.t += dt / state.dur;
+        const k = state.t >= 1 ? 1 : 1 - Math.pow(1 - state.t, 3); // easeOutCubic
+        camera.position.lerpVectors(state.from, state.to, k);
+        controls.target.lerpVectors(state.fromTarget, state.toTarget, k);
+        camera.lookAt(controls.target);
+        if (state.t >= 1) {
+          state.active = false;
+          controls.enabled = true;
+          if (state.onDone) state.onDone();
+        }
+      }
+      function cancel() {
+        if (!state.active) return;
+        state.active = false;
+        controls.enabled = true;
+      }
+      return { flyTo, update, cancel, isActive: () => state.active };
+    }
+    
+    /* ---------------- 语音（中文） --------- */
+    function createVoice() {
+      const synth = window.speechSynthesis;
+      let enabled = true, zhVoice = null;
+      function pick() {
+        const vs = synth.getVoices();
+        zhVoice = vs.find((v) => /zh/i.test(v.lang)) || null;
+      }
+      pick();
+      synth.addEventListener('voiceschanged', pick);
+      function speak(text) {
+        if (!enabled || !synth || !text) return;
+        synth.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.02;
+        if (zhVoice) u.voice = zhVoice;
+        synth.speak(u);
+      }
+      function toggle() { enabled = !enabled; if (!enabled) synth.cancel(); return enabled; }
+      function stop() { synth.cancel(); }
+      return { speak, toggle, stop, isEnabled: () => enabled };
+    }
+    
+    /* ---------------- 信息卡片（CSS 类 + 结构化字段） --------- */
+    function createCard(container) {
+      const el = document.createElement('div');
+      el.className = 'sv-card';
+      el.innerHTML =
+        '<div class="sv-card__head">' +
+        '  <span class="sv-card__dot"></span>' +
+        '  <div class="sv-card__titles"><div class="sv-card__title"></div><div class="sv-card__sub"></div></div>' +
+        '  <button class="sv-card__close" aria-label="关闭">\u00D7</button>' +
+        '</div>' +
+        '<div class="sv-card__body"></div>';
+      container.appendChild(el);
+      const dot = el.querySelector('.sv-card__dot');
+      const title = el.querySelector('.sv-card__title');
+      const sub = el.querySelector('.sv-card__sub');
+      const body = el.querySelector('.sv-card__body');
+      const close = el.querySelector('.sv-card__close');
+    
+      function show(data) {
+        if (!data || !data.name) return;
+        const color = data.color ? '#' + data.color.toString(16).padStart(6, '0') : '#6a8cff';
+        dot.style.background = color;
+        dot.style.color = color;
+        title.textContent = data.name;
+        sub.textContent = data.type || '';
+        body.innerHTML = '';
+        if (data.stats && data.stats.length) {
+          data.stats.forEach((s) => {
+            const row = document.createElement('div');
+            row.className = 'sv-card__stat';
+            row.innerHTML = '<span>' + s.label + '</span><b>' + s.value + '</b>';
+            body.appendChild(row);
+          });
+        }
+        if (data.desc && data.desc.length) {
+          data.desc.forEach((line) => {
+            const row = document.createElement('div');
+            row.className = 'sv-card__row';
+            row.textContent = line;
+            body.appendChild(row);
+          });
+        }
+        el.classList.add('is-open');
+      }
+      function hide() { el.classList.remove('is-open'); }
+      close.addEventListener('click', hide);
+      return { element: el, show, hide };
+    }
+    
+    /* ---------------- 悬停 + 点击拾取（合并） --------- */
+    function makePicker(camera, dom) {
+      const raycaster = new THREE.Raycaster();
+      const ndc = new THREE.Vector2();
+      function setFromEvent(e) {
+        const r = dom.getBoundingClientRect();
+        ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+        ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+        raycaster.setFromCamera(ndc, camera);
+      }
+      function pick(e, targets) {
+        setFromEvent(e);
+        const hits = raycaster.intersectObjects(targets, true);
+        return hits.length ? hits[0].object : null;
+      }
+      function onHover(targets, cb) {
+        dom.addEventListener('mousemove', (e) => cb(pick(e, targets), e));
+        dom.addEventListener('mouseleave', () => cb(null, null));
+      }
+      function onClick(targets, cb) {
+        dom.addEventListener('click', (e) => cb(pick(e, targets), e));
+      }
+      return { pick, onHover, onClick };
+    }
+    
+    /* ---------------- 程序化纹理 --------- */
+    function makeCanvas(size) {
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      return c;
+    }
+    function glowTexture(inner, mid, size) {
+      size = size || 256;
+      const c = makeCanvas(size);
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      g.addColorStop(0, inner);
+      g.addColorStop(0.35, mid);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, size, size);
+      return new THREE.CanvasTexture(c);
+    }
+    // 行星地表（fbm 噪声 + 色带，经度无缝）
+    function planetTexture(palette, size) {
+      size = size || 256;
+      const c = makeCanvas(size);
+      const ctx = c.getContext('2d');
+      const img = ctx.createImageData(size, size);
+      const bands = palette.map((p) => new THREE.Color(p));
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const u = x / size, v = y / size;
+          const th = u * Math.PI * 2;
+          const nx = Math.cos(th) * 3, ny = Math.sin(th) * 3;
+          const n = fbm2(nx + 1.7, v * 5 - ny * 0.4, 5);
+          const n2 = fbm2(nx * 2.3 + 9.1, v * 7 + 3.3, 4);
+          let t = clamp(n * 0.7 + n2 * 0.3, 0, 1);
+          const col = sampleBands(bands, t);
+          const i = (y * size + x) * 4;
+          img.data[i] = col.r * 255;
+          img.data[i + 1] = col.g * 255;
+          img.data[i + 2] = col.b * 255;
+          img.data[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+    function sampleBands(bands, t) {
+      const seg = 1 / (bands.length - 1);
+      const idx = Math.min(Math.floor(t / seg), bands.length - 2);
+      const local = (t - idx * seg) / seg;
+      return bands[idx].clone().lerp(bands[idx + 1], local);
+    }
+    
+    // 恐龙皮肤纹理（鳞片噪声 + 色斑 + 腹部渐变）
+    function skinTexture(baseColor, spotColor, size) {
+      size = size || 256;
+      const c = makeCanvas(size);
+      const ctx = c.getContext('2d');
+      const img = ctx.createImageData(size, size);
+      const base = new THREE.Color(baseColor);
+      const spot = new THREE.Color(spotColor);
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const u = x / size, v = y / size;
+          // 鳞片：高频网格噪声
+          const scale = fbm2(u * 18, v * 18, 4);
+          const scale2 = fbm2(u * 40 + 3, v * 40 + 7, 3);
+          // 色斑：低频大块斑纹
+          const spotN = fbm2(u * 6 + 11, v * 6 - 5, 4);
+          let col = base.clone();
+          col.lerp(spot, S.clamp((spotN - 0.42) * 3.0, 0, 1) * 0.5);
+          // 鳞片刻痕（微亮/微暗）
+          const sheen = (scale2 - 0.5) * 0.16 + (scale - 0.5) * 0.08;
+          col.r = S.clamp(col.r + sheen, 0, 1);
+          col.g = S.clamp(col.g + sheen, 0, 1);
+          col.b = S.clamp(col.b + sheen, 0, 1);
+          const i = (y * size + x) * 4;
+          img.data[i] = col.r * 255;
+          img.data[i + 1] = col.g * 255;
+          img.data[i + 2] = col.b * 255;
+          img.data[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+    
+    /* ---------------- 星空（分层 + 大小/亮度变化） --------- */
+    function createStarfield(count, radius, color1, color2) {
+      count = count || 1400;
+      radius = radius || 240;
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      const col = new Float32Array(count * 3);
+      const c1 = new THREE.Color(color1 || 0xffffff);
+      const c2 = new THREE.Color(color2 || 0xaac4ff);
+      for (let i = 0; i < count; i++) {
+        const v = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1)
+          .normalize().multiplyScalar(radius);
+        pos[i * 3] = v.x; pos[i * 3 + 1] = v.y; pos[i * 3 + 2] = v.z;
+        const c = c1.clone().lerp(c2, Math.random());
+        const b = 0.4 + Math.random() * 0.6;
+        col[i * 3] = c.r * b; col[i * 3 + 1] = c.g * b; col[i * 3 + 2] = c.b * b;
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      const mat = new THREE.PointsMaterial({
+        size: 0.5, vertexColors: true, transparent: true, opacity: 0.85,
+        sizeAttenuation: true, depthWrite: false,
+      });
+      return new THREE.Points(geo, mat);
+    }
+    
+    /* ---------------- UI 助手 --------- */
+    // 创建 3D 标签（需传入 CSS2DObject 构造器）并定位
+    function makeLabel(CSS2DObject, text, position, className) {
+      const div = document.createElement('div');
+      div.className = className || 'sv-label';
+      div.textContent = text;
+      const obj = new CSS2DObject(div);
+      if (position) obj.position.copy(position);
+      return obj;
+    }
+    
+    function toast(text, ms) {  let el = document.querySelector('.sv-toast');
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'sv-toast';
+        document.body.appendChild(el);
+      }
+      el.textContent = text;
+      el.classList.add('is-open');
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.classList.remove('is-open'), ms || 2200);
+    }
+    function bindVoiceButton(btn, voice) {
+      if (!btn) return;
+      const sync = () => btn.classList.toggle('is-off', !voice.isEnabled());
+      sync();
+      btn.addEventListener('click', () => { voice.toggle(); sync(); });
+    }
+    
+    // 具名导出集合（供 init 返回全部 API）
+    const exports = {
+      init, hash3, valueNoise2, fbm2, clamp, lerp,
+      createRenderer, createScene, createCamera, createControls,
+      makeFly, createVoice, createCard, makePicker, makeLabel,
+      glowTexture, planetTexture, skinTexture, createStarfield,
+      toast, bindVoiceButton,
+    };
+    
+    
+    return exports;
+    })();
+
+
+    const S = SciVis.init(THREE, { OrbitControls, EffectComposer, RenderPass, UnrealBloomPass });
+
+    /* ================= 数据 ================= */
     const DATA = [
       [1985,2211.39],[1986,2392.81],[1987,2529.05],[1988,2464.35],[1989,2414.05],
       [1990,2390.70],[1991,2264.74],[1992,2124.91],[1993,2131.80],[1994,2109.55],
@@ -61,8 +482,6 @@
       [2020,1202.26],[2021,1062.00],[2022,956.00],[2023,902.00],[2024,954.00],
       [2025,792.00],
     ];
-
-    // 出生率（‰），与上面同一年份
     const RATE = [
       21.04,22.43,23.33,22.37,21.58,21.06,19.68,18.24,18.09,17.70,
       17.12,16.98,16.57,15.64,14.64,14.03,13.38,12.86,12.41,12.29,
@@ -71,227 +490,293 @@
       5.63,
     ];
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 500);
-    camera.position.set(55, 38, 78);
-    camera.lookAt(20, 10, 0);
+    const MAX = 2600, CHART_H = 36, SPACING = 2.2;
+    const N = DATA.length;
+    const TOTAL_W = (N - 1) * SPACING;
+    const CX = TOTAL_W / 2;
+    const LINE_Z = 2.2;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    document.body.appendChild(renderer.domElement);
+    /* ================= 场景 ================= */
+    const scene = S.createScene(0x04060f);
+    const camera = S.createCamera(42, 0.1, 800);
+    camera.position.set(CX, 26, 88);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.target.set(20, 12, 0);
+    const { renderer, composer, renderPass } = S.createRenderer({
+      exposure: 1.1, bloomStrength: 0.4, bloomRadius: 0.5, bloomThreshold: 0.8,
+    });
+    renderPass.scene = scene;
+    renderPass.camera = camera;
+
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.body.appendChild(labelRenderer.domElement);
+
+    const controls = S.createControls(camera, renderer.domElement, new THREE.Vector3(CX, 12, 0));
     controls.minDistance = 20;
-    controls.maxDistance = 160;
+    controls.maxDistance = 200;
+    controls.maxPolarAngle = Math.PI * 0.55;
+
+    const fly = S.makeFly(camera, controls);
 
     // 灯光
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const dir = new THREE.DirectionalLight(0xffffff, 1.1);
-    dir.position.set(40, 60, 30);
+    scene.add(new THREE.AmbientLight(0xaabbdd, 0.5));
+    const dir = new THREE.DirectionalLight(0xfff4e0, 1.4);
+    dir.position.set(CX - 30, 70, 50);
     scene.add(dir);
-    const rim = new THREE.DirectionalLight(0x6a5cff, 0.5);
-    rim.position.set(-30, 20, -40);
-    scene.add(rim);
+    const fill = new THREE.DirectionalLight(0x8fb0ff, 0.4);
+    fill.position.set(CX + 40, 30, -30);
+    scene.add(fill);
 
-    // 星空背景
-    const stars = new THREE.Points(
-      new THREE.BufferGeometry(),
-      new THREE.PointsMaterial({ color: 0xffffff, size: 0.3, transparent: true, opacity: 0.7 })
-    );
-    {
-      const n = 900; const pos = new Float32Array(n * 3);
-      for (let i = 0; i < n * 3; i++) pos[i] = (Math.random() - 0.5) * 400;
-      stars.geometry.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    }
-    scene.add(stars);
+    scene.add(S.createStarfield(900, 400, 0xffffff, 0x8fa8ff));
 
-    // 峰值/基准比例
-    const MAX = 2600;
-    const BAR_SPACING = 2.2;
-    const baseY = 0;
-    const bars = [];
-
-    // ---- 颜色插值：峰值暖黄，谷底冷蓝 ----
+    /* ================= 色彩映射 ================= */
+    const C_LOW = new THREE.Color(0x1d4ed8);
+    const C_HIGH = new THREE.Color(0xf6b73c);
     function colorFor(v) {
-      const t = (v - 700) / (2529 - 700);
-      const c1 = new THREE.Color(0x2f6bff); // 低
-      const c2 = new THREE.Color(0xffd66b); // 高
-      return c1.lerp(c2, Math.min(Math.max(t, 0), 1));
+      const t = S.clamp((v - 700) / (2529 - 700), 0, 1);
+      return C_LOW.clone().lerp(C_HIGH, Math.pow(t, 0.85));
+    }
+
+    /* ================= 柱体（渐变 shader：顶亮底暗） ================= */
+    const bars = [];
+    const barGroup = new THREE.Group();
+    scene.add(barGroup);
+
+    const barVertex = `
+      varying float vY;
+      void main(){
+        vY = uv.y;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }`;
+    function barMaterial(color) {
+      return new THREE.ShaderMaterial({
+        transparent: true,
+        uniforms: {
+          uColor: { value: color },
+          uOpacity: { value: 1.0 },
+        },
+        vertexShader: barVertex,
+        fragmentShader: `
+          varying float vY;
+          uniform vec3 uColor;
+          uniform float uOpacity;
+          void main(){
+            // 顶部更亮 + 自发光感，底部压暗
+            vec3 col = uColor * (0.55 + vY * 0.75);
+            // 顶端一条亮线
+            col += vec3(1.0) * smoothstep(0.96, 1.0, vY) * 0.35;
+            gl_FragColor = vec4(col, uOpacity);
+          }`,
+      });
     }
 
     DATA.forEach(([year, v], i) => {
-      const h = v / MAX * 40;
-      const x = i * BAR_SPACING;
-      const geo = new THREE.BoxGeometry(1.4, h, 1.4);
-      const mat = new THREE.MeshPhongMaterial({
-        color: colorFor(v),
-        transparent: true, opacity: 0.9,
-        emissive: colorFor(v).clone().multiplyScalar(0.12),
-      });
-      const bar = new THREE.Mesh(geo, mat);
-      bar.position.set(x, baseY + h / 2, 0);
-      bar.userData = { year, v };
-      scene.add(bar);
+      const h = v / MAX * CHART_H;
+      const mat = barMaterial(colorFor(v));
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(1.5, h, 1.5), mat);
+      bar.position.set(i * SPACING, h / 2, 0);
+      bar.userData = { year, v, h, idx: i };
+      bar.scale.y = 0.001;
+      barGroup.add(bar);
       bars.push(bar);
     });
 
-    // ---- 出生率折线（叠加在柱状图上方）----
-    const RATE_MAX = 25;  // ‰ 刻度上限，映射到柱高上限
-    const lineColor = 0xff5c8a;
-    const linePoints = DATA.map(([year], i) => {
-      const x = i * BAR_SPACING;
-      const y = RATE[i] / RATE_MAX * 40;
-      return new THREE.Vector3(x, y, 0);
-    });
-    const rateLine = new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints(linePoints),
-      new THREE.LineBasicMaterial({ color: lineColor, linewidth: 3 })
+    /* ================= 出生率折线（管状 + 流动） ================= */
+    const linePoints = DATA.map(([year], i) =>
+      new THREE.Vector3(i * SPACING, RATE[i] / 25 * CHART_H, LINE_Z)
     );
-    scene.add(rateLine);
+    const rateCurve = new THREE.CatmullRomCurve3(linePoints);
+    const LINE_SEGMENTS = 400;
+    const rateTube = new THREE.Mesh(
+      new THREE.TubeGeometry(rateCurve, LINE_SEGMENTS, 0.1, 10, false),
+      new THREE.MeshBasicMaterial({ color: 0xff5c8a, transparent: true, opacity: 0.95 })
+    );
+    // 用 drawRange 做折线生长动画
+    const tubeIndexCount = rateTube.geometry.index.count;
+    rateTube.geometry.setDrawRange(0, 0);
+    scene.add(rateTube);
 
-    // 折线上的数据点小球
+    // 数据点
     const dotMat = new THREE.MeshBasicMaterial({ color: 0xff8fb2 });
-    const rateDots = [];
+    const dots = [];
     linePoints.forEach((p, i) => {
-      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), dotMat);
+      const dot = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 14), dotMat);
       dot.position.copy(p);
-      dot.userData = { year: DATA[i][0], rate: RATE[i] };
+      dot.userData = { year: DATA[i][0], rate: RATE[i], v: DATA[i][1], idx: i };
+      dot.scale.setScalar(0.001);
       scene.add(dot);
-      rateDots.push(dot);
+      dots.push(dot);
     });
 
-    // ---- 底部基准线 ----
-    const totalW = (DATA.length - 1) * BAR_SPACING;
-    const baseLine = new THREE.Mesh(
-      new THREE.BoxGeometry(totalW + 3, 0.3, 1.6),
-      new THREE.MeshPhongMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 })
-    );
-    baseLine.position.set(totalW / 2, baseY - 0.2, 0);
-    scene.add(baseLine);
-
-    // ---- 年份标签（文字精灵）----
-    function makeTextSprite(text, size) {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = 256; canvas.height = 128;
-      ctx.font = 'bold ' + size + 'px "PingFang SC","Microsoft YaHei",sans-serif';
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(text, 128, 64);
-      const tex = new THREE.CanvasTexture(canvas);
-      const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
-      const sprite = new THREE.Sprite(mat);
-      sprite.scale.set(4, 2, 1);
-      return sprite;
+    /* ================= 坐标系统（CSS2D 高清标签） ================= */
+    function addLabel(text, pos, cls) {
+      const div = document.createElement('div');
+      div.className = cls || 'sv-label sv-label--value';
+      div.textContent = text;
+      const obj = new CSS2DObject(div);
+      obj.position.copy(pos);
+      scene.add(obj);
+      return obj;
     }
-
-    const labelEvery = Math.ceil(DATA.length / 15); // 约每5年一个标签
+    // 年份
+    const labelEvery = 4;
     DATA.forEach(([year], i) => {
       if (i % labelEvery !== 0) return;
-      const s = makeTextSprite(String(year), 40);
-      s.position.set(i * BAR_SPACING, baseY - 2.6, 0);
-      scene.add(s);
+      addLabel(String(year), new THREE.Vector3(i * SPACING, -2.6, 0));
     });
-
-    // ---- 语音 + 提示 ----
-    const synth = window.speechSynthesis;
-    let voiceEnabled = true;
-    let zhVoice = null;
-    function pickVoice() {
-      const vs = synth.getVoices();
-      zhVoice = vs.find((v) => /zh/i.test(v.lang)) || null;
-    }
-    pickVoice();
-    synth.addEventListener('voiceschanged', pickVoice);
-    const voiceBtn = document.getElementById('voiceBtn');
-    voiceBtn.addEventListener('click', () => {
-      voiceEnabled = !voiceEnabled;
-      voiceBtn.classList.toggle('off', !voiceEnabled);
-      if (!voiceEnabled) synth.cancel();
+    // 纵轴刻度
+    [500, 1000, 1500, 2000, 2500].forEach((v) => {
+      const y = v / MAX * CHART_H;
+      addLabel(String(v), new THREE.Vector3(-4, y, 0));
+      const grid = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(-2.5, y, -0.9), new THREE.Vector3(TOTAL_W + 2.5, y, -0.9),
+        ]),
+        new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.08 })
+      );
+      scene.add(grid);
     });
+    addLabel('万人', new THREE.Vector3(-4, CHART_H + 2, 0));
+    // 峰值/低谷标注
+    const peakIdx = 2, troughIdx = N - 1;
+    addLabel('▲ 1987 峰值', new THREE.Vector3(peakIdx * SPACING, DATA[peakIdx][1] / MAX * CHART_H + 2, 0), 'sv-label');
+    addLabel('▼ 2025 新低', new THREE.Vector3(troughIdx * SPACING, DATA[troughIdx][1] / MAX * CHART_H + 2, 0), 'sv-label');
 
-    // ---- 悬停拾取 + tooltip ----
-    const raycaster = new THREE.Raycaster();
-    const pointer = new THREE.Vector2();
+    // 底座
+    const base = new THREE.Mesh(
+      new THREE.BoxGeometry(TOTAL_W + 6, 0.4, 2),
+      new THREE.MeshStandardMaterial({ color: 0x2a3a5c, roughness: 0.6, metalness: 0.3 })
+    );
+    base.position.set(CX, -0.25, 0);
+    scene.add(base);
+
+    // 地面网格（增加空间感）
+    const gridHelper = new THREE.GridHelper(TOTAL_W + 40, 30, 0x1a2a4a, 0x121e36);
+    gridHelper.position.set(CX, -0.5, 0);
+    scene.add(gridHelper);
+
+    /* ================= 交互 ================= */
+    const voice = S.createVoice();
+    S.bindVoiceButton(document.getElementById('voiceBtn'), voice);
+
     const tooltip = document.getElementById('tooltip');
+    const picker = S.makePicker(camera, renderer.domElement);
+    const targets = [...bars, ...dots];
     let hovered = null;
 
-    function onMove(event) {
-      pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-      pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-      raycaster.setFromCamera(pointer, camera);
-      const hits = raycaster.intersectObjects(bars.concat(rateDots), false);
-      if (hits.length > 0) {
-        const obj = hits[0].object;
-        if (hovered !== obj) {
-          hovered = obj;
-          const isBar = obj.geometry.type === 'BoxGeometry';
-          if (isBar) {
-            const ri = DATA.findIndex((d) => d[0] === obj.userData.year);
-            tooltip.innerHTML = '<b>' + obj.userData.year + '年</b><br>出生人口：' + obj.userData.v.toFixed(2) + ' 万人<br>出生率：' + RATE[ri].toFixed(2) + ' ‰';
-            if (voiceEnabled) {
-              synth.cancel();
-              const u = new SpeechSynthesisUtterance(obj.userData.year + '年，出生人口' + obj.userData.v.toFixed(2) + '万人，出生率千分之' + RATE[ri].toFixed(2));
-              u.lang = 'zh-CN'; u.rate = 0.9;
-              if (zhVoice) u.voice = zhVoice;
-              synth.speak(u);
-            }
-          } else {
-            const bi = DATA.findIndex((d) => d[0] === obj.userData.year);
-            tooltip.innerHTML = '<b>' + obj.userData.year + '年</b><br>出生率：' + obj.userData.rate.toFixed(2) + ' ‰<br>出生人口：' + DATA[bi][1].toFixed(2) + ' 万人';
-            if (voiceEnabled) {
-              synth.cancel();
-              const u = new SpeechSynthesisUtterance(obj.userData.year + '年，出生率千分之' + obj.userData.rate.toFixed(2) + '，出生人口' + DATA[bi][1].toFixed(2) + '万人');
-              u.lang = 'zh-CN'; u.rate = 0.9;
-              if (zhVoice) u.voice = zhVoice;
-              synth.speak(u);
-            }
-          }
-        }
-        tooltip.style.display = 'block';
-        tooltip.style.left = event.clientX + 16 + 'px';
-        tooltip.style.top = event.clientY + 16 + 'px';
-        renderer.domElement.style.cursor = 'pointer';
-      } else {
-        if (hovered) { hovered = null; synth.cancel(); }
-        tooltip.style.display = 'none';
-        renderer.domElement.style.cursor = 'grab';
+    function setDim(obj) {
+      bars.forEach((b) => {
+        const target = obj === b ? 1.0 : (obj ? 0.25 : 1.0);
+        b.material.uniforms.uOpacity.value += (target - b.material.uniforms.uOpacity.value) * 0.15;
+      });
+      dots.forEach((d) => {
+        const target = obj === d ? 1.6 : (obj ? 0.7 : 1.0);
+        d.scale.lerp(new THREE.Vector3(target, target, target), 0.2);
+      });
+    }
+
+    function showTip(d, e) {
+      const yearIdx = DATA.findIndex((x) => x[0] === d.year);
+      tooltip.innerHTML = '<b>' + d.year + ' 年</b>' +
+        '出生人口 <span class="v">' + DATA[yearIdx][1].toFixed(0) + '</span> 万人<br>' +
+        '出生率 <span class="v">' + RATE[yearIdx].toFixed(2) + '</span> ‰';
+      tooltip.classList.add('is-open');
+      if (e) {
+        tooltip.style.left = Math.min(e.clientX + 16, window.innerWidth - 200) + 'px';
+        tooltip.style.top = (e.clientY + 16) + 'px';
       }
     }
-    renderer.domElement.addEventListener('mousemove', onMove);
 
-    // ---- 动画 ----
-    const clock = new THREE.Clock();
-    let growDone = false;
-    bars.forEach((bar, i) => {
-      bar.scale.y = 0.001; // 从0长高
+    picker.onHover(targets, (obj, e) => {
+      if (obj !== hovered) {
+        hovered = obj;
+        if (obj) {
+          showTip(obj.userData, e);
+          voice.speak(obj.userData.year + '年，出生人口' + obj.userData.v.toFixed(0) + '万人，出生率千分之' + RATE[obj.userData.idx].toFixed(2));
+        } else {
+          tooltip.classList.remove('is-open');
+          voice.stop();
+        }
+        renderer.domElement.style.cursor = obj ? 'pointer' : 'grab';
+      } else if (obj) {
+        showTip(obj.userData, e);
+      }
+      setDim(obj);
     });
 
+    /* ================= 镜头预设 ================= */
+    document.getElementById('view3d').addEventListener('click', () => {
+      fly.flyTo(new THREE.Vector3(CX, 26, 88), new THREE.Vector3(CX, 12, 0), 1.1);
+    });
+    document.getElementById('viewFront').addEventListener('click', () => {
+      fly.flyTo(new THREE.Vector3(CX, 16, 92), new THREE.Vector3(CX, 14, 0), 1.1);
+    });
+    document.getElementById('viewTop').addEventListener('click', () => {
+      fly.flyTo(new THREE.Vector3(CX, 80, 2), new THREE.Vector3(CX, 0, 0), 1.1);
+    });
+
+    /* ================= 入场动画 ================= */
+    const GROW_START = 0.2, STAGGER = 0.04, GROW_DUR = 0.6;
+    let introT = 0;
+    let introDone = false;
+
+    function introProgress(i, t) {
+      const local = (t - GROW_START - i * STAGGER) / GROW_DUR;
+      const c = S.clamp(local, 0, 1);
+      return 1 - Math.pow(1 - c, 3);
+    }
+
+    function replay() {
+      introT = 0; introDone = false;
+      bars.forEach((b) => { b.scale.y = 0.001; b.position.y = 0.001; });
+      dots.forEach((d) => d.scale.setScalar(0.001));
+      rateTube.geometry.setDrawRange(0, 0);
+    }
+    document.getElementById('replayBtn').addEventListener('click', replay);
+
+    /* ================= 动画 ================= */
+    const clock = new THREE.Clock();
     function animate() {
       const dt = clock.getDelta();
-      if (!growDone) {
-        let done = true;
-        bars.forEach((bar, i) => {
-          const target = 1;
-          bar.scale.y += (target - bar.scale.y) * dt * 3;
-          if (Math.abs(target - bar.scale.y) > 0.01) done = false;
-          bar.position.y = (bar.userData.v / MAX * 40) * bar.scale.y / 2;
+      if (!introDone) {
+        introT += dt;
+        let allDone = true;
+        bars.forEach((b, i) => {
+          const p = introProgress(i, introT);
+          if (p < 1) allDone = false;
+          b.scale.y = Math.max(p, 0.001);
+          b.position.y = b.userData.h * b.scale.y / 2;
         });
-        if (done) growDone = true;
+        // 折线在柱子长完后生长
+        const lineT = S.clamp((introT - GROW_START - N * STAGGER) / 1.4, 0, 1);
+        rateTube.geometry.setDrawRange(0, Math.floor(tubeIndexCount * (1 - Math.pow(1 - lineT, 3))));
+        const dotT = S.clamp((introT - GROW_START - N * STAGGER) / 1.4, 0, 1);
+        dots.forEach((d, i) => {
+          const dp = S.clamp(dotT * 1.3 - i / N * 0.3, 0, 1);
+          d.scale.setScalar(Math.max(dp, 0.001));
+        });
+        if (allDone && lineT >= 1) introDone = true;
       }
+      fly.update(dt);
       controls.update();
-      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+      if (composer) composer.render();
+      else renderer.render(scene, camera);
       requestAnimationFrame(animate);
     }
     animate();
+
+    setTimeout(() => document.getElementById('loader').classList.add('is-done'), 300);
 
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
     });
   </script>
 </body>

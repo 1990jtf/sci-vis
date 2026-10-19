@@ -1,42 +1,36 @@
 # 科普可视化（面向儿童科普）
 
-面向儿童的科学知识可视化项目，使用 Web 技术（Three.js）制作交互式的科学演示，帮助孩子通过直观、有趣的 3D 动画认识科学。
+面向儿童的科学知识可视化项目。基于 Three.js 的极致 3D 交互演示：电影级色调映射（ACES）+ UnrealBloom 泛光后处理、程序化生成贴图、平滑运镜、流光 Shader、统一玻璃拟态设计系统。帮助孩子通过直观、有趣的 3D 动画认识科学。
 
 ## 目录结构
 
 ```
 sci-vis/
-├── index.html                     # 首页导航（各科普的入口）
+├── index.html                     # 首页导航（星空动效 + 专题卡片）
+├── tools/
+│   └── inline-kit.js              # 构建脚本：把共享运行时内联进各页面
 └── src/
-    ├── shared/                    # 共享模块源码（供新科普参考复用）
-    │   ├── starfield.js           # 星空背景
-    │   ├── speech.js              # 中文语音播报（Web Speech API）
-    │   ├── infoCard.js            # 科普介绍卡片组件
-    │   └── picking.js             # 点击拾取（Raycaster）
-    ├── solar-system/              # 太阳系科普
-    │   └── solar-system.html      # 自包含页面（单文件，含全部逻辑）
-    ├── circulation/               # 人体 · 血液循环科普
-    │   └── circulation.html       # 自包含页面（单文件，含全部逻辑）
-    └── weather/                   # 天气系统 · 水循环科普
-        └── weather.html           # 自包含页面（单文件，含全部逻辑）
-    └── dinosaur/                  # 恐龙 · 地质年代漫游科普
-        └── dinosaur.html          # 自包含页面（单文件，含全部逻辑）
+    ├── shared/                    # 共享底座
+    │   ├── kit.js                 # 共用运行时（渲染器/泛光/运镜/卡片/语音/程序化纹理/噪声）
+    │   ├── theme.css              # 设计系统（面板/按钮/图例/卡片/加载层/标签）
+    │   └── *.js                   # 旧版参考实现（已被 kit.js 取代）
+    ├── solar-system/solar-system.html   # 太阳系（程序化行星 + 泛光 + 漫游）
+    ├── circulation/circulation.html     # 血液循环（霓虹血管 + 心跳动画）
+    ├── weather/weather.html             # 水循环（PBR 海面 + 云雨 + 流程聚焦）
+    ├── dinosaur/                         # 恐龙年代（真实骨骼动画 + 小行星事件）
+    │   ├── dinosaur.html
+    │   └── models/*.glb                  # CC0 恐龙模型（Trex / Triceratops / ...）
+    └── birth/birth.html                 # 出生人口（3D 数据雕塑 + 镜头预设）
 ```
 
-> **每个科普是一个自包含的 HTML 单文件**（HTML/CSS/JS 全部内联）。这样无需本地服务器，直接用浏览器双击打开即可运行，也兼容 `file://` 协议（若拆成 ES Modules 多文件，`file://` 下会因浏览器跨域限制而白屏）。
->
-> `src/shared/` 保留公共模块源码，新增科普时可直接复制内联进单文件页面，或在 `index.html` 首页添加入口卡片即可。
+## 架构说明
 
-## 共享模块（参考实现）
-
-| 模块 | 说明 | 用法 |
-| ---- | ---- | ---- |
-| `starfield.js` | 随机星空背景 | `createStarfield(scene, { count, size })` |
-| `speech.js` | 中文语音播报（可开关） | `createVoice(buttonEl)` → `speak(text)` / `toggle()` |
-| `infoCard.js` | 科普介绍卡片（点开显示） | `createInfoCard(container, { onShow })` → `show(userData)` |
-| `picking.js` | 点击拾取 | `enablePicking(renderer, camera, { clickable, onPick })` |
+- **shared/theme.css**：统一设计系统——深空玻璃面板、控制坞、图例、信息卡片、加载层、CSS2D 标签，全站一套视觉语言。
+- **shared/kit.js**：共用运行时（ES Module）：渲染器（ACES + UnrealBloom）、平滑运镜 makeFly、拾取 makePicker、语音、信息卡片、程序化纹理 planetTexture（fbm 噪声）、星空等。页面通过 SciVis.init(THREE, {OrbitControls, EffectComposer, RenderPass, UnrealBloomPass}) 注入依赖。
+- **单文件交付**：为保证 file:// 双击可用，页面内的 kit 已内联。修改 kit.js 后运行 `node tools/inline-kit.js` 重新内联。
 
 ## 科普列表
+
 
 ### 🪐 太阳系 · 地球自转与公转（src/solar-system/solar-system.html）
 
@@ -107,17 +101,31 @@ sci-vis/
 
 ### 🦖 恐龙 · 地质年代漫游（src/dinosaur/dinosaur.html）
 
-程序化恐龙模型 + 时间机器穿梭地质年代。
+真实骨骼动画恐龙模型 + 时间机器穿梭地质年代。
 
 **核心功能：**
 
-- **地质年代漫游**：三叠纪 → 侏罗纪 → 白垩纪，一键切换或自动漫游
-- **代表恐龙**：三叠纪小型恐龙（始盗龙）、侏罗纪蜥脚类（梁龙）、白垩纪霸王龙与三角龙（全部程序化几何搭建）
-- **环境变迁**：每个年代的天空颜色、地面、植物（蕨类/裸子植物森林/开花植物）随之更替
-- **时间机器 UI**：年代名称、时间范围、进度条、上一个/下一个纪按钮、自动漫游
-- **交互查看**：点击恐龙查看科普介绍
-- **语音讲解**：选中恐龙后朗读介绍（可开关）
-- **动画**：恐龙轻微摆动、阴影渲染
+- **真实 3D 恐龙**：使用 CC0 授权的 Gobkit 恐龙模型（GLB），带完整骨骼与 idle / walk / attack / dead 四段动画
+- **地质年代漫游**：三叠纪（翼龙、兽脚类）→ 侏罗纪（剑龙）→ 白垩纪（霸王龙、三角龙、甲龙）
+- **骨骼动画**：恐龙按 idle 待机、绕圈巡游时切换 walk、被点击时触发 attack
+- **小行星撞击事件**：白垩纪点击「小行星撞击」，火球坠落、天空被尘埃遮蔽，所有恐龙应声倒下（dead 动画）
+- **环境变迁**：渐变天空穹顶、噪声起伏地形、蕨类 / 针叶林 / 阔叶林随年代更替，实时软阴影
+- **交互与讲解**：点击恐龙查看品种资料卡、镜头平滑聚焦、中文语音讲解
+
+> 模型来源：Gobkit Free Dinosaur Pack（CC0 1.0，可商用、无需署名），存放于 `src/dinosaur/models/`。
+
+### 👶 人口 · 出生人口（src/birth/birth.html）
+
+中国大陆 1985-2025 年每年出生人口三维柱状图 + 出生率折线。
+
+**核心功能：**
+
+- **双色映射**：柱高与颜色同时编码出生人口（低值冷蓝 → 高值暖琥珀）
+- **出生率折线**：粉色管状折线叠加在柱列前方，带数据点圆球
+- **坐标网格**：横向网格线与万人刻度、年份标签、峰值（1987）/低谷（2025）标注
+- **入场动画**：柱子从左到右依次长高（easeOutCubic）
+- **交互查看**：悬停柱或折线数据点，显示该年人口与出生率
+- **语音讲解**：悬停年份后朗读数据（可开关）
 
 ## 运行方式
 

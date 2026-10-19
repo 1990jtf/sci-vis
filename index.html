@@ -5,75 +5,187 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>科普可视化 · 面向儿童科普</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      min-height: 100vh; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      background: radial-gradient(circle at 50% 30%, #16223a, #050510 75%);
-      color: #fff; padding: 48px 24px;
+    :root {
+      --bg0: #03050d; --bg1: #0a1224;
+      --text: #eef3ff; --dim: #9aa8c4; --faint: #6b7896;
+      --stroke: rgba(255,255,255,0.10);
     }
-    header { text-align: center; margin-bottom: 48px; }
-    header h1 { font-size: 36px; letter-spacing: 3px; }
-    header p { margin-top: 12px; color: #9aa3b5; font-size: 15px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, sans-serif;
+      background: var(--bg0);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    #stars {
+      position: fixed; inset: 0; z-index: 0;
+      background: radial-gradient(circle at 50% 20%, #0d1730 0%, var(--bg0) 70%);
+    }
+    .wrap { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 72px 28px 64px; }
+
+    header { text-align: center; margin-bottom: 64px; }
+    .eyebrow {
+      font-size: 12px; letter-spacing: 5px; color: var(--faint);
+      text-transform: uppercase; margin-bottom: 14px;
+    }
+    h1 {
+      font-size: 44px; letter-spacing: 4px; font-weight: 700;
+      background: linear-gradient(105deg, #ffffff 20%, #6a8cff 60%, #a06bff 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    header p { margin-top: 16px; color: var(--dim); font-size: 15px; letter-spacing: 1px; }
+
     .grid {
-      max-width: 1080px; margin: 0 auto;
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;
+      display: grid; gap: 22px;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     }
     .card {
-      display: block; padding: 28px; border-radius: 16px; text-decoration: none; color: #fff;
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
-      transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+      --accent: #6a8cff; --accent2: #a06bff;
+      position: relative; display: block; text-decoration: none; color: var(--text);
+      border-radius: 20px; padding: 26px 26px 22px;
+      background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
+      border: 1px solid var(--stroke);
+      overflow: hidden;
+      transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.35s, border-color 0.35s;
+      opacity: 0; transform: translateY(18px);
+      animation: rise 0.8s cubic-bezier(0.2,0.8,0.2,1) forwards;
     }
-    .card:hover { transform: translateY(-4px); background: rgba(255,255,255,0.1); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
-    .card .icon { font-size: 40px; margin-bottom: 16px; }
-    .card h2 { font-size: 22px; margin-bottom: 8px; }
-    .card p { font-size: 13px; line-height: 1.7; color: #aab3c5; }
-    .card .badge {
-      display: inline-block; margin-top: 16px; padding: 4px 12px; border-radius: 12px;
-      font-size: 12px; background: rgba(106,92,255,0.3); color: #cfd0ff;
+    .card:nth-child(1) { animation-delay: 0.05s; }
+    .card:nth-child(2) { animation-delay: 0.12s; }
+    .card:nth-child(3) { animation-delay: 0.19s; }
+    .card:nth-child(4) { animation-delay: 0.26s; }
+    .card:nth-child(5) { animation-delay: 0.33s; }
+    @keyframes rise { to { opacity: 1; transform: none; } }
+    .card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(420px 200px at 85% -10%, var(--glow, rgba(106,140,255,0.16)), transparent 65%);
+      opacity: 0; transition: opacity 0.4s;
+      pointer-events: none;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(255,255,255,0.22);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+    }
+    .card:hover::before { opacity: 1; }
+    .card .icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 27px; margin-bottom: 18px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03));
+      border: 1px solid var(--stroke);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+    }
+    .card h2 { font-size: 21px; letter-spacing: 1.5px; margin-bottom: 8px; }
+    .card p { font-size: 13px; line-height: 1.8; color: var(--dim); min-height: 70px; }
+    .card .tags { display: flex; gap: 7px; margin-top: 16px; flex-wrap: wrap; }
+    .card .tag {
+      font-size: 11px; padding: 4px 11px; border-radius: 999px;
+      background: rgba(255,255,255,0.07); border: 1px solid var(--stroke);
+      color: var(--dim); letter-spacing: 0.5px;
+    }
+    .card .arrow {
+      position: absolute; right: 24px; top: 30px;
+      color: var(--faint); font-size: 18px;
+      transition: transform 0.3s, color 0.3s;
+    }
+    .card:hover .arrow { transform: translateX(4px); color: var(--text); }
+
+    footer {
+      margin-top: 72px; text-align: center;
+      font-size: 12px; color: var(--faint); letter-spacing: 1px;
+    }
+    @media (max-width: 640px) {
+      h1 { font-size: 30px; }
+      .wrap { padding: 48px 16px; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🌌 科普可视化</h1>
-    <p>面向儿童的科学知识互动演示 · 点击进入</p>
-  </header>
+  <canvas id="stars"></canvas>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow">Sci-Vis for Kids</div>
+      <h1>科普可视化</h1>
+      <p>面向儿童的科学知识互动演示 · 用 3D 与动画讲科学</p>
+    </header>
 
-  <main class="grid">
-    <a class="card" href="src/solar-system/solar-system.html">
-      <div class="icon">🪐</div>
-      <h2>太阳系</h2>
-      <p>八大行星的公转与自转、土星环、卫星系统。点击天体查看科普介绍，支持语音讲解与自动漫游。</p>
-      <span class="badge">Three.js · 交互 · 语音</span>
-    </a>
+    <main class="grid">
+      <a class="card" href="src/solar-system/solar-system.html" style="--accent:#ffb347; --glow:rgba(255,179,71,0.14)">
+        <div class="icon">🪐</div>
+        <span class="arrow">→</span>
+        <h2>太阳系</h2>
+        <p>程序化生成的八大行星表面、土星环与大气层，真实的公转速度比例。点击行星镜头平滑飞掠，支持自动漫游与时间加速。</p>
+        <div class="tags"><span class="tag">泛光渲染</span><span class="tag">程序化纹理</span><span class="tag">运镜动画</span></div>
+      </a>
 
-    <a class="card" href="src/circulation/circulation.html">
-      <div class="icon">❤️</div>
-      <h2>人体 · 血液循环</h2>
-      <p>半透明人体模型展示心脏、肺与血管。血液粒子沿动脉、静脉和肺循环流动，点击器官查看科普介绍。</p>
-      <span class="badge">Three.js · 半透明 · 粒子动画</span>
-    </a>
+      <a class="card" href="src/circulation/circulation.html" style="--accent:#ff5566; --glow:rgba(255,85,102,0.13)">
+        <div class="icon">❤️</div>
+        <span class="arrow">→</span>
+        <h2>人体 · 血液循环</h2>
+        <p>半透明人体模型里，霓虹血液沿动脉、静脉与肺循环流动。心脏以真实的"lub-dub"节律跳动，点击器官查看科普卡片。</p>
+        <div class="tags"><span class="tag">流光 Shader</span><span class="tag">实例化粒子</span><span class="tag">X 光质感</span></div>
+      </a>
 
-    <a class="card" href="src/weather/weather.html">
-      <div class="icon">🌧️</div>
-      <h2>天气系统 · 水循环</h2>
-      <p>太阳、云、海洋构成的水循环。蒸发粒子上升、雨滴下落、径流汇入海洋，配箭头示意方向。点击太阳、云、海洋查看科普介绍。</p>
-      <span class="badge">Three.js · 粒子 · 箭头动画</span>
-    </a>
+      <a class="card" href="src/weather/weather.html" style="--accent:#38bdf8; --glow:rgba(56,189,248,0.13)">
+        <div class="icon">🌧️</div>
+        <span class="arrow">→</span>
+        <h2>天气系统 · 水循环</h2>
+        <p>波浪起伏的 PBR 海面、云层飘动、太阳光晕与雨丝。蒸发、冷凝、降水、径流四大环节皆可点击聚焦探索。</p>
+        <div class="tags"><span class="tag">PBR 水面</span><span class="tag">渐变天空</span><span class="tag">流程聚焦</span></div>
+      </a>
 
-    <a class="card" href="src/dinosaur/dinosaur.html">
-      <div class="icon">🦖</div>
-      <h2>恐龙 · 地质年代漫游</h2>
-      <p>程序化搭建的霸王龙、梁龙等恐龙，用时间机器穿梭三叠纪、侏罗纪、白垩纪，年代变迁带动天空、植物与生物更替。</p>
-      <span class="badge">Three.js · 时间漫游 · 交互</span>
-    </a>
+      <a class="card" href="src/dinosaur/dinosaur.html" style="--accent:#4ade80; --glow:rgba(74,222,128,0.13)">
+        <div class="icon">🦖</div>
+        <span class="arrow">→</span>
+        <h2>恐龙 · 地质年代</h2>
+        <p>时间机器穿越三叠纪、侏罗纪与白垩纪：天空、植被与恐龙随年代更替，走路摆尾的恐龙、实时的影子，还能亲手召唤灭绝时刻的小行星。</p>
+        <div class="tags"><span class="tag">时间漫游</span><span class="tag">行走动画</span><span class="tag">陨石事件</span></div>
+      </a>
 
-    <a class="card" href="src/birth/birth.html">
-      <div class="icon">👶</div>
-      <h2>人口 · 出生人口</h2>
-      <p>中国大陆 1985-2025 年每年出生人口的三维柱状图。鼠标悬停查看各年数据，柱高随出生人口变化，直观感受人口趋势。</p>
-      <span class="badge">Three.js · 柱状图 · 交互</span>
-    </a>
-  </main>
+      <a class="card" href="src/birth/birth.html" style="--accent:#f6b73c; --glow:rgba(246,183,60,0.13)">
+        <div class="icon">👶</div>
+        <span class="arrow">→</span>
+        <h2>人口 · 出生人口</h2>
+        <p>1985-2025 年出生人口的三维数据雕塑：柱高与颜色双重编码、出生率流光折线逐点生长，悬停查看每年数据，镜头三视角切换。</p>
+        <div class="tags"><span class="tag">数据可视化</span><span class="tag">渐变映射</span><span class="tag">镜头预设</span></div>
+      </a>
+    </main>
+
+    <footer>Three.js · Web Speech API · 无需构建，双击即用</footer>
+  </div>
+
+  <script>
+    // 首页星空：轻量 2D canvas，缓慢闪烁
+    const cv = document.getElementById('stars');
+    const ctx = cv.getContext('2d');
+    let stars = [];
+    function resize() {
+      cv.width = innerWidth; cv.height = innerHeight;
+      stars = Array.from({ length: 140 }, () => ({
+        x: Math.random() * cv.width,
+        y: Math.random() * cv.height * 0.9,
+        r: Math.random() * 1.3 + 0.3,
+        p: Math.random() * Math.PI * 2,
+        s: 0.4 + Math.random() * 1.2,
+      }));
+    }
+    resize();
+    addEventListener('resize', resize);
+    (function draw(t) {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      stars.forEach((s) => {
+        const a = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(t / 1000 * s.s + s.p));
+        ctx.fillStyle = 'rgba(220,232,255,' + a.toFixed(3) + ')';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    })(0);
+  </script>
 </body>
 </html>

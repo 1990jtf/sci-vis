@@ -4,43 +4,39 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>人体 · 血液循环</title>
-  <style>
-    body { margin: 0; overflow: hidden; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-    #info {
-      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-      color: #fff; background: rgba(0,0,0,0.55); padding: 10px 18px;
-      border-radius: 8px; font-size: 14px; letter-spacing: 1px; pointer-events: none; white-space: nowrap;
-    }
-    #hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-      color: #ccc; font-size: 12px; pointer-events: none; }
-    #voiceBtn {
-      position: absolute; top: 16px; right: 20px; width: 44px; height: 44px;
-      border-radius: 50%; border: none; cursor: pointer; font-size: 20px;
-      background: rgba(10,15,30,0.85); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-      z-index: 10; transition: transform 0.2s, background 0.2s;
-    }
-    #voiceBtn:hover { transform: scale(1.1); }
-    #voiceBtn.off { opacity: 0.45; }
-    #playBtn {
-      position: absolute; bottom: 60px; right: 20px; width: 44px; height: 44px;
-      border-radius: 50%; border: none; cursor: pointer; font-size: 18px;
-      background: rgba(10,15,30,0.85); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-      z-index: 10; transition: transform 0.2s, background 0.2s;
-    }
-    #playBtn:hover { transform: scale(1.1); }
-    #legend {
-      position: absolute; left: 20px; bottom: 20px; padding: 14px 18px; border-radius: 12px;
-      background: rgba(10,15,30,0.85); border: 1px solid rgba(255,255,255,0.15); z-index: 10;
-    }
-    #legend .title { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 6px; }
-  </style>
+  <link rel="stylesheet" href="../shared/theme.css" />
 </head>
 <body>
-  <div id="info">人体 · 血液循环</div>
-  <div id="hint">点击心脏、肺或身体查看介绍 · 拖拽旋转视角 · 滚轮缩放</div>
-  <button id="voiceBtn" title="语音开关">🔊</button>
-  <button id="playBtn" title="暂停/继续动画">⏸</button>
-  <div id="legend"><div class="title">循环通路</div></div>
+  <div class="sv-loader" id="loader">
+    <div class="sv-loader__ring"></div>
+    <div class="sv-loader__text">正在加载人体模型…</div>
+  </div>
+
+  <div class="sv-brand sv-in">
+    <div class="sv-brand__eyebrow">Blood Circulation</div>
+    <div class="sv-brand__title">人体 · 血液循环</div>
+    <div class="sv-brand__sub">透视人体 · 追踪每一滴血的旅程</div>
+  </div>
+
+  <button class="sv-iconbtn sv-iconbtn--top" id="voiceBtn" title="语音开关">🔊</button>
+
+  <div class="sv-legend sv-panel sv-in">
+    <div class="sv-panel__title">循环通路</div>
+    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#ff5566;color:#ff5566"></span>体循环 · 动脉（含氧血）</div>
+    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#3b82f6;color:#3b82f6"></span>体循环 · 静脉（回流）</div>
+    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#a855f7;color:#a855f7"></span>肺循环 · 心肺往返</div>
+  </div>
+
+  <div class="sv-card" id="card"></div>
+
+  <div class="sv-dock sv-in">
+    <button class="sv-btn" id="playBtn"><span class="sv-btn__icon">⏸</span><span>暂停</span></button>
+    <span class="sv-dock__sep"></span>
+    <button class="sv-btn sv-btn--ghost" id="resetBtn">🔄 全身视角</button>
+    <button class="sv-btn sv-btn--ghost" id="xrayBtn">🩻 透视 <b class="sv-num" id="xrayVal">30</b>%</button>
+  </div>
+
+  <div class="sv-hint">点击心脏 / 肺 / 血管查看介绍 · 拖拽旋转 · 滚轮缩放</div>
 
   <script type="importmap">
   {
@@ -54,326 +50,814 @@
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    
 
-    // ---- 共享：中文语音播报 ----
-    function createVoice(buttonEl) {
-      const synth = window.speechSynthesis;
-      let enabled = true;
-      let zhVoice = null;
-      function pickVoice() {
-        const voices = synth.getVoices();
-        zhVoice = voices.find((v) => /zh/i.test(v.lang)) || null;
+    // ===== SciVis Kit（由 tools/inline-kit.js 自动内联，勿手改） =====
+    const SciVis = (function () {
+    
+    // THREE / addons 依赖占位，由 init() 注入
+    let THREE = null;
+    let OrbitControls = null;
+    let EffectComposer = null;
+    let RenderPass = null;
+    let UnrealBloomPass = null;
+    
+    function init(_THREE, addons) {
+      THREE = _THREE;
+      addons = addons || {};
+      OrbitControls = addons.OrbitControls;
+      EffectComposer = addons.EffectComposer;
+      RenderPass = addons.RenderPass;
+      UnrealBloomPass = addons.UnrealBloomPass;
+      return exports;
+    }
+    
+    /* ---------------- 确定性噪声（替代 Math.random 做程序化纹理） --------- */
+    function hash3(x, y, z) {
+      let n = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453123;
+      return n - Math.floor(n);
+    }
+    function smooth(t) { return t * t * (3 - 2 * t); }
+    function valueNoise2(x, y) {
+      const ix = Math.floor(x), iy = Math.floor(y);
+      const fx = x - ix, fy = y - iy;
+      const a = hash3(ix, iy, 0), b = hash3(ix + 1, iy, 0);
+      const c = hash3(ix, iy + 1, 0), d = hash3(ix + 1, iy + 1, 0);
+      return a + (b - a) * smooth(fx) + (c - a) * smooth(fy) * (1 - smooth(fx)) + (d - b) * smooth(fx) * smooth(fy);
+    }
+    function fbm2(x, y, oct) {
+      let v = 0, amp = 0.5, f = 1;
+      for (let i = 0; i < (oct || 5); i++) { v += amp * valueNoise2(x * f, y * f); f *= 2; amp *= 0.5; }
+      return v;
+    }
+    function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    
+    /* ---------------- 渲染器：ACES 色调映射 + UnrealBloom --------- */
+    function createRenderer(opts) {
+      opts = opts || {};
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: opts.alpha !== false,
+        powerPreference: 'high-performance',
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = opts.exposure != null ? opts.exposure : 1.1;
+      if (opts.shadow !== false) {
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       }
-      pickVoice();
-      synth.addEventListener('voiceschanged', pickVoice);
+      document.body.appendChild(renderer.domElement);
+    
+      let composer = null, bloom = null, renderPass = null;
+      if (opts.bloom !== false) {
+        composer = new EffectComposer(renderer);
+        renderPass = new RenderPass(new THREE.Scene(), new THREE.Camera());
+        composer.addPass(renderPass);
+        bloom = new UnrealBloomPass(
+          new THREE.Vector2(window.innerWidth, window.innerHeight),
+          opts.bloomStrength != null ? opts.bloomStrength : 0.55,
+          opts.bloomRadius != null ? opts.bloomRadius : 0.7,
+          opts.bloomThreshold != null ? opts.bloomThreshold : 0.85
+        );
+        composer.addPass(bloom);
+      }
+      // 页面需将真实场景/相机绑定到 renderPass：renderPass.scene = scene; renderPass.camera = camera;
+      return { renderer, composer, bloom, renderPass };
+    }
+    
+    /* ---------------- 基础场景 + 相机 + 轨道控制 --------- */
+    function createScene(bg, fog) {
+      const scene = new THREE.Scene();
+      if (bg) scene.background = new THREE.Color(bg);
+      if (fog) scene.fog = fog;
+      return scene;
+    }
+    function createCamera(fov, near, far) {
+      return new THREE.PerspectiveCamera(fov || 50, window.innerWidth / window.innerHeight, near || 0.1, far || 1000);
+    }
+    function createControls(camera, dom, target) {
+      const c = new OrbitControls(camera, dom);
+      c.enableDamping = true;
+      c.dampingFactor = 0.08;
+      c.rotateSpeed = 0.7;
+      if (target) c.target.copy(target);
+      return c;
+    }
+    
+    /* ---------------- 平滑运镜（点击聚焦 / 漫游） --------- */
+    function makeFly(camera, controls) {
+      const state = {
+        active: false,
+        from: new THREE.Vector3(), to: new THREE.Vector3(),
+        fromTarget: new THREE.Vector3(), toTarget: new THREE.Vector3(),
+        t: 0, dur: 1, onDone: null,
+      };
+      function flyTo(pos, target, dur, onDone) {
+        state.from.copy(camera.position);
+        state.to.copy(pos);
+        state.fromTarget.copy(controls.target);
+        state.toTarget.copy(target);
+        state.t = 0;
+        state.dur = dur || 1;
+        state.onDone = onDone || null;
+        state.active = true;
+        controls.enabled = false;
+      }
+      function update(dt) {
+        if (!state.active) return;
+        state.t += dt / state.dur;
+        const k = state.t >= 1 ? 1 : 1 - Math.pow(1 - state.t, 3); // easeOutCubic
+        camera.position.lerpVectors(state.from, state.to, k);
+        controls.target.lerpVectors(state.fromTarget, state.toTarget, k);
+        camera.lookAt(controls.target);
+        if (state.t >= 1) {
+          state.active = false;
+          controls.enabled = true;
+          if (state.onDone) state.onDone();
+        }
+      }
+      function cancel() {
+        if (!state.active) return;
+        state.active = false;
+        controls.enabled = true;
+      }
+      return { flyTo, update, cancel, isActive: () => state.active };
+    }
+    
+    /* ---------------- 语音（中文） --------- */
+    function createVoice() {
+      const synth = window.speechSynthesis;
+      let enabled = true, zhVoice = null;
+      function pick() {
+        const vs = synth.getVoices();
+        zhVoice = vs.find((v) => /zh/i.test(v.lang)) || null;
+      }
+      pick();
+      synth.addEventListener('voiceschanged', pick);
       function speak(text) {
         if (!enabled || !synth || !text) return;
         synth.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = 'zh-CN'; utter.rate = 0.95; utter.pitch = 1.05;
-        if (zhVoice) utter.voice = zhVoice;
-        synth.speak(utter);
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.02;
+        if (zhVoice) u.voice = zhVoice;
+        synth.speak(u);
       }
-      function toggle() {
-        enabled = !enabled;
-        if (buttonEl) buttonEl.classList.toggle('off', !enabled);
-        if (!enabled) synth.cancel();
-        return enabled;
-      }
-      if (buttonEl) buttonEl.addEventListener('click', toggle);
-      return { speak, toggle, stop: () => synth.cancel(), isEnabled: () => enabled };
+      function toggle() { enabled = !enabled; if (!enabled) synth.cancel(); return enabled; }
+      function stop() { synth.cancel(); }
+      return { speak, toggle, stop, isEnabled: () => enabled };
     }
-
-    // ---- 共享：科普介绍卡片 ----
-    function createInfoCard(container, { onShow } = {}) {
-      const card = document.createElement('div');
-      card.id = 'infoCard';
-      card.style.cssText = `
-        position: absolute; right: 20px; bottom: 20px; width: 300px;
-        color: #fff; background: rgba(10,15,30,0.9); border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 12px; padding: 18px 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-        display: none; z-index: 10; backdrop-filter: blur(6px); font-family: inherit;
-      `;
-      const close = document.createElement('button');
-      close.className = 'close';
-      close.textContent = '\u00D7';
-      close.style.cssText = `
-        position: absolute; top: 10px; right: 12px; cursor: pointer; color: #9aa3b5;
-        font-size: 18px; line-height: 1; background: none; border: none;
-      `;
-      close.addEventListener('mouseenter', () => (close.style.color = '#fff'));
-      close.addEventListener('mouseleave', () => (close.style.color = '#9aa3b5'));
-      const h3 = document.createElement('h3');
-      h3.style.cssText = 'margin: 0 0 10px; font-size: 20px; display: flex; align-items: center; gap: 10px;';
-      const dot = document.createElement('span');
-      dot.style.cssText = 'width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0;';
-      const title = document.createElement('span');
-      h3.appendChild(dot); h3.appendChild(title);
-      const body = document.createElement('div');
-      body.id = 'cardBody';
-      card.appendChild(close); card.appendChild(h3); card.appendChild(body);
-      container.appendChild(card);
-      close.addEventListener('click', () => hide());
-      function show(userData) {
-        if (!userData || !userData.name) return;
-        dot.style.background = '#' + (userData.color || 0xffffff).toString(16).padStart(6, '0');
-        title.textContent = userData.name + '（' + (userData.type || '天体') + '）';
-        body.innerHTML = (userData.info || []).map((line) => '<p style="margin:6px 0;font-size:13px;line-height:1.7;color:#cfd6e6;">' + line + '</p>').join('');
-        card.style.display = 'block';
-        if (onShow) onShow(userData);
+    
+    /* ---------------- 信息卡片（CSS 类 + 结构化字段） --------- */
+    function createCard(container) {
+      const el = document.createElement('div');
+      el.className = 'sv-card';
+      el.innerHTML =
+        '<div class="sv-card__head">' +
+        '  <span class="sv-card__dot"></span>' +
+        '  <div class="sv-card__titles"><div class="sv-card__title"></div><div class="sv-card__sub"></div></div>' +
+        '  <button class="sv-card__close" aria-label="关闭">\u00D7</button>' +
+        '</div>' +
+        '<div class="sv-card__body"></div>';
+      container.appendChild(el);
+      const dot = el.querySelector('.sv-card__dot');
+      const title = el.querySelector('.sv-card__title');
+      const sub = el.querySelector('.sv-card__sub');
+      const body = el.querySelector('.sv-card__body');
+      const close = el.querySelector('.sv-card__close');
+    
+      function show(data) {
+        if (!data || !data.name) return;
+        const color = data.color ? '#' + data.color.toString(16).padStart(6, '0') : '#6a8cff';
+        dot.style.background = color;
+        dot.style.color = color;
+        title.textContent = data.name;
+        sub.textContent = data.type || '';
+        body.innerHTML = '';
+        if (data.stats && data.stats.length) {
+          data.stats.forEach((s) => {
+            const row = document.createElement('div');
+            row.className = 'sv-card__stat';
+            row.innerHTML = '<span>' + s.label + '</span><b>' + s.value + '</b>';
+            body.appendChild(row);
+          });
+        }
+        if (data.desc && data.desc.length) {
+          data.desc.forEach((line) => {
+            const row = document.createElement('div');
+            row.className = 'sv-card__row';
+            row.textContent = line;
+            body.appendChild(row);
+          });
+        }
+        el.classList.add('is-open');
       }
-      function hide() { card.style.display = 'none'; }
-      return { element: card, show, hide };
+      function hide() { el.classList.remove('is-open'); }
+      close.addEventListener('click', hide);
+      return { element: el, show, hide };
     }
-
-    // ---- 共享：点击拾取 ----
-    function enablePicking(renderer, camera, { clickable, onPick }) {
+    
+    /* ---------------- 悬停 + 点击拾取（合并） --------- */
+    function makePicker(camera, dom) {
       const raycaster = new THREE.Raycaster();
-      const pointer = new THREE.Vector2();
-      renderer.domElement.addEventListener('click', (event) => {
-        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(pointer, camera);
-        const hits = raycaster.intersectObjects(clickable, false);
-        if (hits.length > 0 && onPick) onPick(hits[0].object);
-      });
+      const ndc = new THREE.Vector2();
+      function setFromEvent(e) {
+        const r = dom.getBoundingClientRect();
+        ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+        ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+        raycaster.setFromCamera(ndc, camera);
+      }
+      function pick(e, targets) {
+        setFromEvent(e);
+        const hits = raycaster.intersectObjects(targets, true);
+        return hits.length ? hits[0].object : null;
+      }
+      function onHover(targets, cb) {
+        dom.addEventListener('mousemove', (e) => cb(pick(e, targets), e));
+        dom.addEventListener('mouseleave', () => cb(null, null));
+      }
+      function onClick(targets, cb) {
+        dom.addEventListener('click', (e) => cb(pick(e, targets), e));
+      }
+      return { pick, onHover, onClick };
     }
+    
+    /* ---------------- 程序化纹理 --------- */
+    function makeCanvas(size) {
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      return c;
+    }
+    function glowTexture(inner, mid, size) {
+      size = size || 256;
+      const c = makeCanvas(size);
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      g.addColorStop(0, inner);
+      g.addColorStop(0.35, mid);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, size, size);
+      return new THREE.CanvasTexture(c);
+    }
+    // 行星地表（fbm 噪声 + 色带，经度无缝）
+    function planetTexture(palette, size) {
+      size = size || 256;
+      const c = makeCanvas(size);
+      const ctx = c.getContext('2d');
+      const img = ctx.createImageData(size, size);
+      const bands = palette.map((p) => new THREE.Color(p));
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const u = x / size, v = y / size;
+          const th = u * Math.PI * 2;
+          const nx = Math.cos(th) * 3, ny = Math.sin(th) * 3;
+          const n = fbm2(nx + 1.7, v * 5 - ny * 0.4, 5);
+          const n2 = fbm2(nx * 2.3 + 9.1, v * 7 + 3.3, 4);
+          let t = clamp(n * 0.7 + n2 * 0.3, 0, 1);
+          const col = sampleBands(bands, t);
+          const i = (y * size + x) * 4;
+          img.data[i] = col.r * 255;
+          img.data[i + 1] = col.g * 255;
+          img.data[i + 2] = col.b * 255;
+          img.data[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+    function sampleBands(bands, t) {
+      const seg = 1 / (bands.length - 1);
+      const idx = Math.min(Math.floor(t / seg), bands.length - 2);
+      const local = (t - idx * seg) / seg;
+      return bands[idx].clone().lerp(bands[idx + 1], local);
+    }
+    
+    // 恐龙皮肤纹理（鳞片噪声 + 色斑 + 腹部渐变）
+    function skinTexture(baseColor, spotColor, size) {
+      size = size || 256;
+      const c = makeCanvas(size);
+      const ctx = c.getContext('2d');
+      const img = ctx.createImageData(size, size);
+      const base = new THREE.Color(baseColor);
+      const spot = new THREE.Color(spotColor);
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const u = x / size, v = y / size;
+          // 鳞片：高频网格噪声
+          const scale = fbm2(u * 18, v * 18, 4);
+          const scale2 = fbm2(u * 40 + 3, v * 40 + 7, 3);
+          // 色斑：低频大块斑纹
+          const spotN = fbm2(u * 6 + 11, v * 6 - 5, 4);
+          let col = base.clone();
+          col.lerp(spot, S.clamp((spotN - 0.42) * 3.0, 0, 1) * 0.5);
+          // 鳞片刻痕（微亮/微暗）
+          const sheen = (scale2 - 0.5) * 0.16 + (scale - 0.5) * 0.08;
+          col.r = S.clamp(col.r + sheen, 0, 1);
+          col.g = S.clamp(col.g + sheen, 0, 1);
+          col.b = S.clamp(col.b + sheen, 0, 1);
+          const i = (y * size + x) * 4;
+          img.data[i] = col.r * 255;
+          img.data[i + 1] = col.g * 255;
+          img.data[i + 2] = col.b * 255;
+          img.data[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+    
+    /* ---------------- 星空（分层 + 大小/亮度变化） --------- */
+    function createStarfield(count, radius, color1, color2) {
+      count = count || 1400;
+      radius = radius || 240;
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      const col = new Float32Array(count * 3);
+      const c1 = new THREE.Color(color1 || 0xffffff);
+      const c2 = new THREE.Color(color2 || 0xaac4ff);
+      for (let i = 0; i < count; i++) {
+        const v = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1)
+          .normalize().multiplyScalar(radius);
+        pos[i * 3] = v.x; pos[i * 3 + 1] = v.y; pos[i * 3 + 2] = v.z;
+        const c = c1.clone().lerp(c2, Math.random());
+        const b = 0.4 + Math.random() * 0.6;
+        col[i * 3] = c.r * b; col[i * 3 + 1] = c.g * b; col[i * 3 + 2] = c.b * b;
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      const mat = new THREE.PointsMaterial({
+        size: 0.5, vertexColors: true, transparent: true, opacity: 0.85,
+        sizeAttenuation: true, depthWrite: false,
+      });
+      return new THREE.Points(geo, mat);
+    }
+    
+    /* ---------------- UI 助手 --------- */
+    // 创建 3D 标签（需传入 CSS2DObject 构造器）并定位
+    function makeLabel(CSS2DObject, text, position, className) {
+      const div = document.createElement('div');
+      div.className = className || 'sv-label';
+      div.textContent = text;
+      const obj = new CSS2DObject(div);
+      if (position) obj.position.copy(position);
+      return obj;
+    }
+    
+    function toast(text, ms) {  let el = document.querySelector('.sv-toast');
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'sv-toast';
+        document.body.appendChild(el);
+      }
+      el.textContent = text;
+      el.classList.add('is-open');
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.classList.remove('is-open'), ms || 2200);
+    }
+    function bindVoiceButton(btn, voice) {
+      if (!btn) return;
+      const sync = () => btn.classList.toggle('is-off', !voice.isEnabled());
+      sync();
+      btn.addEventListener('click', () => { voice.toggle(); sync(); });
+    }
+    
+    // 具名导出集合（供 init 返回全部 API）
+    const exports = {
+      init, hash3, valueNoise2, fbm2, clamp, lerp,
+      createRenderer, createScene, createCamera, createControls,
+      makeFly, createVoice, createCard, makePicker, makeLabel,
+      glowTexture, planetTexture, skinTexture, createStarfield,
+      toast, bindVoiceButton,
+    };
+    
+    
+    return exports;
+    })();
 
-    // ---- 数据 ----
-    const ORGANS = {
-      心脏: ['位于胸腔中部、略偏左', '像一个强力泵，一生都在跳动', '每分钟约跳动 60~100 次', '把血液输送到全身各处', '大小和我们的拳头差不多'],
-      肺: ['左右各一个，位于胸腔', '是人体进行气体交换的场所', '吸入氧气、呼出二氧化碳', '由亿万个肺泡构成', '血液在这里获得新鲜氧气'],
-      血管: ['遍布全身，像一张网', '分为动脉、静脉和毛细血管', '动脉把血送出心脏，鲜红色', '静脉把血送回心脏，暗红色', '全身血管连接起来可绕地球两圈多'],
-      人体: ['血液由心脏泵出，流遍全身', '给每个细胞送去氧气和营养', '再带走二氧化碳和废物', '这就是血液循环'],
+
+    const S = SciVis.init(THREE, { OrbitControls, EffectComposer, RenderPass, UnrealBloomPass });
+
+    /* ================= 科普数据 ================= */
+    const INFO = {
+      心脏: {
+        color: 0xd23b46, type: '器官',
+        stats: [['每分钟跳动','60~100 次'],['每日泵血','约 7000 升'],['大小','与拳头相当'],['位置','胸腔中部略偏左']],
+        desc: ['像一个不知疲倦的强力泵', '把血液输送到全身每个角落'],
+      },
+      肺: {
+        color: 0xffb3b8, type: '器官',
+        stats: [['肺泡数量','约 3 亿个'],['表面积','约 70 ㎡'],['位置','胸腔左右各一']],
+        desc: ['气体交换的场所', '血液在这里获得新鲜氧气'],
+      },
+      动脉: {
+        color: 0xff5566, type: '血管',
+        stats: [['管壁','厚而弹性强'],['血色','鲜红（含氧）'],['流速','最快']],
+        desc: ['把含氧血从心脏送出去', '分布较深，靠近骨骼'],
+      },
+      静脉: {
+        color: 0x3b82f6, type: '血管',
+        stats: [['管壁','薄而有瓣膜'],['血色','暗红（缺氧）'],['流速','较慢']],
+        desc: ['把血液送回心脏', '手臂上的"青筋"就是静脉'],
+      },
+      肺循环: {
+        color: 0xa855f7, type: '循环',
+        stats: [['路径','心脏 ↔ 肺'],['耗时','约 10 秒'],['功能','补充氧气']],
+        desc: ['血液在心肺之间的小循环', '暗血变鲜血的魔法环节'],
+      },
     };
 
-    // ---- 场景 ----
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x071018);
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 1.9, 10.5);
-    camera.lookAt(0, 1.9, 0);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.target.set(0, 1.9, 0);
+    /* ================= 渲染基础 ================= */
+    const scene = S.createScene(0x060a16, new THREE.Fog(0x060a16, 16, 36));
+    const camera = S.createCamera(48, 0.1, 200);
+    camera.position.set(0.6, 3.6, 8.5);
+
+    const { renderer, composer, renderPass } = S.createRenderer({
+      exposure: 1.15, bloomStrength: 0.9, bloomRadius: 0.6, bloomThreshold: 0.6,
+    });
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.body.appendChild(labelRenderer.domElement);
+
+    const controls = S.createControls(camera, renderer.domElement, new THREE.Vector3(0, 3.3, 0));
+    controls.minDistance = 2.5;
+    controls.maxDistance = 20;
+    renderPass.scene = scene;
+    renderPass.camera = camera;
 
     // 灯光
-    scene.add(new THREE.AmbientLight(0x556677, 0.8));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    keyLight.position.set(3, 5, 4);
+    scene.add(new THREE.AmbientLight(0x556688, 0.9));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.6);
+    keyLight.position.set(4, 6, 5);
     scene.add(keyLight);
-    const rimLight = new THREE.DirectionalLight(0x88aaff, 0.6);
-    rimLight.position.set(-4, 2, -3);
+    const rimLight = new THREE.DirectionalLight(0x7f9fff, 0.9);
+    rimLight.position.set(-5, 3, -4);
     scene.add(rimLight);
 
-    // ---- 人体：加载真实 3D 模型 (Michelle.glb) ----
-    const clickable = [];
-    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/Michelle.glb';
-    const TARGET_HEIGHT = 4.6;   // 目标身高（世界单位）
-    let body, heart, lungs, vesselCurves;
+    // 地面光晕（垫在脚下）
+    const floorGlow = new THREE.Mesh(
+      new THREE.CircleGeometry(4, 48),
+      new THREE.MeshBasicMaterial({
+        map: S.glowTexture('rgba(60,90,180,0.35)', 'rgba(40,60,120,0.12)'),
+        transparent: true, depthWrite: false,
+      })
+    );
+    floorGlow.rotation.x = -Math.PI / 2;
+    floorGlow.position.y = -0.02;
+    scene.add(floorGlow);
 
-    const loader = new GLTFLoader();
-    loader.load(MODEL_URL, (gltf) => {
-      body = gltf.scene;
-      scene.add(body);
-
-      // 计算包围盒 → 缩放对齐到目标身高，并竖直居中
-      const box = new THREE.Box3().setFromObject(body);
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      const scale = TARGET_HEIGHT / size.y;
-      body.scale.setScalar(scale);
-      body.position.set(0, -(center.y * scale), 0);   // 让脚底落在 y=0
-      body.rotation.y = Math.PI;                       // 面朝相机
-
-      // 让皮肤半透明，透出内部器官
-      body.traverse((o) => {
-        if (o.isMesh && o.material) {
-          o.material.transparent = true;
-          o.material.opacity = 0.32;
-          o.material.depthWrite = false;
-        }
-      });
-
-      body.userData = { name: '人体', type: '身体', color: 0xc0b8ae, info: ORGANS['人体'] };
-      clickable.push(body);
-
-      // 按比例定位器官与血管
-      const foot = 0, head = TARGET_HEIGHT;
-      const waistH = head * 0.53;      // 髋部（腰部）高度
-      const shoulderH = head * 0.82;   // 肩部高度
-      const chestMid = (shoulderH + waistH) / 2;   // 胸腔中部
-      const hx = size.x * scale * 0.18; // 胸腔左右半宽
-
-      buildOrgans(chestMid, hx);
-      buildVessels(chestMid, hx, head);
-      buildParticles();
-    }, undefined, (err) => {
-      console.error('模型加载失败', err);
-      buildOrgans(2.4, 0.6);
-      buildVessels(2.4, 0.6, 5.2);
-      buildParticles();
+    /* ================= 器官材质 ================= */
+    const heartMat = new THREE.MeshPhysicalMaterial({
+      color: 0xd23b46, emissive: 0x5c1018, emissiveIntensity: 0.5,
+      roughness: 0.35, clearcoat: 0.8, clearcoatRoughness: 0.25,
+    });
+    const lungMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffb3b8, transparent: true, opacity: 0.55,
+      roughness: 0.5, emissive: 0x552028, emissiveIntensity: 0.25,
     });
 
-    // 器官
-    function buildOrgans(chestMid, hx) {
-      heart = new THREE.Group();
-      const heartMat = new THREE.MeshStandardMaterial({ color: 0xd23b46, emissive: 0x5c1018, emissiveIntensity: 0.35, roughness: 0.4 });
-      const heartBody = new THREE.Mesh(new THREE.SphereGeometry(0.3, 32, 32), heartMat);
-      heartBody.scale.set(1, 1.2, 0.85);
-      const heartTip = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.5, 20), heartMat);
-      heartTip.rotation.x = Math.PI / 2;
-      heartTip.position.y = -0.62;
-      heart.add(heartBody); heart.add(heartTip);
-      const vent = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 0.2, 16), heartMat);
-      vent.position.y = 0.45;
-      heart.add(vent);
-      heart.position.set(-hx * 0.5, chestMid, hx * 0.25);
-      heart.rotation.z = 0.25;
-      heart.userData = { name: '心脏', type: '器官', color: 0xd23b46, info: ORGANS['心脏'] };
-      scene.add(heart);
-      clickable.push(heart);
-
-      const lungMat = new THREE.MeshPhysicalMaterial({ color: 0xffb3b8, transparent: true, opacity: 0.55, roughness: 0.5, side: THREE.DoubleSide });
-      lungs = [];
-      [-1, 1].forEach((side) => {
-        const lung = new THREE.Mesh(
-          new THREE.CapsuleGeometry(0.36, 0.9, 8, 20),
-          lungMat
-        );
-        lung.scale.set(1, 1.15, 0.62);
-        lung.position.set(side * hx * 0.85, chestMid, hx * 0.2);
-        lung.rotation.z = -side * 0.12;
-        lung.userData = { name: '肺', type: '器官', color: 0xffb3b8, info: ORGANS['肺'] };
-        scene.add(lung);
-        lungs.push(lung);
-        clickable.push(lung);
+    /* ================= 霓虹血管（流光 shader） ================= */
+    const vesselShaders = [];
+    function vesselMaterial(hex) {
+      const color = new THREE.Color(hex);
+      const mat = new THREE.ShaderMaterial({
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        uniforms: {
+          uColor: { value: color },
+          uTime: { value: 0 },
+          uOpacity: { value: 0.75 },
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main(){
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }`,
+        fragmentShader: `
+          varying vec2 vUv;
+          uniform vec3 uColor;
+          uniform float uTime;
+          uniform float uOpacity;
+          void main(){
+            // 沿管道方向流动的光脉冲
+            float flow = fract(vUv.y * 3.0 - uTime * 0.35);
+            float pulse = smoothstep(0.0, 0.25, flow) * smoothstep(0.75, 0.25, flow);
+            vec3 col = uColor * (0.55 + pulse * 2.2);
+            gl_FragColor = vec4(col, uOpacity * (0.35 + pulse * 0.65));
+          }`,
       });
+      vesselShaders.push(mat);
+      return mat;
     }
 
-    // 血管曲线
-    function buildVessels(chestMid, hx, head) {
-      const h = head;
-      const heartPos = [-hx * 0.5, chestMid, hx * 0.25];
-      vesselCurves = {
+    /* ================= 人体加载 + 骨骼定位 ================= */
+    const clickable = [];
+    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/mrdoob/three.js@r160/examples/models/gltf/Michelle.glb';
+    const TARGET_HEIGHT = 4.6;
+    let heart = null, chestMid = 3.1, hx = 0.5;
+
+    function makeLabel(text, color) {
+      const div = document.createElement('div');
+      div.className = 'sv-label';
+      div.textContent = text;
+      if (color) div.style.borderColor = 'rgba(' + color + ',0.6)';
+      return new CSS2DObject(div);
+    }
+    function addLabel(text, color, position) {
+      const obj = makeLabel(text, color);
+      obj.position.copy(position);
+      scene.add(obj);
+      return obj;
+    }
+
+    function buildOrgans() {
+      // 心脏
+      heart = new THREE.Group();
+      const m = 0.85;
+      const heartBody = new THREE.Mesh(new THREE.SphereGeometry(0.3 * m, 32, 32), heartMat);
+      heartBody.scale.set(1, 1.2, 0.85);
+      const heartTip = new THREE.Mesh(new THREE.ConeGeometry(0.2 * m, 0.5 * m, 20), heartMat);
+      heartTip.rotation.x = Math.PI / 2;
+      heartTip.position.y = -0.62 * m;
+      heart.add(heartBody, heartTip);
+      const heartPos = new THREE.Vector3(-hx * 0.5, chestMid + 0.05, hx * 0.35);
+      heart.position.copy(heartPos);
+      heart.rotation.z = 0.25;
+      heart.userData = INFO['心脏'];
+      scene.add(heart);
+      clickable.push(heart);
+      addLabel('心脏', '255,85,102', heartPos.clone().add(new THREE.Vector3(0, 0.8, 0)));
+
+      // 肺
+      [-1, 1].forEach((side) => {
+        const lung = new THREE.Mesh(new THREE.CapsuleGeometry(0.22 * m, 0.55 * m, 8, 20), lungMat);
+        lung.scale.set(1, 1.1, 0.62);
+        const p = new THREE.Vector3(side * hx * 0.7, chestMid - 0.05, hx * 0.2);
+        lung.position.copy(p);
+        lung.rotation.z = -side * 0.12;
+        lung.userData = INFO['肺'];
+        scene.add(lung);
+        clickable.push(lung);
+        addLabel('肺', '255,179,184', p.clone().add(new THREE.Vector3(side * 0.3, 0.55, 0)));
+      });
+
+      // 血管曲线（收在躯干内）
+      const curves = {
         artery: makeCurve([
-          heartPos, [heartPos[0] * 0.2, chestMid + h * 0.16, heartPos[2] - h * 0.02], [0, chestMid + h * 0.3, heartPos[2] - h * 0.08],
-          [0, chestMid + h * 0.42, heartPos[2] - h * 0.1], [-hx * 0.3, chestMid + h * 0.4, heartPos[2] - h * 0.05],
-          [-hx * 0.7, chestMid + h * 0.25, heartPos[2]], [-hx * 0.8, chestMid + h * 0.05, heartPos[2]],
-          [-hx * 0.7, chestMid - h * 0.15, heartPos[2]], [-hx * 0.35, chestMid - h * 0.32, heartPos[2]],
-          [0, chestMid - h * 0.42, heartPos[2]], [hx * 0.35, chestMid - h * 0.32, heartPos[2]],
-          [hx * 0.7, chestMid - h * 0.1, heartPos[2]], [hx * 0.6, chestMid + h * 0.1, heartPos[2]],
-          [heartPos[0] * 0.4, chestMid + h * 0.05, heartPos[2]],
+          heartPos.toArray(),
+          [heartPos.x * 0.2, chestMid + 0.28, heartPos.z - 0.06],
+          [-hx * 0.45, chestMid + 0.18, heartPos.z - 0.03],
+          [-hx * 0.62, chestMid - 0.04, heartPos.z],
+          [-hx * 0.55, chestMid - 0.2, heartPos.z],
+          [-hx * 0.2, chestMid - 0.33, heartPos.z],
+          [hx * 0.3, chestMid - 0.2, heartPos.z],
+          [hx * 0.55, chestMid - 0.01, heartPos.z],
+          [hx * 0.5, chestMid + 0.12, heartPos.z - 0.03],
+          [heartPos.x * 0.4, chestMid + 0.08, heartPos.z],
         ]),
         vein: makeCurve([
-          heartPos, [-hx * 0.4, chestMid + h * 0.1, heartPos[2] - h * 0.02],
-          [-hx * 0.45, chestMid - h * 0.05, heartPos[2] - h * 0.02], [0, chestMid - h * 0.35, heartPos[2] - h * 0.04],
-          [hx * 0.45, chestMid - h * 0.05, heartPos[2] - h * 0.02], [hx * 0.5, chestMid + h * 0.12, heartPos[2] - h * 0.02],
-          [heartPos[0] * 0.4, chestMid + h * 0.05, heartPos[2]],
+          heartPos.toArray(),
+          [-hx * 0.4, chestMid + 0.22, heartPos.z - 0.07],
+          [-hx * 0.3, chestMid, heartPos.z - 0.08],
+          [0, chestMid - 0.27, heartPos.z - 0.08],
+          [hx * 0.35, chestMid - 0.06, heartPos.z - 0.08],
+          [hx * 0.42, chestMid + 0.17, heartPos.z - 0.05],
+          [heartPos.x * 0.4, chestMid + 0.1, heartPos.z],
         ]),
         pulmonary: makeCurve([
-          heartPos, [hx * 0.75, chestMid + h * 0.06, heartPos[2] - h * 0.02],
-          [hx * 0.85, chestMid, heartPos[2] - h * 0.06], [-hx * 0.85, chestMid, heartPos[2] - h * 0.06],
-          [-hx * 0.75, chestMid + h * 0.06, heartPos[2] - h * 0.02],
+          heartPos.toArray(),
+          [hx * 0.55, chestMid + 0.1, heartPos.z - 0.04],
+          [hx * 0.72, chestMid, heartPos.z - 0.1],
+          [-hx * 0.2, chestMid + 0.04, heartPos.z - 0.14],
+          [-hx * 0.72, chestMid, heartPos.z - 0.1],
+          [-hx * 0.55, chestMid + 0.1, heartPos.z - 0.04],
         ]),
       };
 
-      const vesselColors = { artery: 0xff5555, vein: 0x4aa5ff, pulmonary: 0xb76bff };
-      Object.keys(vesselCurves).forEach((k) => {
+      const colors = { artery: 0xff5566, vein: 0x3b82f6, pulmonary: 0xa855f7 };
+      const flowCurves = [];
+      const labelOffsets = { artery: new THREE.Vector3(-0.9, 0.1, 0), vein: new THREE.Vector3(0.9, -0.25, 0), pulmonary: new THREE.Vector3(0.1, 0.55, 0) };
+      Object.keys(curves).forEach((k) => {
         scene.add(new THREE.Mesh(
-          new THREE.TubeGeometry(vesselCurves[k], 160, 0.045, 8, true),
-          new THREE.MeshBasicMaterial({ color: vesselColors[k], transparent: true, opacity: 0.3 })
+          new THREE.TubeGeometry(curves[k], 160, 0.04, 8, true),
+          vesselMaterial(colors[k])
         ));
+        const mid = curves[k].getPointAt(0.5);
+        const labelName = { artery: '动脉', vein: '静脉', pulmonary: '肺循环' }[k];
+        const rgb = new THREE.Color(colors[k]);
+        const rgba = Math.round(rgb.r * 255) + ',' + Math.round(rgb.g * 255) + ',' + Math.round(rgb.b * 255);
+        addLabel(labelName, rgba, mid.clone().add(labelOffsets[k]));
+        flowCurves.push(curves[k]);
       });
+
+      // 血液粒子（instanced + additive）
+      buildParticles(flowCurves);
     }
 
-    // 血液粒子
-    function buildParticles() {
-      particleSets = [
-        makeParticles(vesselCurves.artery, 0xff6b6b, 70, 0.10),
-        makeParticles(vesselCurves.vein, 0x5fb4ff, 55, 0.08),
-        makeParticles(vesselCurves.pulmonary, 0xc98bff, 45, 0.14),
-      ];
-    }
-    let particleSets = [];
-
-    // 血管曲线工具
-    function makeCurve(points) {
-      const v = points.map((p) => new THREE.Vector3(...p));
-      return new THREE.CatmullRomCurve3(v, true, 'catmullrom', 0.6);
+    function makeCurve(pts) {
+      return new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p)), true, 'catmullrom', 0.6);
     }
 
-    // 血液粒子
-    function makeParticles(curve, color, count, speed) {
-      const mat = new THREE.MeshBasicMaterial({ color });
-      const items = [];
-      for (let i = 0; i < count; i++) {
-        const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 12), mat);
-        mesh.userData.t = i / count;
-        mesh.userData.speed = speed;
-        scene.add(mesh);
-        items.push(mesh);
+    /* ================= 血液粒子 ================= */
+    const PARTICLE_COUNT = 240;
+    let particleMesh = null;
+    const particleData = [];
+
+    function buildParticles(curves) {
+      const geo = new THREE.SphereGeometry(0.045, 8, 8);
+      const mat = new THREE.MeshBasicMaterial({
+        color: 0xff8899, transparent: true, opacity: 0.9,
+        blending: THREE.AdditiveBlending, depthWrite: false,
+      });
+      particleMesh = new THREE.InstancedMesh(geo, mat, PARTICLE_COUNT);
+      particleMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      scene.add(particleMesh);
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particleData.push({
+          curve: curves[i % curves.length],
+          t: Math.random(),
+          speed: 0.12 + Math.random() * 0.12,
+        });
       }
-      return { curve, items };
     }
 
-    // 语音 + 卡片 + 点击
-    const voice = createVoice(document.getElementById('voiceBtn'));
-    const infoCard = createInfoCard(document.body, {
-      onShow: (userData) => voice.speak(userData.name + '。' + (userData.info || []).join('，')),
+    const dummy = new THREE.Object3D();
+    function updateParticles(dt) {
+      if (!particleMesh) return;
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const p = particleData[i];
+        p.t = (p.t + dt * p.speed) % 1;
+        p.curve.getPointAt(p.t, dummy.position);
+        dummy.updateMatrix();
+        particleMesh.setMatrixAt(i, dummy.matrix);
+      }
+      particleMesh.instanceMatrix.needsUpdate = true;
+    }
+
+    /* ================= 模型加载 ================= */
+    const loader = new GLTFLoader();
+    loader.load(MODEL_URL, (gltf) => {
+      const body = gltf.scene;
+      scene.add(body);
+
+      // 蒙皮模型：骨骼世界坐标估算身体范围
+      body.updateWorldMatrix(true, true);
+      const box = new THREE.Box3();
+      body.traverse((o) => { if (o.isBone) box.expandByPoint(o.getWorldPosition(new THREE.Vector3())); });
+      if (box.isEmpty()) box.setFromObject(body);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+
+      const scale = TARGET_HEIGHT / size.y;
+      const FOOT_ALLOWANCE = 0.09;
+      body.scale.setScalar(scale);
+      body.position.set(0, (size.y / 2 + FOOT_ALLOWANCE - center.y) * scale, 0);
+      body.rotation.y = Math.PI;
+
+      // 半透明 X 光质感
+      bodyMats.length = 0;
+      body.traverse((o) => {
+        if (o.isMesh && o.material) {
+          o.material.transparent = true;
+          o.material.opacity = xray;
+          o.material.depthWrite = false;
+          bodyMats.push(o.material);
+        }
+      });
+
+      body.userData = { name: '人体', type: '身体', color: 0x8899cc, info: null, desc: ['血液由心脏泵出，流遍全身', '送氧气营养，带走废物', '这就是血液循环'] };
+      clickable.push(body);
+
+      // 用骨骼定位胸腔
+      let neckY = -1e9, hipsY = 1e9, shoulderX = 0;
+      body.traverse((o) => {
+        if (!o.isBone) return;
+        const p = o.getWorldPosition(new THREE.Vector3());
+        if (/neck/i.test(o.name)) neckY = Math.max(neckY, p.y);
+        if (/hips?$/i.test(o.name)) hipsY = Math.min(hipsY, p.y);
+        if (/shoulder/i.test(o.name)) shoulderX = Math.max(shoulderX, Math.abs(p.x));
+      });
+      if (neckY > -1e8 && hipsY < 1e8) {
+        chestMid = (neckY + hipsY) / 2 - 0.15;
+        hx = Math.max(shoulderX * 0.8, 0.35);
+      } else {
+        chestMid = TARGET_HEIGHT * 0.66;
+        hx = 0.5;
+      }
+
+      buildOrgans();
+
+      // 构图：镜头对准胸腔
+      camera.position.set(0.6, chestMid + 0.35, 6.8);
+      camera.lookAt(0, chestMid, 0);
+      controls.target.set(0, chestMid, 0);
+
+      document.getElementById('loader').classList.add('is-done');
+    }, undefined, (err) => {
+      console.error('模型加载失败', err);
+      chestMid = 3.1; hx = 0.5;
+      buildOrgans();
+      camera.position.set(0.6, 3.4, 7);
+      camera.lookAt(0, 3.1, 0);
+      controls.target.set(0, 3.1, 0);
+      document.getElementById('loader').classList.add('is-done');
     });
-    enablePicking(renderer, camera, { clickable, onPick: (obj) => infoCard.show(obj.userData) });
 
-    // 图例
-    function addLegend(color, text) {
-      const el = document.createElement('div');
-      el.style.cssText = 'display:flex;align-items:center;gap:6px;margin:6px 0;font-size:12px;color:#cfd6e6;';
-      const dot = document.createElement('span');
-      dot.style.cssText = `width:12px;height:12px;border-radius:50%;background:#${color.toString(16).padStart(6,'0')};flex-shrink:0;`;
-      el.appendChild(dot);
-      el.appendChild(document.createTextNode(text));
-      document.getElementById('legend').appendChild(el);
-    }
-    addLegend(0xff6b6b, '动脉 · 含氧血流向全身');
-    addLegend(0x5fb4ff, '静脉 · 回流心脏');
-    addLegend(0xc98bff, '肺循环 · 心脏与肺往返');
+    /* ================= 交互 ================= */
+    const voice = S.createVoice();
+    S.bindVoiceButton(document.getElementById('voiceBtn'), voice);
+    const card = S.createCard(document.body);
+    const picker = S.makePicker(camera, renderer.domElement);
+    const fly = S.makeFly(camera, controls);
 
-    // 播放控制
-    const clock = new THREE.Clock();
+    picker.onHover(clickable, (obj) => {
+      renderer.domElement.style.cursor = obj ? 'pointer' : 'grab';
+    });
+    picker.onClick(clickable, (obj) => {
+      if (!obj) return;
+      const d = obj.userData;
+      if (!d || !d.name) return;
+      card.show(d);
+      voice.speak(d.name + '。' + (d.stats || []).map((s) => s.label + s.value).join('，') + '。' + (d.desc || []).join('，'));
+      const t = new THREE.Vector3();
+      obj.getWorldPosition(t);
+      const dist = d.name === '人体' ? 7 : 2.6;
+      const dir = camera.position.clone().sub(t).normalize();
+      fly.flyTo(t.clone().add(dir.multiplyScalar(dist)), t, 1.0);
+    });
+
+    /* ================= 控件 ================= */
     let isPlaying = true;
+    const clock = new THREE.Clock();
     const playBtn = document.getElementById('playBtn');
     playBtn.addEventListener('click', () => {
       isPlaying = !isPlaying;
-      playBtn.textContent = isPlaying ? '⏸' : '▶';
-      clock.getDelta();
+      playBtn.innerHTML = isPlaying ? '<span class="sv-btn__icon">⏸</span><span>暂停</span>' : '<span class="sv-btn__icon">▶</span><span>播放</span>';
+      if (!isPlaying) clock.getDelta();
     });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      fly.flyTo(new THREE.Vector3(0.6, chestMid + 0.35, 6.8), new THREE.Vector3(0, chestMid, 0), 1.2);
+    });
+
+    let xray = 0.3;
+    const bodyMats = [];
+    const xrayBtn = document.getElementById('xrayBtn');
+    const xrayVal = document.getElementById('xrayVal');
+    xrayBtn.addEventListener('click', () => {
+      xray = xray >= 0.9 ? 0.1 : xray + 0.2;
+      xrayVal.textContent = Math.round(xray * 100);
+      bodyMats.forEach((m) => { m.opacity = xray; });
+    });
+
+    /* ================= 动画 ================= */
     function animate() {
-      const dt = isPlaying ? clock.getDelta() : 0;
+      const dt = clock.getDelta();
       if (isPlaying) {
-        if (heart) {
-          const pulse = 1 + Math.sin(performance.now() / 250) * 0.12;
-          heart.scale.set(pulse, pulse, pulse);
-        }
-        particleSets.forEach(({ curve, items }) => {
-          items.forEach((m) => {
-            m.userData.t = (m.userData.t + dt * m.userData.speed) % 1;
-            curve.getPointAt(m.userData.t, m.position);
-          });
-        });
+        // 心跳双节拍（lub-dub）
+        const t = performance.now() / 1000;
+        const beat = Math.pow(Math.max(0, Math.sin(t * Math.PI * 1.2)), 6) * 0.12
+                   + Math.pow(Math.max(0, Math.sin((t - 0.22) * Math.PI * 1.2)), 6) * 0.07;
+        if (heart) heart.scale.setScalar(1 + beat);
+        // 血管流光
+        vesselShaders.forEach((m) => { m.uniforms.uTime.value += dt; });
+        // 粒子
+        updateParticles(dt);
       }
+      fly.update(dt);
       controls.update();
-      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+      composer.render();
       requestAnimationFrame(animate);
     }
     animate();
+
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
     });
   </script>
 </body>
