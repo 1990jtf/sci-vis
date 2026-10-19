@@ -370,10 +370,17 @@ canvas { display: block; }
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
-.sv-dock.sv-in, .sv-legend.sv-in { animation-name: sv-rise-in; }
-@keyframes sv-rise-in {
+/* 控制坞是 left:50% 居中的，入场动画必须保留 -50% 基准位移 */
+.sv-dock.sv-in { animation-name: sv-rise-in-centered; }
+@keyframes sv-rise-in-centered {
   from { opacity: 0; transform: translate(-50%, 14px); }
   to { opacity: 1; transform: translate(-50%, 0); }
+}
+/* 图例是 left:24px 左对齐，不能带 -50%，否则会左移半个自身宽度、被裁出屏幕 */
+.sv-legend.sv-in { animation-name: sv-rise-in; }
+@keyframes sv-rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
 }
 
 /* ---------- 响应式 ---------- */
