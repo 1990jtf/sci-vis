@@ -4,77 +4,51 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>恐龙 · 地质年代漫游</title>
-  <style>
-    body { margin: 0; overflow: hidden; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; }
-    #info {
-      position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
-      color: #fff; background: rgba(0,0,0,0.55); padding: 10px 18px;
-      border-radius: 8px; font-size: 14px; letter-spacing: 1px; pointer-events: none; white-space: nowrap;
-    }
-    #hint { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-      color: #eee; font-size: 12px; pointer-events: none; white-space: nowrap; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
-    #voiceBtn {
-      position: absolute; top: 16px; right: 20px; width: 44px; height: 44px;
-      border-radius: 50%; border: none; cursor: pointer; font-size: 20px;
-      background: rgba(10,15,30,0.85); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-      z-index: 10; transition: transform 0.2s, background 0.2s;
-    }
-    #voiceBtn:hover { transform: scale(1.1); }
-    #voiceBtn.off { opacity: 0.45; }
-    #playBtn {
-      position: absolute; bottom: 60px; right: 20px; width: 44px; height: 44px;
-      border-radius: 50%; border: none; cursor: pointer; font-size: 18px;
-      background: rgba(10,15,30,0.85); color: #fff; box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-      z-index: 10; transition: transform 0.2s, background 0.2s;
-    }
-    #playBtn:hover { transform: scale(1.1); }
-
-    /* 时间机器 */
-    #timeMachine {
-      position: absolute; left: 20px; bottom: 20px; z-index: 10;
-      width: 320px; padding: 16px 18px; border-radius: 14px;
-      background: rgba(15,22,38,0.88); border: 1px solid rgba(255,255,255,0.18);
-      backdrop-filter: blur(6px); color: #fff;
-    }
-    #eraName { font-size: 22px; font-weight: 700; letter-spacing: 2px; }
-    #eraYears { font-size: 12px; color: #aab3c5; margin: 4px 0 12px; }
-    .bar {
-      position: relative; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.15); margin: 16px 0;
-    }
-    #barFill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 4px;
-      background: linear-gradient(90deg, #6a5cff, #9a5cff, #ff8a5c); transition: width 0.5s; }
-    .marks { display: flex; justify-content: space-between; font-size: 10px; color: #9aa3b5; margin-top: 4px; }
-    .nav { display: flex; gap: 8px; margin-top: 14px; }
-    .nav button {
-      flex: 1; padding: 10px 0; border: none; border-radius: 10px; cursor: pointer;
-      font-size: 14px; font-weight: 600; letter-spacing: 1px; color: #fff;
-      background: linear-gradient(135deg, #6a5cff, #9a5cff); transition: transform 0.15s, opacity 0.2s;
-    }
-    .nav button:hover { transform: translateY(-2px); }
-    .nav button:disabled { opacity: 0.35; cursor: default; transform: none; }
-    #autoTour {
-      margin-top: 8px; width: 100%; padding: 9px 0; border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 10px; cursor: pointer; font-size: 13px; color: #fff; background: rgba(255,255,255,0.08);
-    }
-    #autoTour.active { background: linear-gradient(135deg, #ff5c7a, #ff8a5c); border: none; }
-  </style>
+  <link rel="stylesheet" href="../shared/theme.css" />
 </head>
 <body>
-  <div id="info">恐龙 · 地质年代漫游</div>
-  <div id="hint">点击恐龙查看介绍 · 用时间机器穿梭地质年代 · 拖拽视角 · 滚轮缩放</div>
-  <button id="voiceBtn" title="语音开关">🔊</button>
-  <button id="playBtn" title="暂停/继续动画">⏸</button>
+  <div class="sv-loader" id="loader">
+    <div class="sv-loader__ring"></div>
+    <div class="sv-loader__text">正在孵化恐龙…</div>
+  </div>
 
-  <div id="timeMachine">
-    <div id="eraName">三叠纪</div>
-    <div id="eraYears">2.5 亿 ~ 2 亿年前</div>
-    <div class="bar"><div id="barFill"></div></div>
-    <div class="marks"><span>三叠纪</span><span>侏罗纪</span><span>白垩纪</span></div>
-    <div class="nav">
-      <button id="prevBtn">◀ 上一个纪</button>
-      <button id="nextBtn">下一个纪 ▶</button>
+  <div class="sv-brand sv-in" style="--sv-accent:#4ade80; --sv-accent-2:#a3e635">
+    <div class="sv-brand__eyebrow">Age of Dinosaurs</div>
+    <div class="sv-brand__title">恐龙 · 地质年代漫游</div>
+    <div class="sv-brand__sub">登上时间机器，穿越 2.5 亿年</div>
+  </div>
+
+  <button class="sv-iconbtn sv-iconbtn--top" id="voiceBtn" title="语音开关">🔊</button>
+
+  <div class="sv-card" id="card"></div>
+
+  <!-- 时间机器面板 -->
+  <div class="sv-panel sv-in" id="timeMachine" style="left:24px; bottom:24px; width:300px;">
+    <div class="sv-panel__title">时间机器 · Time Machine</div>
+    <div style="font-size:24px; font-weight:700; letter-spacing:2px;" id="eraName">三叠纪</div>
+    <div style="font-size:12px; color:var(--sv-text-dim); margin:4px 0 12px;" id="eraYears">2.5 亿 ~ 2 亿年前</div>
+    <div style="position:relative; height:6px; border-radius:3px; background:rgba(255,255,255,0.12); margin:14px 0 6px;">
+      <div id="barFill" style="position:absolute; left:0; top:0; height:100%; border-radius:3px; width:33%;
+        background:linear-gradient(90deg,#4ade80,#a3e635); transition:width 0.6s cubic-bezier(0.2,0.8,0.2,1);"></div>
     </div>
-    <button id="autoTour">🚀 时间漫游</button>
+    <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--sv-text-faint); margin-bottom:12px;">
+      <span>三叠纪</span><span>侏罗纪</span><span>白垩纪</span>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button class="sv-btn sv-btn--ghost" id="prevBtn" style="flex:1; justify-content:center;">◀ 上一纪</button>
+      <button class="sv-btn sv-btn--ghost" id="nextBtn" style="flex:1; justify-content:center;">下一纪 ▶</button>
+    </div>
+    <button class="sv-btn sv-btn--primary" id="autoTour" style="width:100%; justify-content:center; margin-top:8px;">🚀 时间漫游</button>
+    <button class="sv-btn" id="asteroidBtn" style="width:100%; justify-content:center; margin-top:6px; color:var(--sv-warn);">☄️ 小行星撞击（白垩纪）</button>
+  </div>
+
+  <div class="sv-hint">点击恐龙查看介绍 · 拖拽旋转 · 滚轮缩放</div>
+  <div class="sv-veil" id="veil"></div>
+
+  <div class="sv-dock sv-in">
+    <button class="sv-btn" id="playBtn"><span class="sv-btn__icon">⏸</span><span>暂停</span></button>
+    <span class="sv-dock__sep"></span>
+    <button class="sv-btn sv-btn--ghost" id="resetBtn">🔄 全景</button>
   </div>
 
   <script type="importmap">
@@ -89,376 +63,782 @@
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+    
 
-    // ---- 共享：中文语音播报 ----
-    function createVoice(buttonEl) {
-      const synth = window.speechSynthesis;
-      let enabled = true;
-      let zhVoice = null;
-      function pickVoice() {
-        const voices = synth.getVoices();
-        zhVoice = voices.find((v) => /zh/i.test(v.lang)) || null;
+    // ===== SciVis Kit（由 tools/inline-kit.js 自动内联，勿手改） =====
+    const SciVis = (function () {
+    
+    // THREE / addons 依赖占位，由 init() 注入
+    let THREE = null;
+    let OrbitControls = null;
+    let EffectComposer = null;
+    let RenderPass = null;
+    let UnrealBloomPass = null;
+    
+    function init(_THREE, addons) {
+      THREE = _THREE;
+      addons = addons || {};
+      OrbitControls = addons.OrbitControls;
+      EffectComposer = addons.EffectComposer;
+      RenderPass = addons.RenderPass;
+      UnrealBloomPass = addons.UnrealBloomPass;
+      return exports;
+    }
+    
+    /* ---------------- 确定性噪声（替代 Math.random 做程序化纹理） --------- */
+    function hash3(x, y, z) {
+      let n = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453123;
+      return n - Math.floor(n);
+    }
+    function smooth(t) { return t * t * (3 - 2 * t); }
+    function valueNoise2(x, y) {
+      const ix = Math.floor(x), iy = Math.floor(y);
+      const fx = x - ix, fy = y - iy;
+      const a = hash3(ix, iy, 0), b = hash3(ix + 1, iy, 0);
+      const c = hash3(ix, iy + 1, 0), d = hash3(ix + 1, iy + 1, 0);
+      return a + (b - a) * smooth(fx) + (c - a) * smooth(fy) * (1 - smooth(fx)) + (d - b) * smooth(fx) * smooth(fy);
+    }
+    function fbm2(x, y, oct) {
+      let v = 0, amp = 0.5, f = 1;
+      for (let i = 0; i < (oct || 5); i++) { v += amp * valueNoise2(x * f, y * f); f *= 2; amp *= 0.5; }
+      return v;
+    }
+    function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    
+    /* ---------------- 渲染器：ACES 色调映射 + UnrealBloom --------- */
+    function createRenderer(opts) {
+      opts = opts || {};
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: opts.alpha !== false,
+        powerPreference: 'high-performance',
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = opts.exposure != null ? opts.exposure : 1.1;
+      if (opts.shadow !== false) {
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       }
-      pickVoice();
-      synth.addEventListener('voiceschanged', pickVoice);
+      document.body.appendChild(renderer.domElement);
+    
+      let composer = null, bloom = null, renderPass = null;
+      if (opts.bloom !== false) {
+        composer = new EffectComposer(renderer);
+        renderPass = new RenderPass(new THREE.Scene(), new THREE.Camera());
+        composer.addPass(renderPass);
+        bloom = new UnrealBloomPass(
+          new THREE.Vector2(window.innerWidth, window.innerHeight),
+          opts.bloomStrength != null ? opts.bloomStrength : 0.55,
+          opts.bloomRadius != null ? opts.bloomRadius : 0.7,
+          opts.bloomThreshold != null ? opts.bloomThreshold : 0.85
+        );
+        composer.addPass(bloom);
+      }
+      // 页面需将真实场景/相机绑定到 renderPass：renderPass.scene = scene; renderPass.camera = camera;
+      return { renderer, composer, bloom, renderPass };
+    }
+    
+    /* ---------------- 基础场景 + 相机 + 轨道控制 --------- */
+    function createScene(bg, fog) {
+      const scene = new THREE.Scene();
+      if (bg) scene.background = new THREE.Color(bg);
+      if (fog) scene.fog = fog;
+      return scene;
+    }
+    function createCamera(fov, near, far) {
+      return new THREE.PerspectiveCamera(fov || 50, window.innerWidth / window.innerHeight, near || 0.1, far || 1000);
+    }
+    function createControls(camera, dom, target) {
+      const c = new OrbitControls(camera, dom);
+      c.enableDamping = true;
+      c.dampingFactor = 0.08;
+      c.rotateSpeed = 0.7;
+      if (target) c.target.copy(target);
+      return c;
+    }
+    
+    /* ---------------- 平滑运镜（点击聚焦 / 漫游） --------- */
+    function makeFly(camera, controls) {
+      const state = {
+        active: false,
+        from: new THREE.Vector3(), to: new THREE.Vector3(),
+        fromTarget: new THREE.Vector3(), toTarget: new THREE.Vector3(),
+        t: 0, dur: 1, onDone: null,
+      };
+      function flyTo(pos, target, dur, onDone) {
+        state.from.copy(camera.position);
+        state.to.copy(pos);
+        state.fromTarget.copy(controls.target);
+        state.toTarget.copy(target);
+        state.t = 0;
+        state.dur = dur || 1;
+        state.onDone = onDone || null;
+        state.active = true;
+        controls.enabled = false;
+      }
+      function update(dt) {
+        if (!state.active) return;
+        state.t += dt / state.dur;
+        const k = state.t >= 1 ? 1 : 1 - Math.pow(1 - state.t, 3); // easeOutCubic
+        camera.position.lerpVectors(state.from, state.to, k);
+        controls.target.lerpVectors(state.fromTarget, state.toTarget, k);
+        camera.lookAt(controls.target);
+        if (state.t >= 1) {
+          state.active = false;
+          controls.enabled = true;
+          if (state.onDone) state.onDone();
+        }
+      }
+      function cancel() {
+        if (!state.active) return;
+        state.active = false;
+        controls.enabled = true;
+      }
+      return { flyTo, update, cancel, isActive: () => state.active };
+    }
+    
+    /* ---------------- 语音（中文） --------- */
+    function createVoice() {
+      const synth = window.speechSynthesis;
+      let enabled = true, zhVoice = null;
+      function pick() {
+        const vs = synth.getVoices();
+        zhVoice = vs.find((v) => /zh/i.test(v.lang)) || null;
+      }
+      pick();
+      synth.addEventListener('voiceschanged', pick);
       function speak(text) {
         if (!enabled || !synth || !text) return;
         synth.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = 'zh-CN'; utter.rate = 0.95; utter.pitch = 1.05;
-        if (zhVoice) utter.voice = zhVoice;
-        synth.speak(utter);
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.02;
+        if (zhVoice) u.voice = zhVoice;
+        synth.speak(u);
       }
-      function toggle() {
-        enabled = !enabled;
-        if (buttonEl) buttonEl.classList.toggle('off', !enabled);
-        if (!enabled) synth.cancel();
-        return enabled;
-      }
-      if (buttonEl) buttonEl.addEventListener('click', toggle);
-      return { speak, toggle, stop: () => synth.cancel(), isEnabled: () => enabled };
+      function toggle() { enabled = !enabled; if (!enabled) synth.cancel(); return enabled; }
+      function stop() { synth.cancel(); }
+      return { speak, toggle, stop, isEnabled: () => enabled };
     }
-
-    // ---- 共享：科普介绍卡片 ----
-    function createInfoCard(container, { onShow } = {}) {
-      const card = document.createElement('div');
-      card.id = 'infoCard';
-      card.style.cssText = `
-        position: absolute; right: 20px; top: 70px; width: 300px;
-        color: #fff; background: rgba(10,15,30,0.9); border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 12px; padding: 18px 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-        display: none; z-index: 10; backdrop-filter: blur(6px); font-family: inherit;
-      `;
-      const close = document.createElement('button');
-      close.className = 'close';
-      close.textContent = '\u00D7';
-      close.style.cssText = `
-        position: absolute; top: 10px; right: 12px; cursor: pointer; color: #9aa3b5;
-        font-size: 18px; line-height: 1; background: none; border: none;
-      `;
-      close.addEventListener('mouseenter', () => (close.style.color = '#fff'));
-      close.addEventListener('mouseleave', () => (close.style.color = '#9aa3b5'));
-      const h3 = document.createElement('h3');
-      h3.style.cssText = 'margin: 0 0 10px; font-size: 20px; display: flex; align-items: center; gap: 10px;';
-      const dot = document.createElement('span');
-      dot.style.cssText = 'width: 14px; height: 14px; border-radius: 50%; display: inline-block; flex-shrink: 0;';
-      const title = document.createElement('span');
-      h3.appendChild(dot); h3.appendChild(title);
-      const body = document.createElement('div');
-      body.id = 'cardBody';
-      card.appendChild(close); card.appendChild(h3); card.appendChild(body);
-      container.appendChild(card);
-      close.addEventListener('click', () => hide());
-      function show(userData) {
-        if (!userData || !userData.name) return;
-        dot.style.background = '#' + (userData.color || 0xffffff).toString(16).padStart(6, '0');
-        title.textContent = userData.name + '（' + (userData.type || '生物') + '）';
-        body.innerHTML = (userData.info || []).map((line) => '<p style="margin:6px 0;font-size:13px;line-height:1.7;color:#cfd6e6;">' + line + '</p>').join('');
-        card.style.display = 'block';
-        if (onShow) onShow(userData);
+    
+    /* ---------------- 信息卡片（CSS 类 + 结构化字段） --------- */
+    function createCard(container) {
+      const el = document.createElement('div');
+      el.className = 'sv-card';
+      el.innerHTML =
+        '<div class="sv-card__head">' +
+        '  <span class="sv-card__dot"></span>' +
+        '  <div class="sv-card__titles"><div class="sv-card__title"></div><div class="sv-card__sub"></div></div>' +
+        '  <button class="sv-card__close" aria-label="关闭">\u00D7</button>' +
+        '</div>' +
+        '<div class="sv-card__body"></div>';
+      container.appendChild(el);
+      const dot = el.querySelector('.sv-card__dot');
+      const title = el.querySelector('.sv-card__title');
+      const sub = el.querySelector('.sv-card__sub');
+      const body = el.querySelector('.sv-card__body');
+      const close = el.querySelector('.sv-card__close');
+    
+      function show(data) {
+        if (!data || !data.name) return;
+        const color = data.color ? '#' + data.color.toString(16).padStart(6, '0') : '#6a8cff';
+        dot.style.background = color;
+        dot.style.color = color;
+        title.textContent = data.name;
+        sub.textContent = data.type || '';
+        body.innerHTML = '';
+        if (data.stats && data.stats.length) {
+          data.stats.forEach((s) => {
+            const row = document.createElement('div');
+            row.className = 'sv-card__stat';
+            row.innerHTML = '<span>' + s.label + '</span><b>' + s.value + '</b>';
+            body.appendChild(row);
+          });
+        }
+        if (data.desc && data.desc.length) {
+          data.desc.forEach((line) => {
+            const row = document.createElement('div');
+            row.className = 'sv-card__row';
+            row.textContent = line;
+            body.appendChild(row);
+          });
+        }
+        el.classList.add('is-open');
       }
-      function hide() { card.style.display = 'none'; }
-      return { element: card, show, hide };
+      function hide() { el.classList.remove('is-open'); }
+      close.addEventListener('click', hide);
+      return { element: el, show, hide };
     }
-
-    // ---- 共享：点击拾取 ----
-    function enablePicking(renderer, camera, { clickable, onPick }) {
+    
+    /* ---------------- 悬停 + 点击拾取（合并） --------- */
+    function makePicker(camera, dom) {
       const raycaster = new THREE.Raycaster();
-      const pointer = new THREE.Vector2();
-      renderer.domElement.addEventListener('click', (event) => {
-        pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-        pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
-        raycaster.setFromCamera(pointer, camera);
-        const hits = raycaster.intersectObjects(clickable, false);
-        if (hits.length > 0 && onPick) onPick(hits[0].object);
-      });
+      const ndc = new THREE.Vector2();
+      function setFromEvent(e) {
+        const r = dom.getBoundingClientRect();
+        ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+        ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+        raycaster.setFromCamera(ndc, camera);
+      }
+      function pick(e, targets) {
+        setFromEvent(e);
+        const hits = raycaster.intersectObjects(targets, true);
+        return hits.length ? hits[0].object : null;
+      }
+      function onHover(targets, cb) {
+        dom.addEventListener('mousemove', (e) => cb(pick(e, targets), e));
+        dom.addEventListener('mouseleave', () => cb(null, null));
+      }
+      function onClick(targets, cb) {
+        dom.addEventListener('click', (e) => cb(pick(e, targets), e));
+      }
+      return { pick, onHover, onClick };
     }
+    
+    /* ---------------- 程序化纹理 --------- */
+    function makeCanvas(size) {
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      return c;
+    }
+    function glowTexture(inner, mid, size) {
+      size = size || 256;
+      const c = makeCanvas(size);
+      const ctx = c.getContext('2d');
+      const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      g.addColorStop(0, inner);
+      g.addColorStop(0.35, mid);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, size, size);
+      return new THREE.CanvasTexture(c);
+    }
+    // 行星地表（fbm 噪声 + 色带，经度无缝）
+    function planetTexture(palette, size) {
+      size = size || 256;
+      const c = makeCanvas(size);
+      const ctx = c.getContext('2d');
+      const img = ctx.createImageData(size, size);
+      const bands = palette.map((p) => new THREE.Color(p));
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const u = x / size, v = y / size;
+          const th = u * Math.PI * 2;
+          const nx = Math.cos(th) * 3, ny = Math.sin(th) * 3;
+          const n = fbm2(nx + 1.7, v * 5 - ny * 0.4, 5);
+          const n2 = fbm2(nx * 2.3 + 9.1, v * 7 + 3.3, 4);
+          let t = clamp(n * 0.7 + n2 * 0.3, 0, 1);
+          const col = sampleBands(bands, t);
+          const i = (y * size + x) * 4;
+          img.data[i] = col.r * 255;
+          img.data[i + 1] = col.g * 255;
+          img.data[i + 2] = col.b * 255;
+          img.data[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+    function sampleBands(bands, t) {
+      const seg = 1 / (bands.length - 1);
+      const idx = Math.min(Math.floor(t / seg), bands.length - 2);
+      const local = (t - idx * seg) / seg;
+      return bands[idx].clone().lerp(bands[idx + 1], local);
+    }
+    
+    // 恐龙皮肤纹理（鳞片噪声 + 色斑 + 腹部渐变）
+    function skinTexture(baseColor, spotColor, size) {
+      size = size || 256;
+      const c = makeCanvas(size);
+      const ctx = c.getContext('2d');
+      const img = ctx.createImageData(size, size);
+      const base = new THREE.Color(baseColor);
+      const spot = new THREE.Color(spotColor);
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const u = x / size, v = y / size;
+          // 鳞片：高频网格噪声
+          const scale = fbm2(u * 18, v * 18, 4);
+          const scale2 = fbm2(u * 40 + 3, v * 40 + 7, 3);
+          // 色斑：低频大块斑纹
+          const spotN = fbm2(u * 6 + 11, v * 6 - 5, 4);
+          let col = base.clone();
+          col.lerp(spot, S.clamp((spotN - 0.42) * 3.0, 0, 1) * 0.5);
+          // 鳞片刻痕（微亮/微暗）
+          const sheen = (scale2 - 0.5) * 0.16 + (scale - 0.5) * 0.08;
+          col.r = S.clamp(col.r + sheen, 0, 1);
+          col.g = S.clamp(col.g + sheen, 0, 1);
+          col.b = S.clamp(col.b + sheen, 0, 1);
+          const i = (y * size + x) * 4;
+          img.data[i] = col.r * 255;
+          img.data[i + 1] = col.g * 255;
+          img.data[i + 2] = col.b * 255;
+          img.data[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+    
+    /* ---------------- 星空（分层 + 大小/亮度变化） --------- */
+    function createStarfield(count, radius, color1, color2) {
+      count = count || 1400;
+      radius = radius || 240;
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      const col = new Float32Array(count * 3);
+      const c1 = new THREE.Color(color1 || 0xffffff);
+      const c2 = new THREE.Color(color2 || 0xaac4ff);
+      for (let i = 0; i < count; i++) {
+        const v = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1)
+          .normalize().multiplyScalar(radius);
+        pos[i * 3] = v.x; pos[i * 3 + 1] = v.y; pos[i * 3 + 2] = v.z;
+        const c = c1.clone().lerp(c2, Math.random());
+        const b = 0.4 + Math.random() * 0.6;
+        col[i * 3] = c.r * b; col[i * 3 + 1] = c.g * b; col[i * 3 + 2] = c.b * b;
+      }
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      const mat = new THREE.PointsMaterial({
+        size: 0.5, vertexColors: true, transparent: true, opacity: 0.85,
+        sizeAttenuation: true, depthWrite: false,
+      });
+      return new THREE.Points(geo, mat);
+    }
+    
+    /* ---------------- UI 助手 --------- */
+    // 创建 3D 标签（需传入 CSS2DObject 构造器）并定位
+    function makeLabel(CSS2DObject, text, position, className) {
+      const div = document.createElement('div');
+      div.className = className || 'sv-label';
+      div.textContent = text;
+      const obj = new CSS2DObject(div);
+      if (position) obj.position.copy(position);
+      return obj;
+    }
+    
+    function toast(text, ms) {  let el = document.querySelector('.sv-toast');
+      if (!el) {
+        el = document.createElement('div');
+        el.className = 'sv-toast';
+        document.body.appendChild(el);
+      }
+      el.textContent = text;
+      el.classList.add('is-open');
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.classList.remove('is-open'), ms || 2200);
+    }
+    function bindVoiceButton(btn, voice) {
+      if (!btn) return;
+      const sync = () => btn.classList.toggle('is-off', !voice.isEnabled());
+      sync();
+      btn.addEventListener('click', () => { voice.toggle(); sync(); });
+    }
+    
+    // 具名导出集合（供 init 返回全部 API）
+    const exports = {
+      init, hash3, valueNoise2, fbm2, clamp, lerp,
+      createRenderer, createScene, createCamera, createControls,
+      makeFly, createVoice, createCard, makePicker, makeLabel,
+      glowTexture, planetTexture, skinTexture, createStarfield,
+      toast, bindVoiceButton,
+    };
+    
+    
+    return exports;
+    })();
 
-    // ---- 地质年代数据 ----
+
+    const S = SciVis.init(THREE, { OrbitControls, EffectComposer, RenderPass, UnrealBloomPass });
+
+    /* ================= 年代数据 ================= */
     const ERAS = [
       {
         id: 'tri', name: '三叠纪', years: '2.5 亿 ~ 2 亿年前',
-        sky: 0x9fd8b8, ground: 0x9a8f62, veg: '早期蕨类',
-        desc: ['恐龙在三叠纪末期出现', '大陆还是连成一片的盘古大陆', '气候温暖干燥，遍地是蕨类植物', '出现了最早的恐龙和鳄类爬行动物'],
-        creatures: ['小型恐龙', '早期爬行动物'],
+        skyTop: 0x8a7fa0, skyBottom: 0xe8c890, ground: 0x9a8f62, fog: 0xd8c8a0,
+        desc: ['恐龙在三叠纪末期出现', '大陆还是连成一片的盘古大陆', '气候温暖干燥，遍地是蕨类植物'],
       },
       {
         id: 'jur', name: '侏罗纪', years: '2 亿 ~ 1.45 亿年前',
-        sky: 0x7ec0ef, ground: 0x5c9a54, veg: '裸子植物森林',
-        desc: ['恐龙称霸陆地，种类繁多', '出现了巨大的蜥脚类恐龙', '裸子植物（银杏、苏铁）茂密生长', '始祖鸟等早期鸟类开始出现'],
-        creatures: ['蜥脚类恐龙', '剑龙'],
+        skyTop: 0x3f7fbf, skyBottom: 0xbfe0d8, ground: 0x5c9a54, fog: 0xa8d0c0,
+        desc: ['恐龙称霸陆地，种类繁多', '出现了巨大的蜥脚类恐龙', '裸子植物森林茂密生长'],
       },
       {
         id: 'cre', name: '白垩纪', years: '1.45 亿 ~ 6600 万年前',
-        sky: 0x9ecdf0, ground: 0x6b9a4a, veg: '开花植物',
-        desc: ['霸王龙等大型肉食恐龙称霸', '出现了三角龙等角龙类', '开花植物开始遍布地球', '6600 万年前一颗小行星撞击地球，恐龙灭绝'],
-        creatures: ['霸王龙', '三角龙'],
+        skyTop: 0x4a8fd0, skyBottom: 0xc8e2f0, ground: 0x6b9a4a, fog: 0xb8d8e8,
+        desc: ['霸王龙等大型肉食恐龙称霸', '开花植物开始遍布地球', '6600 万年前小行星撞击，恐龙灭绝'],
       },
     ];
 
-    // ---- 场景 ----
+    /* ================= 场景 ================= */
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(ERAS[0].sky);
-    scene.fog = new THREE.Fog(ERAS[0].sky, 30, 70);
+    const camera = S.createCamera(48, 0.1, 500);
+    camera.position.set(9, 4.8, 14);
 
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
-    camera.position.set(8, 4, 12);
-    camera.lookAt(0, 1.5, 0);
+    const { renderer, composer, renderPass } = S.createRenderer({
+      exposure: 1.05, bloomStrength: 0.3, bloomRadius: 0.6, bloomThreshold: 0.85,
+    });
+    renderPass.scene = scene;
+    renderPass.camera = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    document.body.appendChild(renderer.domElement);
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.body.appendChild(labelRenderer.domElement);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.target.set(0, 1.5, 0);
+    const controls = S.createControls(camera, renderer.domElement, new THREE.Vector3(0, 2, 0));
     controls.maxPolarAngle = Math.PI * 0.52;
+    controls.minDistance = 3;
+    controls.maxDistance = 40;
 
     // 灯光
-    const hemi = new THREE.HemisphereLight(0xbfdfff, 0x6a8a5a, 0.9);
+    const hemi = new THREE.HemisphereLight(0xcfe4ff, 0x6a8a5a, 0.9);
     scene.add(hemi);
-    const sunLight = new THREE.DirectionalLight(0xfff2d9, 1.4);
-    sunLight.position.set(8, 14, 8);
+    const sunLight = new THREE.DirectionalLight(0xfff2d9, 1.8);
+    sunLight.position.set(10, 16, 8);
     sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(2048, 2048);
+    Object.assign(sunLight.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20 });
+    sunLight.shadow.bias = -0.0005;
     scene.add(sunLight);
 
-    const clickable = [];
+    /* ================= 天空穹顶 ================= */
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false,
+      uniforms: {
+        topColor: { value: new THREE.Color(ERAS[0].skyTop) },
+        bottomColor: { value: new THREE.Color(ERAS[0].skyBottom) },
+        sunDir: { value: new THREE.Vector3(0.5, 0.6, 0.4).normalize() },
+      },
+      vertexShader: `varying vec3 vDir; void main(){ vDir=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+      fragmentShader: `
+        varying vec3 vDir; uniform vec3 topColor, bottomColor, sunDir;
+        void main(){
+          float h = clamp(vDir.y, 0.0, 1.0);
+          vec3 col = mix(bottomColor, topColor, pow(h, 0.55));
+          col += vec3(1.0,0.9,0.7) * pow(max(dot(vDir,sunDir),0.0), 30.0) * 0.6;
+          gl_FragColor = vec4(col, 1.0);
+        }`,
+    });
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(200, 32, 20), skyMat));
+    scene.fog = new THREE.Fog(ERAS[0].fog, 30, 110);
+
+    /* ================= 地面（噪声起伏 + 顶点色） ================= */
+    const ground = new THREE.Group();
+    scene.add(ground);
+    function buildGround(groundColor) {
+      ground.clear();
+      const geo = new THREE.CircleGeometry(60, 64, 40, 40);
+      geo.rotateX(-Math.PI / 2);
+      const pos = geo.attributes.position;
+      const colors = new Float32Array(pos.count * 3);
+      const base = new THREE.Color(groundColor);
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), z = pos.getZ(i);
+        const n = S.fbm2(x * 0.15 + 3, z * 0.15 - 2, 4);
+        pos.setY(i, (n - 0.5) * 1.2);
+        const shade = 0.85 + n * 0.3;
+        colors[i * 3] = base.r * shade;
+        colors[i * 3 + 1] = base.g * shade;
+        colors[i * 3 + 2] = base.b * shade;
+      }
+      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      geo.computeVertexNormals();
+      const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
+      mesh.receiveShadow = true;
+      ground.add(mesh);
+    }
+    buildGround(ERAS[0].ground);
+
+    /* ================= 恐龙模型（CC0 · Gobkit Free Dinosaur Pack） =================
+       真实骨骼蒙皮模型 + 烘焙动画（idle / walk / attack / dead）。
+       注意：模型朝 +Z；复制蒙皮实例必须用 SkeletonUtils.clone，普通 clone 会丢绑定。 */
+    const MODEL_DIR = 'models/';
+    const MODEL_FILES = {
+      Trex: 'Trex.glb',
+      Triceratops: 'Triceratops.glb',
+      Ankylosaurus: 'Ankylosaurus.glb',
+      Stegosaurus: 'Stegosaurus.glb',
+      Carnotaurus: 'Carnotaurus.glb',
+      Pterodactylus: 'Pterodactylus.glb',
+    };
+    const modelCache = {};
+    let modelsReady = false;
+    let modelsLoading = 0;
+
+    const gltfLoader = new GLTFLoader();
+    function loadModels(done) {
+      const keys = Object.keys(MODEL_FILES);
+      modelsLoading = keys.length;
+      keys.forEach((k) => {
+        gltfLoader.load(MODEL_DIR + MODEL_FILES[k], (g) => {
+          modelCache[k] = g;
+          if (--modelsLoading === 0) { modelsReady = true; done && done(); }
+        }, undefined, (e) => {
+          console.warn('模型加载失败：' + k, e);
+          if (--modelsLoading === 0) { modelsReady = true; done && done(); }
+        });
+      });
+    }
+
+    /* ---- 物种资料 ---- */
+    const SPECIES = {
+      霸王龙: {
+        color: 0x8fa84e, model: 'Trex', height: 3.4, type: '白垩纪 · 兽脚类',
+        stats: [['体长', '约 12 m'], ['体重', '约 8 吨'], ['牙齿', '长达 18 cm'], ['食性', '肉食']],
+        desc: ['最著名的肉食恐龙', '前肢短小，咬合力惊人', '白垩纪的顶级猎手'],
+      },
+      三角龙: {
+        color: 0xb09a72, model: 'Triceratops', height: 2.4, type: '白垩纪 · 角龙类',
+        stats: [['体长', '约 8 m'], ['体重', '约 6 吨'], ['头盾', '长约 2 m'], ['食性', '草食']],
+        desc: ['头上长着三只角', '用角和骨质颈盾抵御掠食者'],
+      },
+      甲龙: {
+        color: 0x9a8a6e, model: 'Ankylosaurus', height: 1.7, type: '白垩纪 · 甲龙类',
+        stats: [['体长', '约 7 m'], ['体重', '约 5 吨'], ['装甲', '背部骨板'], ['食性', '草食']],
+        desc: ['背覆坚硬骨板，像一辆活坦克', '尾巴末端有骨质尾锤'],
+      },
+      剑龙: {
+        color: 0x8a7a5e, model: 'Stegosaurus', height: 2.6, type: '侏罗纪 · 剑龙类',
+        stats: [['体长', '约 9 m'], ['体重', '约 5 吨'], ['背板', '17 块骨板'], ['食性', '草食']],
+        desc: ['背上一排大骨板用于展示与散热', '尾端有四根尖刺'],
+      },
+      翼龙: {
+        color: 0xc9b48a, model: 'Pterodactylus', height: 1.1, type: '三叠纪末 · 飞行爬行动物',
+        stats: [['翼展', '约 1 m'], ['体重', '约 1 kg'], ['食性', '肉食（鱼、昆虫）']],
+        desc: ['不是恐龙，而是会飞的爬行动物', '最早的脊椎动物飞行者之一'],
+      },
+      兽脚类恐龙: {
+        color: 0xa8763f, model: 'Carnotaurus', height: 2.2, type: '三叠纪-侏罗纪 · 兽脚类',
+        stats: [['体长', '约 3~8 m'], ['食性', '肉食'], ['特征', '双足奔跑']],
+        desc: ['三叠纪晚期登上舞台的恐龙家族', '（示意复原）'],
+      },
+    };
+
+    const creatures = [];
+
+    function spawnDino(name, opts) {
+      const info = SPECIES[name];
+      const src = modelCache[info.model];
+      if (!src) return null;
+
+      const root = SkeletonUtils.clone(src.scene);
+
+      // 归一化：这些模型共享骨架、顶点极小，用几何网格的世界包围盒测量才准确
+      function measureWorldBox(obj) {
+        const b = new THREE.Box3();
+        obj.updateWorldMatrix(true, true);
+        obj.traverse((o) => {
+          if (!o.isMesh) return;
+          if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+          b.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld));
+        });
+        return b;
+      }
+
+      root.position.set(0, 0, 0);
+      root.rotation.set(0, 0, 0);
+      root.scale.setScalar(1);
+      const raw = measureWorldBox(root);
+      const rawSize = raw.getSize(new THREE.Vector3());
+      const sc = info.height / Math.max(rawSize.y, 0.0001);
+      root.scale.setScalar(sc);
+      const scaled = measureWorldBox(root);
+      root.position.set(opts.x, -scaled.min.y, opts.z);
+      root.rotation.y = opts.rotY || 0;
+
+      root.traverse((o) => {
+        if (!o.isMesh) return;
+        o.castShadow = true;
+        o.receiveShadow = true;
+        o.frustumCulled = false; // 蒙皮包围球可能失准，避免整体被裁掉
+        const mats = Array.isArray(o.material) ? o.material : [o.material];
+        mats.forEach((m) => {
+          if (!m) return;
+          m.metalness = 0;
+          m.roughness = 0.88;
+          if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
+        });
+      });
+
+      // 动画：按名字取 clip
+      const mixer = new THREE.AnimationMixer(root);
+      const actions = {};
+      ['idle', 'walk', 'attack', 'dead'].forEach((n) => {
+        const clip = THREE.AnimationClip.findByName(src.animations, n);
+        if (clip) actions[n] = mixer.clipAction(clip);
+      });
+      if (actions.idle) actions.idle.play();
+      if (actions.walk) actions.walk.play().setEffectiveWeight(0);
+
+      // 标签
+      const div = document.createElement('div');
+      div.className = 'sv-label';
+      div.textContent = name;
+      const label = new CSS2DObject(div);
+      label.position.set(0, info.height + 0.45, 0);
+      root.add(label);
+
+      root.userData = { name, ...info, kind: 'creature' };
+      creatureGroup.add(root);
+      clickable.push(root);
+
+      const item = {
+        root, mixer, actions, name, info,
+        flying: !!opts.flying,
+        flyingY: opts.flyingY || 0,
+        walkRadius: opts.walkRadius || 0,
+        walkSpeed: opts.walkSpeed || 0.2,
+        phase: opts.phase != null ? opts.phase : Math.random() * Math.PI * 2,
+        center: new THREE.Vector3(opts.x, opts.flyingY || 0, opts.z),
+        moving: !!opts.walkRadius,
+      };
+      creatures.push(item);
+      return item;
+    }
+
+    // 一次性播放（attack / dead），结束后回到 idle
+    function playOnce(item, actionName, stay) {
+      const act = item.actions[actionName];
+      const idle = item.actions.idle;
+      if (!act) return;
+      act.reset();
+      act.setLoop(THREE.LoopOnce, 1);
+      act.clampWhenFinished = true;
+      act.setEffectiveWeight(1).fadeIn(0.15).play();
+      if (idle) idle.fadeOut(0.15);
+      clearTimeout(item._resetT);
+      item._resetT = setTimeout(() => {
+        if (stay) return;
+        act.fadeOut(0.3);
+        if (idle) idle.reset().fadeIn(0.3).play();
+      }, Math.max((act.getClip().duration - 0.2) * 1000, 400));
+    }
+
+    /* ================= 植物 ================= */
+    const matOf = (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, metalness: 0.02 });
+    function shadowify(g) { g.traverse((o) => { if (o.isMesh) { o.castShadow = true; } }); }
+    function makeTree(kind, s) {
+      const g = new THREE.Group();
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * s, 0.28 * s, 1.4 * s, 8), matOf(0x7a5230));
+      trunk.position.y = 0.7 * s;
+      g.add(trunk);
+      if (kind === 'conifer') {
+        for (let i = 0; i < 3; i++) {
+          const r = (0.9 - i * 0.22) * s;
+          const cone = new THREE.Mesh(new THREE.ConeGeometry(r, 0.9 * s, 10), matOf(0x2f6b30));
+          cone.position.y = (1.5 + i * 0.55) * s;
+          g.add(cone);
+        }
+      } else {
+        const crown = new THREE.Mesh(new THREE.SphereGeometry(0.8 * s, 12, 10), matOf(0x4a8a3a));
+        crown.position.y = 1.9 * s;
+        g.add(crown);
+      }
+      shadowify(g);
+      return g;
+    }
+    function makeFern(s) {
+      const g = new THREE.Group();
+      for (let i = 0; i < 5; i++) {
+        const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.09 * s, 0.7 * s, 6), matOf(0x5c9a4a));
+        const a = (i / 5) * Math.PI * 2;
+        leaf.position.set(Math.cos(a) * 0.18 * s, 0.3 * s, Math.sin(a) * 0.18 * s);
+        leaf.rotation.set(Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5);
+        g.add(leaf);
+      }
+      shadowify(g);
+      return g;
+    }
+
+    /* ================= 生物管理 ================= */
     const creatureGroup = new THREE.Group();
     scene.add(creatureGroup);
     const plantGroup = new THREE.Group();
     scene.add(plantGroup);
+    let clickable = [];
 
-    // 地面
-    const ground = new THREE.Mesh(
-      new THREE.CircleGeometry(26, 48),
-      new THREE.MeshLambertMaterial({ color: ERAS[0].ground })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    scene.add(ground);
-
-    // ---- 程序化恐龙 ----
-    function mat(color) { return new THREE.MeshLambertMaterial({ color }); }
-
-    // 小型恐龙（三叠纪，双足）
-    function buildSmallDino(color) {
-      const g = new THREE.Group();
-      const m = mat(color);
-      const body = new THREE.Mesh(new THREE.SphereGeometry(0.45, 20, 16), m);
-      body.scale.set(1.2, 0.9, 0.9);
-      body.position.set(0, 0.85, 0.15);
-      // 尾
-      for (let i = 1; i <= 4; i++) {
-        const s = new THREE.Mesh(new THREE.SphereGeometry(0.22 - i * 0.04, 12, 10), m);
-        s.position.set(0, 0.75 - i * 0.12, 0.85 + i * 0.35);
-        g.add(s);
+    // scatter：minR 之外随机分布；avoidCam=true 时排除镜头近前方扇区
+    function scatter(group, builder, count, radius, minR, avoidCam) {
+      minR = minR || 4;
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const r = minR + Math.random() * (radius - minR);
+        const x = Math.cos(a) * r, z = Math.sin(a) * r;
+        // 避开相机与恐龙之间（z 轴正方向为镜头侧）
+        if (avoidCam && z > 3) continue;
+        const obj = builder(0.7 + Math.random() * 0.7);
+        obj.position.set(x, 0, z);
+        obj.rotation.y = Math.random() * Math.PI * 2;
+        group.add(obj);
       }
-      // 头颈
-      const neck = new THREE.Mesh(new THREE.SphereGeometry(0.28, 14, 12), m);
-      neck.position.set(0, 1.15, -0.45);
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.3, 14, 12), m);
-      head.scale.set(1, 0.85, 1.2);
-      head.position.set(0, 1.3, -0.85);
-      // 腿
-      [-0.25, 0.25].forEach((x) => {
-        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.7, 10), m);
-        leg.position.set(x, 0.35, 0.2);
-        const foot = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 0.5), m);
-        foot.position.set(x, 0.07, 0.32);
-        g.add(leg); g.add(foot);
-      });
-      g.add(body, neck, head);
-      return g;
     }
 
-    // 蜥脚类恐龙（侏罗纪，长颈四足）
-    function buildSauropod(color) {
-      const g = new THREE.Group();
-      const m = mat(color);
-      const body = new THREE.Mesh(new THREE.SphereGeometry(1.0, 24, 18), m);
-      body.scale.set(1.3, 1, 1.6);
-      body.position.set(0, 1.3, 0.1);
-      // 长尾
-      for (let i = 1; i <= 6; i++) {
-        const s = new THREE.Mesh(new THREE.SphereGeometry(0.5 - i * 0.07, 12, 10), m);
-        s.position.set(0, 1.0 - i * 0.08, 1.6 + i * 0.5);
-        g.add(s);
-      }
-      // 长颈
-      const neckCurve = new THREE.CatmullRomCurve3([
-        new THREE.Vector3(0, 1.6, -0.8), new THREE.Vector3(0, 2.4, -1.4),
-        new THREE.Vector3(0, 3.0, -1.6), new THREE.Vector3(0, 3.3, -1.5),
-      ]);
-      const neck = new THREE.Mesh(new THREE.TubeGeometry(neckCurve, 20, 0.35, 12, false), m);
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 12), m);
-      head.scale.set(1, 0.8, 1.3);
-      head.position.set(0, 3.4, -1.5);
-      // 四腿
-      [[-0.6, -0.4], [0.6, -0.4], [-0.5, 0.6], [0.5, 0.6]].forEach(([x, z]) => {
-        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 1.2, 12), m);
-        leg.position.set(x, 0.6, z);
-        g.add(leg);
-      });
-      g.add(body, neck, head);
-      return g;
-    }
-
-    // 霸王龙（白垩纪）
-    function buildTrex(color) {
-      const g = new THREE.Group();
-      const m = mat(color);
-      const torso = new THREE.Mesh(new THREE.SphereGeometry(0.95, 24, 20), m);
-      torso.scale.set(1.2, 1, 1.1);
-      torso.position.set(0, 1.8, 0.2);
-      // 尾
-      for (let i = 1; i <= 5; i++) {
-        const s = new THREE.Mesh(new THREE.SphereGeometry(0.55 - i * 0.09, 14, 12), m);
-        s.position.set(0, 1.5 - i * 0.12, 1.3 + i * 0.45);
-        g.add(s);
-      }
-      // 头
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.6, 20, 16), m);
-      head.scale.set(1, 0.9, 1.3);
-      head.position.set(0, 2.7, -1.1);
-      const snout = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.7, 12), m);
-      snout.rotation.x = Math.PI / 2;
-      snout.position.set(0, 2.62, -1.7);
-      // 眼睛
-      const eyeMat = mat(0xffffff);
-      [-0.22, 0.22].forEach((x) => {
-        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.09, 10, 8), eyeMat);
-        eye.position.set(x, 2.82, -1.25);
-        g.add(eye);
-      });
-      // 强壮后腿
-      [-0.4, 0.4].forEach((x) => {
-        const thigh = new THREE.Mesh(new THREE.SphereGeometry(0.45, 14, 12), m);
-        thigh.position.set(x, 0.95, 0.3);
-        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.3, 0.8, 12), m);
-        leg.position.set(x, 0.35, 0.3);
-        const foot = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.18, 0.8), m);
-        foot.position.set(x, 0.09, 0.4);
-        g.add(thigh, leg, foot);
-      });
-      // 小手
-      [-0.5, 0.5].forEach((x) => {
-        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.11, 0.4, 8), m);
-        arm.position.set(x, 2.15, 0.55);
-        g.add(arm);
-      });
-      g.add(torso, head, snout);
-      return g;
-    }
-
-    // 三角龙（白垩纪）
-    function buildTriceratops(color) {
-      const g = new THREE.Group();
-      const m = mat(color);
-      const body = new THREE.Mesh(new THREE.SphereGeometry(0.9, 22, 18), m);
-      body.scale.set(1.2, 0.95, 1.4);
-      body.position.set(0, 1.1, 0.2);
-      // 尾
-      for (let i = 1; i <= 4; i++) {
-        const s = new THREE.Mesh(new THREE.SphereGeometry(0.4 - i * 0.07, 12, 10), m);
-        s.position.set(0, 0.95 - i * 0.1, 1.5 + i * 0.4);
-        g.add(s);
-      }
-      // 头 + 颈盾
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 16), m);
-      head.scale.set(1, 0.85, 1.2);
-      head.position.set(0, 1.55, -1.1);
-      const frill = new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 16), m);
-      frill.scale.set(1.4, 0.9, 0.3);
-      frill.position.set(0, 1.8, -0.75);
-      // 角
-      const hornMat = mat(0xe8d9b0);
-      [0, -0.32, 0.32].forEach((x, i) => {
-        const len = i === 0 ? 0.5 : 0.35;
-        const horn = new THREE.Mesh(new THREE.ConeGeometry(0.08, len, 10), hornMat);
-        horn.position.set(x, 1.95, -1.35);
-        horn.rotation.x = i === 0 ? Math.PI : Math.PI;
-        horn.rotation.z = x;
-        g.add(horn);
-      });
-      // 四腿
-      [[-0.55, -0.4], [0.55, -0.4], [-0.5, 0.5], [0.5, 0.5]].forEach(([x, z]) => {
-        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 1.0, 12), m);
-        leg.position.set(x, 0.5, z);
-        g.add(leg);
-      });
-      g.add(body, head, frill);
-      return g;
-    }
-
-    // ---- 植物（随年代变化）----
-    function buildTree(kind, x, z, s) {
-      const g = new THREE.Group();
-      const trunk = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.18 * s, 0.28 * s, 1.4 * s, 8),
-        mat(0x7a5230)
-      );
-      trunk.position.y = 0.7 * s;
-      g.add(trunk);
-      if (kind === 'conifer') {
-        const crown = new THREE.Mesh(new THREE.ConeGeometry(0.9 * s, 1.6 * s, 10), mat(0x3f7d3a));
-        crown.position.y = 1.9 * s;
-        g.add(crown);
-      } else {
-        const crown = new THREE.Mesh(new THREE.SphereGeometry(0.7 * s, 12, 10), mat(0x4a8a3a));
-        crown.position.y = 1.9 * s;
-        g.add(crown);
-      }
-      g.position.set(x, 0, z);
-      return g;
-    }
-
-    function buildFerns(x, z, s) {
-      const g = new THREE.Group();
-      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.06 * s, 0.08 * s, 0.8 * s, 6), mat(0x6a8a3a));
-      stem.position.y = 0.4 * s;
-      g.add(stem);
-      for (let i = -1; i <= 1; i += 2) {
-        const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.4 * s, 0.6 * s, 8), mat(0x5c9a4a));
-        leaf.position.set(i * 0.3 * s, 0.7 * s, 0);
-        leaf.rotation.z = i * 0.8;
-        g.add(leaf);
-      }
-      g.position.set(x, 0, z);
-      return g;
-    }
-
-    // 每个年代的植物布局
-    function buildPlants(eraIndex) {
+    function buildCreatures(eraIdx) {
+      // CSS2DRenderer 的 DOM 标签不会随 object 移除而消失，需手动清理
+      creatureGroup.traverse((o) => { if (o.element && o.element.remove) o.element.remove(); });
+      creatureGroup.clear();
       plantGroup.clear();
-      const r = () => (Math.random() - 0.5) * 2;
-      if (eraIndex === 0) {
-        // 三叠纪：低矮蕨类
-        for (let i = 0; i < 14; i++) plantGroup.add(buildFerns(r() * 10, r() * 10 - 2, 0.8 + Math.random() * 0.6));
-      } else if (eraIndex === 1) {
-        // 侏罗纪：高大裸子植物
-        for (let i = 0; i < 10; i++) plantGroup.add(buildTree('conifer', r() * 11, r() * 11 - 2, 1.2 + Math.random() * 0.8));
-        for (let i = 0; i < 6; i++) plantGroup.add(buildFerns(r() * 10, r() * 10 - 2, 1 + Math.random() * 0.5));
+      clickable = [];
+      creatures.length = 0;
+      if (!modelsReady) return;
+
+      if (eraIdx === 0) {
+        // 三叠纪：空中翼龙 + 地面兽脚类（示意）
+        spawnDino('翼龙', { x: -3, z: -3, height: 1.1, rotY: 0, flying: true, flyingY: 6.2, walkRadius: 3.0, walkSpeed: 0.35 });
+        spawnDino('翼龙', { x: 3, z: -5, height: 0.95, rotY: 0, flying: true, flyingY: 7.6, walkRadius: 3.6, walkSpeed: -0.28, phase: 2 });
+        spawnDino('兽脚类恐龙', { x: -0.8, z: 0.8, rotY: Math.PI * 0.2, walkRadius: 1.4, walkSpeed: 0.16 });
+        scatter(plantGroup, (s) => makeFern(s), 26, 14);
+      } else if (eraIdx === 1) {
+        // 侏罗纪：剑龙
+        spawnDino('剑龙', { x: -1.6, z: 0.2, rotY: Math.PI * 0.22, walkRadius: 1.6, walkSpeed: 0.14 });
+        spawnDino('剑龙', { x: 2.8, z: -2.2, rotY: Math.PI * 0.45, height: 1.9, walkRadius: 0, phase: 1 });
+        scatter(plantGroup, (s) => makeTree('conifer', s), 8, 13, 9, true);
+        scatter(plantGroup, (s) => makeFern(s), 18, 12);
       } else {
-        // 白垩纪：开花植物 + 阔叶树
-        for (let i = 0; i < 9; i++) plantGroup.add(buildTree('leaf', r() * 11, r() * 11 - 2, 1 + Math.random() * 0.7));
-        for (let i = 0; i < 8; i++) {
-          const f = buildFerns(r() * 10, r() * 10 - 2, 0.9 + Math.random() * 0.5);
-          plantGroup.add(f);
-        }
+        // 白垩纪：霸王龙 / 三角龙 / 甲龙
+        spawnDino('霸王龙', { x: -2.8, z: 0.8, rotY: Math.PI * 0.18, walkRadius: 1.5, walkSpeed: 0.12 });
+        spawnDino('三角龙', { x: 1.6, z: -1.4, rotY: Math.PI * 0.12, walkRadius: 0 });
+        spawnDino('甲龙', { x: 0.2, z: 2.4, rotY: Math.PI * 0.32, walkRadius: 0 });
+        scatter(plantGroup, (s) => makeTree('leaf', s), 6, 13, 9, true);
+        scatter(plantGroup, (s) => makeFern(s), 18, 12);
       }
     }
 
-    // ---- 年代切换 ----
-    let eraIndex = 0;
+    /* ================= 年代切换 ================= */
+    let eraIdx = 0;
+    let isAsteroid = false;
     const eraName = document.getElementById('eraName');
     const eraYears = document.getElementById('eraYears');
     const barFill = document.getElementById('barFill');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
+    const veil = document.getElementById('veil');
+    const voice = S.createVoice();
+    S.bindVoiceButton(document.getElementById('voiceBtn'), voice);
+    const card = S.createCard(document.body);
+    const picker = S.makePicker(camera, renderer.domElement);
+    const fly = S.makeFly(camera, controls);
 
-    function showEra(idx, animate) {
-      eraIndex = idx;
+    function showEra(idx) {
+      eraIdx = idx;
       const era = ERAS[idx];
       eraName.textContent = era.name;
       eraYears.textContent = era.years;
@@ -466,106 +846,183 @@
       prevBtn.disabled = idx === 0;
       nextBtn.disabled = idx === ERAS.length - 1;
 
-      // 场景氛围
-      scene.background = new THREE.Color(era.sky);
-      scene.fog = new THREE.Fog(era.sky, 30, 70);
-      ground.material.color.setHex(era.ground);
-
-      // 重建恐龙与植物
-      creatureGroup.clear();
-      clickable.length = 0;
-      plantGroup.clear();
-      buildPlants(idx);
-
-      let spots = [[-2.5, 0], [2.5, 0]];
-      if (idx === 0) {
-        const d = buildSmallDino(0xd97b3a);
-        d.position.set(spots[0][0], 0, spots[0][1]);
-        d.rotation.y = Math.PI * 0.3;
-        d.userData = { name: '始盗龙', type: '三叠纪·小型恐龙', color: 0xd97b3a, info: ['体型很小，只有狗那么大', '善于奔跑，行动敏捷', '是最早的恐龙之一', '杂食性，什么都吃'] };
-        creatureGroup.add(d); clickable.push(d);
-        const d2 = buildSmallDino(0x8a9a6a);
-        d2.position.set(spots[1][0], 0, spots[1][1]);
-        d2.rotation.y = -Math.PI * 0.4;
-        d2.userData = { name: '早期爬行动物', type: '三叠纪·爬行动物', color: 0x8a9a6a, info: ['在恐龙出现前就生活在地球上', '像蜥蜴一样匍匐爬行', '是恐龙和鸟类的远亲'] };
-        creatureGroup.add(d2); clickable.push(d2);
-      } else if (idx === 1) {
-        const s = buildSauropod(0x7a6a5a);
-        s.position.set(spots[0][0], 0, spots[0][1]);
-        s.rotation.y = Math.PI * 0.5;
-        s.userData = { name: '梁龙', type: '侏罗纪·蜥脚类', color: 0x7a6a5a, info: ['脖子和尾巴都很长', '体型巨大，像一架飞机', '是草食性恐龙', '每天要吃很多植物'] };
-        creatureGroup.add(s); clickable.push(s);
-      } else {
-        const t = buildTrex(0x5c8a3a);
-        t.position.set(spots[0][0], 0, spots[0][1]);
-        t.rotation.y = Math.PI * 0.3;
-        t.userData = { name: '霸王龙', type: '白垩纪·肉食恐龙', color: 0x5c8a3a, info: ['体型庞大的肉食恐龙', '嘴巴很大，牙齿锋利', '前肢却非常短小', '是恐龙时代最著名的猎手'] };
-        creatureGroup.add(t); clickable.push(t);
-        const tr = buildTriceratops(0x9a8a6a);
-        tr.position.set(spots[1][0], 0, spots[1][1]);
-        tr.rotation.y = -Math.PI * 0.4;
-        tr.userData = { name: '三角龙', type: '白垩纪·角龙类', color: 0x9a8a6a, info: ['头上长着三只角', '脖子周围有骨质的颈盾', '是草食性恐龙', '用角和颈盾保护自己'] };
-        creatureGroup.add(tr); clickable.push(tr);
-      }
+      skyMat.uniforms.topColor.value.setHex(era.skyTop);
+      skyMat.uniforms.bottomColor.value.setHex(era.skyBottom);
+      scene.fog.color.setHex(era.fog);
+      buildGround(era.ground);
+      buildCreatures(idx);
+      document.getElementById('asteroidBtn').style.display = idx === 2 ? 'flex' : 'none';
     }
 
-    prevBtn.addEventListener('click', () => { if (eraIndex > 0) showEra(eraIndex - 1); });
-    nextBtn.addEventListener('click', () => { if (eraIndex < ERAS.length - 1) showEra(eraIndex + 1); });
+    function switchEra(idx) {
+      veil.classList.add('is-on');
+      setTimeout(() => {
+        showEra(idx);
+        camera.position.set(9, 4.8, 14);
+        controls.target.set(0, 1.8, 0);
+        veil.classList.remove('is-on');
+        S.toast('欢迎来到' + ERAS[idx].name + ' · ' + ERAS[idx].years);
+      }, 480);
+    }
+    prevBtn.addEventListener('click', () => { if (eraIdx > 0) switchEra(eraIdx - 1); });
+    nextBtn.addEventListener('click', () => { if (eraIdx < ERAS.length - 1) switchEra(eraIdx + 1); });
 
-    // ---- 自动时间漫游 ----
+    /* ================= 小行星事件 ================= */
+    const asteroidBtn = document.getElementById('asteroidBtn');
+    asteroidBtn.addEventListener('click', () => {
+      if (eraIdx !== 2 || isAsteroid) return;
+      isAsteroid = true;
+      S.toast('☄️ 小行星撞击！恐龙的时代结束了…', 3600);
+      voice.speak('小行星撞击地球。6600万年前，一颗巨大的小行星击中了地球，恐龙从此灭绝。');
+      // 火球
+      const meteor = new THREE.Mesh(
+        new THREE.SphereGeometry(0.6, 20, 20),
+        new THREE.MeshBasicMaterial({ color: 0xffaa33 })
+      );
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: S.glowTexture('rgba(255,220,140,1)', 'rgba(255,120,40,0.6)'),
+        transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      glow.scale.set(6, 6, 1);
+      meteor.add(glow);
+      scene.add(meteor);
+      const start = new THREE.Vector3(18, 40, -20);
+      const end = new THREE.Vector3(0, 0.5, 0);
+      meteor.position.copy(start);
+      const t0 = performance.now();
+      function flyMeteor() {
+        const k = Math.min((performance.now() - t0) / 1400, 1);
+        meteor.position.lerpVectors(start, end, k);
+        if (k < 1) requestAnimationFrame(flyMeteor);
+        else {
+          scene.remove(meteor);
+          // 撞击闪光
+          const flash = new THREE.PointLight(0xffcc66, 30, 60);
+          flash.position.copy(end).add(new THREE.Vector3(0, 2, 0));
+          scene.add(flash);
+          setTimeout(() => {
+            // 天空变暗（撞击尘埃）
+            skyMat.uniforms.topColor.value.setHex(0x2a2438);
+            skyMat.uniforms.bottomColor.value.setHex(0x5a4a3a);
+            scene.fog.color.setHex(0x4a3a30);
+            hemi.intensity = 0.3;
+            sunLight.intensity = 0.5;
+            asteroidBtn.textContent = '🌑 灭绝时刻';
+            // 恐龙应声倒下
+            creatures.forEach((c, i) => {
+              c.moving = false;
+              setTimeout(() => playOnce(c, 'dead', true), i * 220);
+            });
+          }, 500);
+        }
+      }
+      flyMeteor();
+    });
+
+    /* ================= 拾取 ================= */
+    picker.onClick(() => clickable, (obj) => {
+      // 点击子网格时向上找到带 creature 标记的祖先
+      let o = obj;
+      while (o && !(o.userData && o.userData.kind === 'creature')) o = o.parent;
+      if (!o) return;
+      const d = o.userData;
+      const item = creatures.find((c) => c.root === o);
+      if (item) playOnce(item, 'attack');   // 被点到的恐龙做一次攻击动作
+      card.show({ name: d.name, type: d.type, color: d.color, stats: d.stats, desc: d.desc });
+      voice.speak(d.name + '。' + (d.stats || []).map((s) => s.label + s.value).join('，') + '。' + (d.desc || []).join('，'));
+      const t = new THREE.Vector3();
+      o.getWorldPosition(t);
+      t.y += (d.height || 2) * 0.45;
+      const dist = (d.height || 2) * 2.6;
+      const dir = camera.position.clone().sub(t).normalize();
+      fly.flyTo(t.clone().add(dir.multiplyScalar(dist)), t, 1.1);
+    });
+    picker.onHover(() => clickable, (obj) => {
+      let o = obj;
+      while (o && !(o.userData && o.userData.kind === 'creature')) o = o.parent;
+      renderer.domElement.style.cursor = o ? 'pointer' : 'grab';
+    });
+
+    /* ================= 自动漫游 ================= */
     const autoTourBtn = document.getElementById('autoTour');
-    let touring = false;
-    let tourTimer = 0;
+    let touring = false, tourTimer = 0;
     autoTourBtn.addEventListener('click', () => {
       touring = !touring;
-      autoTourBtn.classList.toggle('active', touring);
+      autoTourBtn.classList.toggle('is-active', touring);
       autoTourBtn.textContent = touring ? '⏹ 停止漫游' : '🚀 时间漫游';
+      if (touring) tourTimer = 3;
     });
 
-    // ---- 语音 + 卡片 + 点击 ----
-    const voice = createVoice(document.getElementById('voiceBtn'));
-    const infoCard = createInfoCard(document.body, {
-      onShow: (userData) => voice.speak(userData.name + '。' + (userData.info || []).join('，')),
-    });
-    enablePicking(renderer, camera, { clickable, onPick: (obj) => infoCard.show(obj.userData) });
-
-    // ---- 动画 ----
-    showEra(0);
-    const clock = new THREE.Clock();
+    /* ================= 播放控制 ================= */
     let isPlaying = true;
+    const clock = new THREE.Clock();
     const playBtn = document.getElementById('playBtn');
     playBtn.addEventListener('click', () => {
       isPlaying = !isPlaying;
-      playBtn.textContent = isPlaying ? '⏸' : '▶';
-      clock.getDelta();
+      playBtn.innerHTML = isPlaying ? '<span class="sv-btn__icon">⏸</span><span>暂停</span>' : '<span class="sv-btn__icon">▶</span><span>播放</span>';
+      if (!isPlaying) clock.getDelta();
     });
 
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      fly.flyTo(new THREE.Vector3(9, 4.8, 14), new THREE.Vector3(0, 1.8, 0), 1.2);
+    });
+
+    /* ================= 动画 ================= */
     function animate() {
       const dt = isPlaying ? clock.getDelta() : 0;
       if (isPlaying) {
-        // 生物轻微摆动（呼吸感）
-        creatureGroup.children.forEach((c, i) => {
-          c.rotation.z = Math.sin(performance.now() / 900 + i) * 0.02;
+        // 骨骼动画 + 沿圆周行走（有 walkRadius 的恐龙会绕圈巡游）
+        creatures.forEach((c) => {
+          c.mixer.update(dt);
+          if (c.moving) {
+            c.phase += dt * c.walkSpeed;
+            const r = c.walkRadius;
+            c.root.position.x = c.center.x + Math.cos(c.phase) * r;
+            c.root.position.z = c.center.z + Math.sin(c.phase) * r;
+            if (c.flying) {
+              c.root.position.y = c.center.y + Math.sin(c.phase * 0.7) * 0.5;
+              // 飞行姿态：轻微侧倾
+              c.root.rotation.z = Math.cos(c.phase) * 0.18;
+            }
+            // 朝向切线方向（模型朝 +Z）
+            const dirSign = c.walkSpeed >= 0 ? 1 : -1;
+            const dx = -Math.sin(c.phase) * dirSign;
+            const dz = Math.cos(c.phase) * dirSign;
+            c.root.rotation.y = Math.atan2(dx, dz);
+            // 行走时混合 walk 动作
+            if (c.actions.walk) c.actions.walk.setEffectiveWeight(0.85);
+            if (c.actions.idle) c.actions.idle.setEffectiveWeight(0.15);
+          }
         });
-        // 自动漫游：每隔几秒切换年代
         if (touring) {
           tourTimer += dt;
-          if (tourTimer > 4.5) {
+          if (tourTimer > 5) {
             tourTimer = 0;
-            showEra((eraIndex + 1) % ERAS.length);
+            switchEra((eraIdx + 1) % ERAS.length);
           }
         }
       }
+      fly.update(dt);
       controls.update();
-      renderer.render(scene, camera);
+      labelRenderer.render(scene, camera);
+      if (composer) composer.render();
+      else renderer.render(scene, camera);
       requestAnimationFrame(animate);
     }
+
+    // 先加载模型，再渲染当前年代
+    loadModels(() => {
+      showEra(0);
+      document.getElementById('loader').classList.add('is-done');
+    });
     animate();
 
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      composer.setSize(window.innerWidth, window.innerHeight);
+      labelRenderer.setSize(window.innerWidth, window.innerHeight);
     });
   </script>
 </body>
