@@ -56,6 +56,24 @@
       font-size: 10.5px; line-height: 1.55; color: var(--sv-text-faint);
     }
 
+    /* ---- 解剖图层：可以逐层剥离 ---- */
+    .cx-layers { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+    .cx-layers button {
+      flex: 1 1 30%; padding: 6px 0; font-size: 11px; line-height: 1;
+      font-family: inherit; border-radius: 8px; cursor: pointer;
+      border: 1px solid var(--sv-stroke);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--sv-text-dim);
+      transition: background .16s, color .16s, border-color .16s, opacity .16s;
+    }
+    .cx-layers button:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+    .cx-layers button.is-on {
+      background: rgba(214, 138, 120, 0.22);
+      border-color: rgba(232, 162, 144, 0.5);
+      color: #fff;
+    }
+    .cx-layers button.is-off { opacity: 0.42; }
+
     .sv-legend { min-width: 234px; }
     .cx-label-wrap { pointer-events: none; }
     .cx-label-wrap .sv-label { pointer-events: auto; transition: transform 0.18s ease; }
@@ -98,7 +116,16 @@
   </div>
 
   <div class="sv-legend sv-panel sv-in">
-    <div class="sv-panel__title">循环通路</div>
+    <div class="sv-panel__title">解剖图层</div>
+    <div class="cx-layers" id="layerSeg">
+      <button data-layer="skin" class="is-on">皮肤</button>
+      <button data-layer="muscle" class="is-on">肌肉</button>
+      <button data-layer="bone" class="is-on">骨骼</button>
+      <button data-layer="organ" class="is-on">内脏</button>
+      <button data-layer="vessel" class="is-on">血管</button>
+    </div>
+
+    <div class="sv-panel__title" style="margin-top:14px">循环通路</div>
     <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#ff4d5e;color:#ff4d5e"></span>动脉 · 含氧血离开心脏</div>
     <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#3b82f6;color:#3b82f6"></span>静脉 · 缺氧血回到心脏</div>
     <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#a855f7;color:#a855f7"></span>肺循环 · 心脏与肺之间</div>
@@ -122,7 +149,7 @@
     <button class="sv-btn" id="playBtn"><span class="sv-btn__icon">⏸</span><span>暂停</span></button>
     <span class="sv-dock__sep"></span>
     <button class="sv-btn sv-btn--ghost" id="resetBtn">🔄 全身视角</button>
-    <button class="sv-btn sv-btn--ghost" id="xrayBtn">🩻 透视 <b class="sv-num" id="xrayVal">32</b>%</button>
+    <button class="sv-btn sv-btn--ghost" id="xrayBtn">🩻 透视 <b class="sv-num" id="xrayVal">30</b>%</button>
   </div>
 
   <div class="sv-hint">点击器官或左侧索引查看介绍 · 拖拽旋转 · 滚轮缩放</div>
@@ -853,7 +880,7 @@
     camera.position.set(0.45, H * 0.52, 9.4);
 
     const { renderer, composer, renderPass } = S.createRenderer({
-      exposure: 1.1, bloomStrength: 0.68, bloomRadius: 0.5, bloomThreshold: 0.62,
+      exposure: 1.22, bloomStrength: 0.72, bloomRadius: 0.55, bloomThreshold: 0.55,
     });
 
     const labelRenderer = new CSS2DRenderer();
@@ -869,16 +896,22 @@
     renderPass.scene = scene;
     renderPass.camera = camera;
 
-    scene.add(new THREE.AmbientLight(0x7b88a8, 1.25));
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.85);
-    keyLight.position.set(4, 8, 6);
+    scene.add(new THREE.AmbientLight(0x6b7a99, 1.15));
+    const keyLight = new THREE.DirectionalLight(0xfff4ea, 2.15);   // 主光：暖白，略偏左上
+    keyLight.position.set(3.4, 7.2, 5.2);
     scene.add(keyLight);
-    const rimLight = new THREE.DirectionalLight(0x7f9fff, 0.95);
-    rimLight.position.set(-6, 3, -5);
+    const fillLight = new THREE.DirectionalLight(0xffd7c2, 0.75);  // 侧补：让肌肉有层次
+    fillLight.position.set(-5.2, 2.4, 3.6);
+    scene.add(fillLight);
+    const rimLight = new THREE.DirectionalLight(0x6f9dff, 1.15);   // 轮廓：冷蓝，勾出人体边缘
+    rimLight.position.set(-4.5, 3.2, -6.0);
     scene.add(rimLight);
-    const warmLight = new THREE.PointLight(0xff8877, 0.55, 14);
-    warmLight.position.set(0, H * 0.72, 2.2);
+    const warmLight = new THREE.PointLight(0xff8a6a, 0.62, 12);    // 体内暖光
+    warmLight.position.set(0, H * 0.66, 1.4);
     scene.add(warmLight);
+    const underLight = new THREE.PointLight(0xff6a5a, 0.35, 9);    // 底部反光，模拟血肉透光
+    underLight.position.set(0, H * 0.18, -1.2);
+    scene.add(underLight);
 
     const floorGlow = new THREE.Mesh(
       new THREE.CircleGeometry(3.4, 48),
@@ -934,7 +967,7 @@
         clearcoat: 0.55,
         clearcoatRoughness: 0.32,
         emissive: hex,
-        emissiveIntensity: opt.emissive != null ? opt.emissive : 0.14,
+        emissiveIntensity: Math.max(0.45, Math.min(1.05, (opt.emissive != null ? opt.emissive : 0.14) * 3)),
         transparent: true,
         opacity: opt.opacity != null ? opt.opacity : 0.97,
         depthWrite: opt.depthWrite !== false,
@@ -1218,7 +1251,7 @@
     /* ---- 大脑：脑回褶皱 + 纵裂 + 颞叶 / 小脑 / 脑干 ---- */
     function buildBrain() {
       const g = new THREE.Group();
-      const m = organMat(0xc79aa4, { emissive: 0.07, rough: 0.62 });
+      const m = organMat(0xc79aa4, { emissive: 0.05, rough: 0.62 });
       const deep = organMat(0x9b707a, { emissive: 0.03, rough: 0.72 });
 
       const geo = new THREE.SphereGeometry(1, 54, 36);
@@ -1234,9 +1267,9 @@
         const pinch = 1 - 0.34 * Math.exp(-Math.pow(v.x / 0.2, 2));
         pos.setXYZ(
           i,
-          v.x * CM * 6.4 * k * pinch,
-          v.y * CM * 5.2 * k,
-          v.z * CM * 7.0 * k
+          v.x * CM * 5.6 * k * pinch,
+          v.y * CM * 4.8 * k,
+          v.z * CM * 6.4 * k
         );
       }
       geo.computeVertexNormals();
@@ -1906,96 +1939,473 @@
     }
 
     /* ==================================================================
-       人体轮廓（程序化，玻璃质感；不再依赖外部 GLB）
+       人体：皮肤 / 骨骼 / 肌肉 三层
+       按解剖软件的做法分层建模，可以逐层剥离看里面 —— 皮肤是半透明的，
+       正面几乎看穿，越靠近轮廓越厚实（菲涅尔），透出皮下的骨头、肌肉和血管
        ================================================================== */
     const bodyMats = [];
-    let xray = 0.32;
+    const LAYERS = { skin: null, muscle: null, bone: null };
+    let xray = 0.3;
 
-    function bodyMaterial() {
-      const m = new THREE.MeshPhysicalMaterial({
-        color: 0x9cc4f5,
+    /* ---- 材质 ---- */
+
+    // 皮肤：菲涅尔边缘 + 皮下血色 + 细血管纹
+    function skinMaterial() {
+      const m = new THREE.ShaderMaterial({
         transparent: true,
-        opacity: 0.1 + xray * 0.62,
-        roughness: 0.26,
-        metalness: 0.0,
-        clearcoat: 0.8,
-        clearcoatRoughness: 0.2,
-        emissive: 0x2257a8,
-        emissiveIntensity: 0.9,
         depthWrite: false,
-        side: THREE.DoubleSide,
+        side: THREE.FrontSide,
+        uniforms: {
+          uSkin: { value: new THREE.Color(0xf0c8b2) },
+          uDeep: { value: new THREE.Color(0xa8494d) },
+          uOpacity: { value: 1.0 - xray * 0.2 },
+        },
+        vertexShader: [
+          'varying vec3 vN; varying vec3 vV; varying vec3 vP;',
+          'void main() {',
+          '  vec4 mv = modelViewMatrix * vec4(position, 1.0);',
+          '  vN = normalize(normalMatrix * normal);',
+          '  vV = normalize(-mv.xyz);',
+          '  vP = position;',
+          '  gl_Position = projectionMatrix * mv;',
+          '}',
+        ].join('\n'),
+        fragmentShader: [
+          'uniform vec3 uSkin; uniform vec3 uDeep; uniform float uOpacity;',
+          'varying vec3 vN; varying vec3 vV; varying vec3 vP;',
+          'float vein(vec3 p) {',
+          '  float a = sin(p.y * 54.0 + sin(p.x * 15.0) * 2.6) * 0.5 + 0.5;',
+          '  float b = sin((p.x + p.z) * 43.0 + p.y * 11.0) * 0.5 + 0.5;',
+          '  return smoothstep(0.76, 0.99, a * b);',
+          '}',
+          'void main() {',
+          '  vec3 N = normalize(vN);',
+          '  vec3 V = normalize(vV);',
+          '  float ndv = clamp(abs(dot(N, V)), 0.0, 1.0);',
+          '  float fres = pow(1.0 - ndv, 2.2);',
+          // 解剖窗：胸腹正面开一个口，其余地方保持不透明皮肤 ——
+          // 这才是解剖软件的做法（不透明皮肤 + 局部剖面），整体半透明只会像塑料人偶
+          '  float yWin = smoothstep(2.06, 2.24, vP.y) * (1.0 - smoothstep(3.66, 3.82, vP.y));',
+          '  float zWin = smoothstep(-0.14, 0.02, vP.z);',
+          '  float xWin = 1.0 - smoothstep(0.34, 0.47, abs(vP.x));',
+          '  float win = yWin * zWin * xWin;',
+          '  vec3 L = normalize(vec3(0.55, 0.72, 0.45));',
+          '  float lam = 0.5 + 0.5 * clamp(dot(N, L) * 0.5 + 0.5, 0.0, 1.0);',
+          '  float v = vein(vP) * smoothstep(1.9, 2.1, vP.y) * (1.0 - smoothstep(3.7, 3.9, vP.y));',
+          '  vec3 col = mix(uSkin * lam, uDeep, fres * 0.52 + v * 0.2);',
+          '  float skinA = 0.965 + fres * 0.035;',
+          '  float headZone = smoothstep(3.94, 4.06, vP.y);',
+          '  float a = mix(mix(skinA, 0.035, win) * uOpacity, 0.34, headZone);',
+          '  gl_FragColor = vec4(col, clamp(a, 0.0, 0.96));',
+          '}',
+        ].join('\n'),
       });
+      m.userData.isSkin = true;
       bodyMats.push(m);
       return m;
     }
 
+    // 骨头：象牙白，半透明一点点，像 X 光片里透出来的
+    function boneMaterial() {
+      return new THREE.MeshPhysicalMaterial({
+        color: 0xf4ead8,
+        roughness: 0.52, metalness: 0.0,
+        clearcoat: 0.32, clearcoatRoughness: 0.55,
+        emissive: 0x6d5c46, emissiveIntensity: 0.2,
+        transparent: true, opacity: 0.4, depthWrite: true,
+        side: THREE.DoubleSide,
+      });
+    }
+
+    // 肌肉：暗红、带筋膜反光
+    function muscleMaterial(hex) {
+      return new THREE.MeshPhysicalMaterial({
+        color: hex || 0x9d3b34,
+        roughness: 0.56, metalness: 0.0,
+        clearcoat: 0.44, clearcoatRoughness: 0.4,
+        emissive: 0x3d100c, emissiveIntensity: 0.24,
+        transparent: true, opacity: 0.38, depthWrite: true,
+        side: THREE.DoubleSide,
+      });
+    }
+
     function applyXray() {
-      bodyMats.forEach((m) => { m.opacity = 0.1 + xray * 0.62; });
+      bodyMats.forEach((m) => {
+        if (m.uniforms && m.uniforms.uOpacity) {
+          m.uniforms.uOpacity.value = 1.0 - xray * 0.2;      // 透视值越大，皮肤越薄
+        } else {
+          m.opacity = 0.1 + xray * 0.62;
+        }
+      });
       if (xrayVal) xrayVal.textContent = Math.round(xray * 100);
     }
 
-    function buildBody() {
+    /* ---- 骨骼：肋骨、胸骨、锁骨、脊柱、骨盆、颅骨、四肢长骨 ---- */
+    function buildSkeleton() {
       const g = new THREE.Group();
-      const mat = bodyMaterial();
+      const mat = boneMaterial();
 
-      // 头 + 颈
-      g.add(mesh(blob(0.185, 0.26, 0.215, { noise: 0.015, seg: 26, seg2: 18, seed: 2 }), mat, 0, L.headY + 0.09, 0));
-      g.add(mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.22, 16), mat, 0, L.neckY - 0.04, 0));
-      // 胸 / 腰 / 髋
-      g.add(mesh(blob(0.345, 0.4, 0.225, { noise: 0.015, seg: 26, seg2: 18, seed: 4 }), mat, 0, L.chestY + 0.12, 0));
-      g.add(mesh(blob(0.265, 0.26, 0.19, { noise: 0.015, seg: 24, seg2: 16, seed: 6 }), mat, 0, L.chestY - 0.34, 0));
-      g.add(mesh(blob(0.285, 0.2, 0.2, { noise: 0.015, seg: 24, seg2: 16, seed: 8 }), mat, 0, L.hipY - 0.02, 0));
+      // 12 对肋骨：上窄下宽再收窄；1~7 肋连胸骨，8~10 肋汇成肋弓，11~12 是浮肋
+      const RIBS = [
+        [3.738, 0.190, 0.196, 1], [3.682, 0.246, 0.222, 1], [3.624, 0.296, 0.238, 1],
+        [3.562, 0.336, 0.246, 1], [3.498, 0.366, 0.249, 1], [3.434, 0.390, 0.246, 1],
+        [3.370, 0.406, 0.238, 1], [3.306, 0.414, 0.224, 0], [3.242, 0.408, 0.206, 0],
+        [3.178, 0.390, 0.184, 0], [3.114, 0.356, 0.152, 0], [3.050, 0.302, 0.116, 0],
+      ];
+      RIBS.forEach(([y, w, fz, toSternum]) => {
+        [-1, 1].forEach((s) => {
+          const pts = [
+            P(s * 0.032, y, -0.152),
+            P(s * w * 0.52, y + 0.014, -0.222),
+            P(s * w * 0.96, y + 0.004, -0.078),
+            P(s * w * 1.02, y - 0.018, 0.070),
+            P(s * w * 0.74, y - 0.052, fz * 0.88),
+            P(s * (toSternum ? 0.048 : w * 0.40), y - 0.082, fz),
+          ];
+          g.add(sweep(pts, (t) => {
+            const r = 0.0058 + 0.0046 * Math.sin(t * Math.PI);
+            return { a: r * 0.62, b: r };
+          }, { tubular: 36, radial: 8, mat, roundStart: 0.05, roundEnd: 0.08 }));
+        });
+      });
+
+      // 胸骨：柄 → 体 → 剑突
+      g.add(sweep([
+        P(0, 3.706, 0.168), P(0, 3.580, 0.204), P(0, 3.400, 0.212), P(0, 3.220, 0.196),
+      ], (t) => ({ a: 0.013, b: 0.038 + 0.015 * Math.sin(t * Math.PI) }), {
+        tubular: 26, radial: 8, mat, roundStart: 0.14, roundEnd: 0.1,
+      }));
+
+      // 锁骨
+      [-1, 1].forEach((s) => {
+        g.add(sweep([
+          P(s * 0.018, 3.696, 0.142), P(s * 0.150, 3.716, 0.112),
+          P(s * 0.300, 3.722, 0.048), P(s * 0.412, 3.700, -0.018),
+        ], () => ({ a: 0.016, b: 0.020 }), {
+          tubular: 22, radial: 8, mat, roundStart: 0.12, roundEnd: 0.16,
+        }));
+      });
+
+      // 脊柱：颈曲前凸、胸曲后凸、腰曲前凸
+      for (let i = 0; i < 24; i++) {
+        const t = i / 23;
+        const y = 3.920 - t * 1.660;
+        const z = -0.155 + Math.sin(t * Math.PI * 2.1 - 0.55) * 0.032;
+        const w = 0.040 + 0.018 * Math.sin(t * Math.PI);
+        g.add(mesh(new THREE.CylinderGeometry(w, w * 0.94, 0.060, 10), mat, 0, y, z));
+        g.add(mesh(new THREE.BoxGeometry(0.017, 0.026, 0.050), mat, 0, y - 0.004, z - w - 0.020));
+      }
+
+      // 骨盆：髂骨翼 + 坐耻骨环 + 骶骨
+      [-1, 1].forEach((s) => {
+        const wing = mesh(blob(0.096, 0.094, 0.046, { noise: 0.07, seg: 18, seg2: 12, seed: 40 + s }),
+          mat, s * 0.108, 2.396, -0.022);
+        wing.rotation.z = s * 0.42;
+        wing.rotation.y = s * 0.22;
+        g.add(wing);
+        g.add(sweep([
+          P(s * 0.152, 2.360, -0.030), P(s * 0.136, 2.270, 0.004),
+          P(s * 0.082, 2.225, 0.050), P(s * 0.016, 2.235, 0.058),
+        ], (t) => ({ a: 0.020, b: 0.024 - 0.005 * t }), { tubular: 18, radial: 7, mat }));
+      });
+      g.add(mesh(blob(0.054, 0.070, 0.040, { noise: 0.05, seg: 16, seg2: 10, seed: 44 }),
+        mat, 0, 2.300, -0.104));
+
+      // 颅骨（比皮肤更透，脑子还看得见）+ 下颌 + 颧弓
+      const skullMat = boneMaterial();
+      skullMat.opacity = 0.36;
+      skullMat.depthWrite = false;
+      g.add(mesh(blob(0.172, 0.235, 0.202, { noise: 0.022, seg: 26, seg2: 18, seed: 7 }),
+        skullMat, 0, L.headY + 0.113, -0.008));
+      g.add(mesh(blob(0.132, 0.078, 0.128, { noise: 0.03, seg: 20, seg2: 14, seed: 12 }),
+        mat, 0, L.headY - 0.132, 0.040));
+      [-1, 1].forEach((s) => {
+        g.add(mesh(blob(0.050, 0.024, 0.040, { noise: 0.04, seg: 14, seg2: 10, seed: 30 + s }),
+          mat, s * 0.108, L.headY + 0.016, 0.150));
+      });
+
+      // 四肢长骨
+      [-1, 1].forEach((s) => {
+        // 肱骨
+        g.add(sweep([
+          P(s * 0.372, 3.752, -0.008), P(s * 0.438, 3.500, 0.010), P(s * 0.474, 3.196, 0.008),
+        ], (t) => 0.030 + 0.013 * Math.sin(t * Math.PI), {
+          tubular: 20, radial: 8, mat, roundStart: 0.07, roundEnd: 0.1,
+        }));
+        // 尺骨 + 桡骨
+        g.add(sweep([
+          P(s * 0.476, 3.186, 0.000), P(s * 0.510, 2.950, 0.012), P(s * 0.534, 2.700, 0.014),
+        ], (t) => 0.021 + 0.008 * Math.sin(t * Math.PI), {
+          tubular: 18, radial: 7, mat, roundStart: 0.08, roundEnd: 0.1,
+        }));
+        g.add(sweep([
+          P(s * 0.492, 3.160, 0.030), P(s * 0.528, 2.940, 0.036), P(s * 0.548, 2.716, 0.030),
+        ], () => 0.015, { tubular: 18, radial: 6, mat }));
+        // 股骨
+        g.add(sweep([
+          P(s * 0.104, 2.318, -0.008), P(s * 0.158, 1.950, 0.012), P(s * 0.172, 1.440, 0.004),
+        ], (t) => 0.036 + 0.016 * Math.sin(t * Math.PI), {
+          tubular: 20, radial: 8, mat, roundStart: 0.06, roundEnd: 0.08,
+        }));
+        // 胫骨 + 腓骨
+        g.add(sweep([
+          P(s * 0.172, 1.400, 0.000), P(s * 0.168, 0.900, 0.006), P(s * 0.163, 0.250, 0.010),
+        ], (t) => 0.028 + 0.011 * Math.sin(t * Math.PI), {
+          tubular: 20, radial: 7, mat, roundStart: 0.05, roundEnd: 0.07,
+        }));
+        g.add(sweep([
+          P(s * 0.206, 1.340, -0.020), P(s * 0.198, 0.900, -0.020), P(s * 0.186, 0.340, -0.014),
+        ], () => 0.014, { tubular: 16, radial: 6, mat }));
+        // 关节
+        g.add(mesh(new THREE.SphereGeometry(0.040, 12, 9), mat, s * 0.474, 3.190, 0.008));
+        g.add(mesh(new THREE.SphereGeometry(0.046, 12, 9), mat, s * 0.172, 1.432, 0.004));
+        g.add(mesh(new THREE.SphereGeometry(0.036, 12, 9), mat, s * 0.535, 2.690, 0.012));
+      });
+
+      return g;
+    }
+
+    /* ---- 肌肉：胸大肌、腹直肌、腹外斜肌、斜方肌、三角肌、四肢肌群 ---- */
+    function buildMuscles() {
+      const g = new THREE.Group();
+      const mat = muscleMaterial(0x9d3b34);
+      const matDeep = muscleMaterial(0x7d2a26);
+
+      // 胸大肌：起于锁骨 / 胸骨，斜向外止于肱骨，几束纤维合成一片
+      [-1, 1].forEach((s) => {
+        for (let k = 0; k < 4; k++) {
+          const t = k / 3;
+          const y0 = 3.660 - t * 0.268;
+          const zz = 1 - t * 0.16;
+          g.add(sweep([
+            P(s * 0.042, y0, 0.238 * zz),
+            P(s * 0.152, y0 + 0.008, 0.246 * zz),
+            P(s * 0.272, y0 - 0.006, 0.214 * zz),
+            P(s * 0.378, y0 - 0.024 - t * 0.026, 0.146 * zz),
+            P(s * 0.408, y0 - 0.032 - t * 0.038, 0.030),
+          ], () => ({ a: 0.017, b: 0.030 }), { tubular: 26, radial: 8, mat }));
+        }
+      });
+
+      // 腹直肌：4 对肌腹（中间那条白线就是它们分开的地方）
+      [-1, 1].forEach((s) => {
+        for (let i = 0; i < 4; i++) {
+          const y = 3.050 - i * 0.142;
+          g.add(mesh(blob(0.058, 0.050 - i * 0.004, 0.014,
+            { noise: 0.05, seg: 14, seg2: 10, seed: 50 + i * 3 + s }),
+            mat, s * 0.056, y, 0.244 - i * 0.004));
+        }
+      });
+
+      // 腹外斜肌：侧腹的斜向纤维
+      [-1, 1].forEach((s) => {
+        for (let k = 0; k < 4; k++) {
+          g.add(sweep([
+            P(s * 0.256, 3.016 - k * 0.028, 0.128),
+            P(s * 0.318, 2.896 - k * 0.028, 0.076),
+            P(s * 0.306, 2.756 - k * 0.028, 0.026),
+            P(s * 0.216, 2.636 - k * 0.028, 0.086),
+          ], () => ({ a: 0.010, b: 0.016 }), { tubular: 18, radial: 7, mat: matDeep }));
+        }
+      });
+
+      // 斜方肌：从颈后铺到肩峰
+      [-1, 1].forEach((s) => {
+        g.add(sweep([
+          P(s * 0.026, 3.930, -0.118), P(s * 0.150, 3.846, -0.126),
+          P(s * 0.300, 3.782, -0.078), P(s * 0.440, 3.732, -0.004),
+        ], (t) => ({ a: 0.018, b: 0.040 * (1 - t * 0.5) }), { tubular: 20, radial: 8, mat }));
+      });
+
+      [-1, 1].forEach((s) => {
+        // 三角肌
+        g.add(mesh(blob(0.090, 0.118, 0.086, { noise: 0.06, seg: 16, seg2: 12, seed: 60 + s }),
+          mat, s * 0.452, 3.706, 0.006));
+        // 肱二头肌 / 肱三头肌
+        g.add(sweep([
+          P(s * 0.452, 3.508, 0.042), P(s * 0.464, 3.360, 0.046), P(s * 0.472, 3.226, 0.026),
+        ], (t) => ({ a: 0.024, b: 0.030 * Math.sin(Math.PI * Math.min(1, t * 1.4 + 0.12)) + 0.006 }),
+          { tubular: 16, radial: 7, mat }));
+        g.add(sweep([
+          P(s * 0.456, 3.500, -0.036), P(s * 0.468, 3.360, -0.042), P(s * 0.474, 3.230, -0.026),
+        ], (t) => ({ a: 0.020, b: 0.026 * Math.sin(Math.PI * Math.min(1, t * 1.4 + 0.12)) + 0.006 }),
+          { tubular: 16, radial: 7, mat }));
+        // 股四头肌
+        g.add(sweep([
+          P(s * 0.132, 2.246, 0.072), P(s * 0.160, 1.930, 0.082), P(s * 0.170, 1.610, 0.058),
+        ], (t) => ({ a: 0.050, b: 0.070 * Math.sin(Math.PI * Math.min(1, t * 1.3 + 0.16)) + 0.008 }),
+          { tubular: 16, radial: 8, mat }));
+        // 腘绳肌
+        g.add(sweep([
+          P(s * 0.136, 2.220, -0.062), P(s * 0.158, 1.900, -0.070), P(s * 0.170, 1.640, -0.050),
+        ], (t) => ({ a: 0.038, b: 0.052 * Math.sin(Math.PI * Math.min(1, t * 1.3 + 0.16)) + 0.008 }),
+          { tubular: 14, radial: 7, mat: matDeep }));
+        // 小腿三头肌 / 胫骨前肌
+        g.add(sweep([
+          P(s * 0.170, 1.372, -0.050), P(s * 0.166, 1.150, -0.066), P(s * 0.162, 0.960, -0.044),
+        ], (t) => ({ a: 0.038, b: 0.044 * Math.sin(Math.PI * Math.min(1, t * 1.5 + 0.2)) + 0.008 }),
+          { tubular: 14, radial: 7, mat }));
+        g.add(sweep([
+          P(s * 0.176, 1.330, 0.048), P(s * 0.172, 1.050, 0.052), P(s * 0.166, 0.800, 0.034),
+        ], (t) => ({ a: 0.020, b: 0.024 * Math.sin(Math.PI * Math.min(1, t * 1.3 + 0.2)) + 0.006 }),
+          { tubular: 14, radial: 6, mat }));
+      });
+
+      return g;
+    }
+
+    /* ---- 皮肤：躯干、头颈、四肢 ---- */
+    function buildSkin() {
+      const g = new THREE.Group();
+      const mat = skinMaterial();
+
+      // 躯干：从臀到颈一路放样，半宽 / 半厚按胸腰臀逐段变化
+      //   尺寸按真人比例换算（胸宽约 32cm、厚 22cm、腰 26cm），
+      //   必须比肋骨宽出一圈，否则肋骨会直接穿出皮肤
+      const TW = [0.290, 0.312, 0.326, 0.300, 0.332, 0.366, 0.392, 0.408, 0.398, 0.296, 0.152];
+      const TD = [0.228, 0.246, 0.246, 0.226, 0.246, 0.266, 0.280, 0.286, 0.270, 0.214, 0.126];
+      const trunkPts = [
+        P(0, 2.145, 0.010), P(0, 2.260, 0.014), P(0, 2.400, 0.010),
+        P(0, 2.620, 0.000), P(0, 2.820, 0.004), P(0, 3.020, 0.010),
+        P(0, 3.240, 0.008), P(0, 3.460, 0.000), P(0, 3.660, -0.008),
+        P(0, 3.800, -0.010), P(0, 3.900, -0.008),
+      ];
+      const trunkRad = (t) => {
+        const f = t * (TW.length - 1);
+        const i = Math.min(TW.length - 2, Math.floor(f));
+        const k = f - i;
+        return { a: TD[i] + (TD[i + 1] - TD[i]) * k, b: TW[i] + (TW[i + 1] - TW[i]) * k };
+      };
+      g.add(sweep(trunkPts, trunkRad, { tubular: 72, radial: 44, mat, roundStart: 0.07, roundEnd: 0.05 }));
+
+      // 体腔内壁：从解剖窗看进去不该是纯黑，而是一层暗红的组织
+      const cavityMat = new THREE.MeshBasicMaterial({
+        color: 0x3f1613, side: THREE.BackSide, transparent: true, opacity: 0.4,
+      });
+      const cavity = sweep(trunkPts, trunkRad, {
+        tubular: 44, radial: 28, mat: cavityMat, roundStart: 0.07, roundEnd: 0.05,
+      });
+      cavity.scale.set(0.94, 0.997, 0.94);
+      cavity.renderOrder = 1;
+      g.add(cavity);
+
+      // 颈
+      g.add(sweep([
+        P(0, L.neckY - 0.135, -0.012), P(0, L.neckY + 0.010, -0.014), P(0, L.headY - 0.170, -0.010),
+      ], (t) => ({ a: 0.080 + 0.014 * t, b: 0.096 + 0.016 * t }), {
+        tubular: 16, radial: 22, mat, roundStart: 0.1, roundEnd: 0.1,
+      }));
+
+      // 头：颅 + 面 + 下颌 + 鼻 + 耳
+      g.add(mesh(blob(0.178, 0.232, 0.204, { noise: 0.018, seg: 26, seg2: 18, seed: 2 }),
+        mat, 0, L.headY + 0.118, -0.004));
+      g.add(mesh(blob(0.082, 0.062, 0.098, { noise: 0.018, seg: 18, seg2: 12, seed: 14 }),
+        mat, 0, L.headY - 0.158, 0.052));
+      g.add(mesh(blob(0.022, 0.034, 0.028, { noise: 0.012, seg: 12, seg2: 9, seed: 15 }),
+        mat, 0, L.headY + 0.014, 0.188));
+      [-1, 1].forEach((s) => {
+        g.add(mesh(blob(0.022, 0.052, 0.038, { noise: 0.02, seg: 12, seg2: 9, seed: 21 + s }),
+          mat, s * 0.176, L.headY + 0.048, -0.012));
+      });
+
       // 肩
       [-1, 1].forEach((s) => {
-        g.add(mesh(new THREE.SphereGeometry(0.092, 16, 12), mat, s * 0.42, L.chestY + 0.3, 0));
+        g.add(mesh(new THREE.SphereGeometry(0.112, 16, 12), mat, s * 0.442, 3.706, 0.006));
       });
-      // 手臂：上臂 / 前臂 / 手（自然下垂）
+
+      // 手臂：上臂 / 前臂 / 手
       [-1, 1].forEach((s) => {
-        const up = new THREE.Mesh(new THREE.CapsuleGeometry(0.064, 0.5, 5, 12), mat);
-        up.position.set(s * 0.515, L.chestY + 0.03, 0);
-        up.rotation.z = s * 0.08;
+        const up = new THREE.Mesh(new THREE.CapsuleGeometry(0.086, 0.40, 6, 14), mat);
+        up.position.set(s * 0.500, 3.508, 0.010);
+        up.rotation.z = s * 0.10;
         g.add(up);
-        const fore = new THREE.Mesh(new THREE.CapsuleGeometry(0.052, 0.46, 5, 12), mat);
-        fore.position.set(s * 0.55, L.chestY - 0.63, 0);
-        fore.rotation.z = s * 0.04;
+        const fore = new THREE.Mesh(new THREE.CapsuleGeometry(0.070, 0.40, 6, 14), mat);
+        fore.position.set(s * 0.540, 2.960, 0.014);
+        fore.rotation.z = s * 0.045;
         g.add(fore);
-        g.add(mesh(blob(0.05, 0.085, 0.032, { noise: 0.02, seg: 12, seg2: 8 }), mat, s * 0.55, L.chestY - 0.98, 0));
+        g.add(mesh(blob(0.056, 0.086, 0.036, { noise: 0.02, seg: 12, seg2: 9 }),
+          mat, s * 0.558, 2.616, 0.020));
       });
-      // 腿：大腿 / 小腿 / 足
+
+      // 腿：大腿 / 膝 / 小腿 / 足
       [-1, 1].forEach((s) => {
-        const thigh = new THREE.Mesh(new THREE.CapsuleGeometry(0.118, 0.7, 5, 12), mat);
-        thigh.position.set(s * 0.175, L.hipY - 0.48, 0);
+        const thigh = new THREE.Mesh(new THREE.CapsuleGeometry(0.162, 0.62, 6, 16), mat);
+        thigh.position.set(s * 0.176, 1.842, 0.012);
         g.add(thigh);
-        const shin = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.64, 5, 12), mat);
-        shin.position.set(s * 0.165, L.hipY - 1.24, 0);
+        g.add(mesh(new THREE.SphereGeometry(0.118, 14, 11), mat, s * 0.174, 1.420, 0.012));
+        const shin = new THREE.Mesh(new THREE.CapsuleGeometry(0.108, 0.72, 6, 16), mat);
+        shin.position.set(s * 0.170, 0.858, 0.004);
         g.add(shin);
-        const foot = mesh(new THREE.CapsuleGeometry(0.06, 0.14, 4, 10), mat, s * 0.16, 0.08, 0.05);
+        const foot = new THREE.Mesh(new THREE.CapsuleGeometry(0.072, 0.17, 4, 12), mat);
+        foot.position.set(s * 0.164, 0.100, 0.062);
         foot.rotation.x = Math.PI / 2;
         g.add(foot);
       });
 
-      // 轮廓光：远景下也能看清人体边界，内脏不会“飘”在黑底上
-      const rimMat = new THREE.MeshBasicMaterial({
-        color: 0x6aa8ff, side: THREE.BackSide, transparent: true,
-        opacity: 0.12, depthWrite: false, blending: THREE.AdditiveBlending,
-      });
-      const shells = [];
-      g.traverse((o) => { if (o.isMesh) shells.push(o); });
-      shells.forEach((o) => {
-        const ol = new THREE.Mesh(o.geometry, rimMat);
-        ol.scale.setScalar(1.028);
-        o.add(ol);
-      });
+      return g;
+    }
+
+    /** @deprecated 保留旧名，皮肤材质仍走 bodyMats 通道 */
+    function bodyMaterial() { return skinMaterial(); }
+
+    function buildBody() {
+      const g = new THREE.Group();
+
+      const bone = buildSkeleton();
+      bone.renderOrder = 2;
+      bone.name = 'bone';
+      LAYERS.bone = bone;
+      g.add(bone);
+
+      const muscle = buildMuscles();
+      muscle.renderOrder = 3;
+      muscle.name = 'muscle';
+      LAYERS.muscle = muscle;
+      g.add(muscle);
+
+      const skin = buildSkin();
+      skin.renderOrder = 20;                 // 最后画，半透明地罩在一切外面
+      skin.name = 'skin';
+      LAYERS.skin = skin;
+      g.add(skin);
 
       scene.add(g);
       return g;
     }
+
+    /* ---- 解剖图层：逐层剥离（解剖软件最实用的一个交互） ---- */
+    const layerOn = { skin: true, muscle: true, bone: true, organ: true, vessel: true };
+
+    function applyLayers() {
+      if (LAYERS.skin) LAYERS.skin.visible = layerOn.skin;
+      if (LAYERS.muscle) LAYERS.muscle.visible = layerOn.muscle;
+      if (LAYERS.bone) LAYERS.bone.visible = layerOn.bone;
+      Object.keys(organObjects).forEach((k) => { organObjects[k].visible = layerOn.organ; });
+      vesselGroup.visible = layerOn.vessel;
+      if (particleMesh) particleMesh.visible = layerOn.vessel;
+      labelObjs.forEach((o) => { o.visible = layerOn.organ; });
+      document.querySelectorAll('#layerSeg button').forEach((b) => {
+        const on = !!layerOn[b.dataset.layer];
+        b.classList.toggle('is-on', on);
+        b.classList.toggle('is-off', !on);
+      });
+    }
+
+    document.getElementById('layerSeg').addEventListener('click', (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const k = btn.dataset.layer;
+      if (!(k in layerOn)) return;
+      layerOn[k] = !layerOn[k];
+      applyLayers();
+    });
 
     function finishLoad() {
       buildAll();
       buildIndex();
       applyCycle('all');
       setView('torso');
+      applyLayers();
       document.getElementById('loader').classList.add('is-done');
     }
 
@@ -2131,7 +2541,7 @@
       vesselObjs.forEach((v) => {
         const on = mode === 'all' || v.group === mode;
         v.active = on;
-        v.mat.uniforms.uOpacity.value = on ? (mode === 'all' ? 0.46 : 0.64) : 0.035;
+        v.mat.uniforms.uOpacity.value = on ? (mode === 'all' ? 0.52 : 0.72) : 0.04;
       });
       document.querySelectorAll('#cycleSeg button').forEach((b) => {
         b.classList.toggle('is-on', b.dataset.cycle === mode);
