@@ -73,6 +73,9 @@
       color: #fff;
     }
     .cx-layers button.is-off { opacity: 0.42; }
+    .cx-credit { margin-top: 8px; font-size: 9.5px; line-height: 1.5; color: rgba(255,255,255,0.32); }
+    .cx-credit a { color: rgba(160,190,255,0.6); text-decoration: none; }
+    .cx-credit a:hover { color: rgba(190,215,255,0.9); }
 
     .sv-legend { min-width: 234px; }
     .cx-label-wrap { pointer-events: none; }
@@ -119,7 +122,6 @@
     <div class="sv-panel__title">解剖图层</div>
     <div class="cx-layers" id="layerSeg">
       <button data-layer="skin" class="is-on">皮肤</button>
-      <button data-layer="muscle" class="is-on">肌肉</button>
       <button data-layer="bone" class="is-on">骨骼</button>
       <button data-layer="organ" class="is-on">内脏</button>
       <button data-layer="vessel" class="is-on">血管</button>
@@ -141,6 +143,7 @@
       <button data-view="head">头部</button>
     </div>
     <div class="cx-note">心脏 → 动脉 → 毛细血管 → 静脉 → 心脏，一圈约 1 分钟。点器官或左侧索引查看细节。</div>
+    <div class="cx-credit">解剖模型：<a href="https://lifesciencedb.jp/bp3d/" target="_blank" rel="noopener">BodyParts3D</a>（Database Center for Life Science，CC BY 4.0）· 经 <a href="https://github.com/ashemag/human-atlas" target="_blank" rel="noopener">human-atlas</a> 打包简化</div>
   </div>
 
   <div class="sv-card" id="card"></div>
@@ -170,6 +173,7 @@
     import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
     import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
     import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
         
     // ===== SciVis Kit（由 tools/inline-kit.js 自动内联，勿手改） =====
     const SciVis = (function () {
@@ -880,7 +884,7 @@
     camera.position.set(0.45, H * 0.52, 9.4);
 
     const { renderer, composer, renderPass } = S.createRenderer({
-      exposure: 1.22, bloomStrength: 0.72, bloomRadius: 0.55, bloomThreshold: 0.55,
+      exposure: 1.05, bloomStrength: 0.42, bloomRadius: 0.5, bloomThreshold: 0.78,
     });
 
     const labelRenderer = new CSS2DRenderer();
@@ -895,6 +899,12 @@
     controls.maxDistance = 18;
     renderPass.scene = scene;
     renderPass.camera = camera;
+
+    /* 剖切面：像解剖软件那样把身体前半剖开，露出里面的器官。
+       只作用在皮肤和骨骼上，内脏和血管保持完整。 */
+    renderer.localClippingEnabled = true;
+    const slicePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0.015);
+    let clipOn = true;
 
     scene.add(new THREE.AmbientLight(0x6b7a99, 1.15));
     const keyLight = new THREE.DirectionalLight(0xfff4ea, 2.15);   // 主光：暖白，略偏左上
@@ -1598,9 +1608,19 @@
       return group;
     }
 
-    function buildAll() {
+    function buildAll(useAtlas) {
       const chestY = L.chestY;
       const hipY = L.hipY;
+
+      if (useAtlas) {
+        // BodyParts3D 里大脑是 59 个独立网格（141k 三角），体积太大，仍用程序化大脑
+        const brainG = buildBrain();
+        brainG.scale.setScalar(0.72);
+        addOrgan('brain', brainG, new THREE.Vector3(0, L.headY + CM * 5.2, CM * 0.4), new THREE.Vector3(CM * 11, CM * 5.4, 0));
+        buildVessels();
+        buildParticles();
+        return;
+      }
 
       addOrgan('heart', buildHeart(), new THREE.Vector3(-CM * 0.8, chestY - CM * 0.6, CM * 0.6), new THREE.Vector3(CM * 11, CM * 9.5, 0));
       addOrgan('lungs', buildLungs(), new THREE.Vector3(0, chestY + CM * 1.6, -CM * 2.0), new THREE.Vector3(-CM * 17, CM * 11, 0));
@@ -2373,15 +2393,187 @@
       return g;
     }
 
+    /* ==================================================================
+       真实解剖模型：BodyParts3D 4.0（CC BY 4.0）
+       —— 与 Complete Anatomy 同源的数据集：2,234 个网格、15 个解剖系统。
+       这里预先按系统合并成两个 GLB：
+         core.glb  皮肤 + 动脉 + 静脉 + 内脏（14 个命名结构）
+         bone.glb  全身骨骼（141 件主要骨，去掉籽骨等碎件）
+       出处：BodyParts3D, Database Center for Life Science, CC BY 4.0
+             经 ashemag/human-atlas 打包与简化
+       ================================================================== */
+    const ATLAS = { skin: null, vesselRoot: null, bone: null, ok: false };
+
+    function tuneAtlasMat(mat, opt) {
+      opt = opt || {};
+      mat.side = THREE.DoubleSide;
+      mat.metalness = opt.metal != null ? opt.metal : 0.0;
+      mat.roughness = opt.rough != null ? opt.rough : (mat.roughness != null ? mat.roughness : 0.6);
+      if (opt.color) mat.color.setHex(opt.color);
+      if (mat.emissive) {
+        if (opt.emissive) mat.emissive.setHex(opt.emissive);
+        mat.emissiveIntensity = opt.emissiveIntensity != null ? opt.emissiveIntensity : 1.2;
+      }
+      if (opt.opacity != null) {
+        mat.transparent = opt.opacity < 1;
+        mat.opacity = opt.opacity;
+        mat.depthWrite = opt.opacity >= 0.92;
+      }
+      mat.needsUpdate = true;
+      return mat;
+    }
+
+    /* 器官概念在 BodyParts3D 里常把伴行血管也包含进来（肝静脉、心腔…），
+       逐个网格上材质会花成紫色。这里统一按器官主色重建一份材质。 */
+    function unifyOrganMaterial(node, hex) {
+      const col = new THREE.Color(hex);
+      const mat = new THREE.MeshStandardMaterial({
+        color: col,
+        roughness: 0.44,
+        metalness: 0.0,
+        emissive: col.clone().multiplyScalar(0.3),
+        emissiveIntensity: 1.15,
+        side: THREE.DoubleSide,
+      });
+      node.traverse((o) => { if (o.isMesh) o.material = mat; });
+      return mat;
+    }
+
+    // 把 GLB 里的某个结构登记成可点击器官（沿用现有卡片/标签/聚光逻辑）
+    function registerAtlasOrgan(key, node) {
+      const def = ORGANS[key];
+      if (!def || !node) return null;
+      unifyOrganMaterial(node, def.color);
+      node.userData = Object.assign({}, def, { kind: 'organ', key: key, baseScale: 1 });
+      node.traverse((o) => {
+        if (!o.isMesh) return;
+        o.userData.key = key;
+        if (o.material) {
+          o.material.userData.baseOpacity = o.material.opacity;
+          o.material.userData.baseEmissive = o.material.emissiveIntensity;
+        }
+      });
+      organObjects[key] = node;
+      pickTargets.push(node);
+      const b = new THREE.Box3().setFromObject(node);
+      const c = b.getCenter(new THREE.Vector3());
+      const off = new THREE.Vector3(c.x + (c.x > 0.02 ? 0.26 : -0.26), b.max.y + 0.10, c.z);
+      const minor = ['spleen', 'pancreas', 'bladder', 'kidney'].indexOf(key) >= 0;
+      addLabel(def.name, def.color, off, key, minor);
+      return node;
+    }
+
+    function applyClip() {
+      const planes = clipOn ? [slicePlane] : [];
+      [ATLAS.skin].forEach((root) => {
+        if (!root) return;
+        root.traverse((o) => {
+          if (!o.isMesh || !o.material) return;
+          o.material.clippingPlanes = planes;
+          o.material.needsUpdate = true;
+        });
+      });
+    }
+
+    async function loadAtlas() {
+      try {
+        const loader = new GLTFLoader();
+        const [core, bone] = await Promise.all([
+          loader.loadAsync('./models/core.glb'),
+          loader.loadAsync('./models/bone.glb'),
+        ]);
+
+        /* ---- 骨骼 ---- */
+        const boneGroup = bone.scene;
+        boneGroup.name = 'atlas-bone';
+        boneGroup.traverse((o) => {
+          if (!o.isMesh) return;
+          tuneAtlasMat(o.material, { color: 0xf8f0de, emissive: 0x8a7258, emissiveIntensity: 1.35, opacity: 0.52, rough: 0.46 });
+        });
+        boneGroup.renderOrder = 2;
+        scene.add(boneGroup);
+        ATLAS.bone = boneGroup;
+        LAYERS.bone = boneGroup;
+
+        /* ---- core：皮肤 / 血管 / 内脏 ---- */
+        scene.add(core.scene);          // 整体先挂上，血管稍后再摘到 vesselRoot
+        const skinNode = core.scene.getObjectByName('skin') || core.scene.getObjectByName('Skin');
+        const vesselRoot = new THREE.Group();
+        vesselRoot.name = 'atlas-vessels';
+
+        const organKeys = ['heart', 'lungs', 'liver', 'stomach', 'smallIntestine',
+          'largeIntestine', 'kidney', 'spleen', 'pancreas', 'bladder', 'trachea'];
+
+        core.scene.children.slice().forEach((node) => {
+          const nm = node.name;
+          if (nm === 'skin') {
+            node.traverse((o) => {
+              if (!o.isMesh) return;
+              tuneAtlasMat(o.material, { color: 0xe8b49a, opacity: 0.15, rough: 0.5 });
+              o.material.side = THREE.FrontSide;
+              o.material.emissive.copy(o.material.color).multiplyScalar(0.16);
+              o.material.emissiveIntensity = 1.0;
+              o.material.depthWrite = false;
+              o.renderOrder = 20;
+            });
+            ATLAS.skin = node;
+            LAYERS.skin = node;
+            return;
+          }
+          if (nm === 'artery' || nm === 'vein') {
+            const isArt = nm === 'artery';
+            node.traverse((o) => {
+              if (!o.isMesh) return;
+              tuneAtlasMat(o.material, {
+                color: isArt ? 0xc9202f : 0x1e50b4,
+                emissive: isArt ? 0x5a0a12 : 0x0a1c46,
+                emissiveIntensity: 2.6,
+                opacity: isArt ? 0.98 : 0.72, rough: 0.42,
+              });
+            });
+            vesselRoot.add(node);
+            return;
+          }
+          if (organKeys.includes(nm)) {
+            const meshes = [];
+            node.traverse((o) => { if (o.isMesh) meshes.push(o); });
+            meshes.forEach((o) => {
+              const mm = o.material;
+              tuneAtlasMat(mm, { rough: 0.46 });
+              if (mm.emissive) {
+                mm.emissive.copy(mm.color).multiplyScalar(0.30);
+                mm.emissiveIntensity = 1.05;
+              }
+            });
+            if (nm === 'trachea') scene.add(node);
+            else registerAtlasOrgan(nm, node);
+            return;
+          }
+          // 其它没归类的结构直接挂上
+          scene.add(node);
+        });
+
+        scene.add(vesselRoot);
+        ATLAS.vesselRoot = vesselRoot;
+        applyClip();
+
+        ATLAS.ok = true;
+        return true;
+      } catch (err) {
+        console.warn('[atlas] 真实模型加载失败，回退到程序化解剖', err);
+        return false;
+      }
+    }
+
     /* ---- 解剖图层：逐层剥离（解剖软件最实用的一个交互） ---- */
     const layerOn = { skin: true, muscle: true, bone: true, organ: true, vessel: true };
-
     function applyLayers() {
       if (LAYERS.skin) LAYERS.skin.visible = layerOn.skin;
       if (LAYERS.muscle) LAYERS.muscle.visible = layerOn.muscle;
       if (LAYERS.bone) LAYERS.bone.visible = layerOn.bone;
       Object.keys(organObjects).forEach((k) => { organObjects[k].visible = layerOn.organ; });
       vesselGroup.visible = layerOn.vessel;
+      if (ATLAS.vesselRoot) ATLAS.vesselRoot.visible = layerOn.vessel;
       if (particleMesh) particleMesh.visible = layerOn.vessel;
       labelObjs.forEach((o) => { o.visible = layerOn.organ; });
       document.querySelectorAll('#layerSeg button').forEach((b) => {
@@ -2400,8 +2592,10 @@
       applyLayers();
     });
 
-    function finishLoad() {
-      buildAll();
+    async function finishLoad() {
+      const useAtlas = await loadAtlas();
+      if (!useAtlas) buildBody();
+      buildAll(useAtlas);
       buildIndex();
       applyCycle('all');
       setView('torso');
@@ -2541,7 +2735,7 @@
       vesselObjs.forEach((v) => {
         const on = mode === 'all' || v.group === mode;
         v.active = on;
-        v.mat.uniforms.uOpacity.value = on ? (mode === 'all' ? 0.52 : 0.72) : 0.04;
+        v.mat.uniforms.uOpacity.value = on ? (ATLAS.ok ? 0.05 : (mode === 'all' ? 0.52 : 0.72)) : 0.03;
       });
       document.querySelectorAll('#cycleSeg button').forEach((b) => {
         b.classList.toggle('is-on', b.dataset.cycle === mode);
@@ -2699,7 +2893,6 @@
       composer.render();
       requestAnimationFrame(animate);
     }
-    buildBody();
     finishLoad();
     animate();
 
