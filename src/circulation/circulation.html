@@ -73,7 +73,7 @@
       color: #fff;
     }
     .cx-layers button.is-off { opacity: 0.42; }
-    .cx-credit { margin-top: 8px; font-size: 9.5px; line-height: 1.5; color: rgba(255,255,255,0.32); }
+    .cx-credit { margin-top: 8px; font-size: 9.5px; line-height: 1.5; color: rgba(255,255,255,0.32); max-width: 214px; word-break: break-word; }
     .cx-credit a { color: rgba(160,190,255,0.6); text-decoration: none; }
     .cx-credit a:hover { color: rgba(190,215,255,0.9); }
 
@@ -2488,7 +2488,7 @@
         boneGroup.name = 'atlas-bone';
         boneGroup.traverse((o) => {
           if (!o.isMesh) return;
-          tuneAtlasMat(o.material, { color: 0xf8f0de, emissive: 0x8a7258, emissiveIntensity: 1.35, opacity: 0.52, rough: 0.46 });
+          tuneAtlasMat(o.material, { color: 0xf0e6cf, emissive: 0x6a5844, emissiveIntensity: 0.9, opacity: 0.4, rough: 0.5 });
         });
         boneGroup.renderOrder = 2;
         scene.add(boneGroup);
