@@ -1,0 +1,62 @@
+{
+  "wuyuan": {
+    "file": "v_wuyuan.mp3",
+    "hash": "f03a068a52c2",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 145728
+  },
+  "zhi": {
+    "file": "v_zhi.mp3",
+    "hash": "6a833f0a176a",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 139536
+  },
+  "jiandu": {
+    "file": "v_jiandu.mp3",
+    "hash": "7f3f6709b131",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 185184
+  },
+  "fangwu": {
+    "file": "v_fangwu.mp3",
+    "hash": "241410e33c0a",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 128448
+  },
+  "majiu": {
+    "file": "v_majiu.mp3",
+    "hash": "d39a2b587e54",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 141408
+  },
+  "fengdun": {
+    "file": "v_fengdun.mp3",
+    "hash": "af70e4eff9db",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 132192
+  },
+  "yidao": {
+    "file": "v_yidao.mp3",
+    "hash": "fb40d3729a53",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 120960
+  },
+  "xuanquan": {
+    "file": "v_xuanquan.mp3",
+    "hash": "8012a664a0ca",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 119664
+  },
+  "changhui": {
+    "file": "v_changhui.mp3",
+    "hash": "0f765d90b1c6",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 141696
+  },
+  "qilian": {
+    "file": "v_qilian.mp3",
+    "hash": "4ad8a3fac256",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 141264
+  }
+}

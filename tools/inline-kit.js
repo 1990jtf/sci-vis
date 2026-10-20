@@ -24,6 +24,7 @@ const PAGES = [
   'src/circulation/circulation.html',
   'src/weather/weather.html',
   'src/garden/garden.html',
+  'src/xuanquan/xuanquan.html',
   'src/dinosaur/dinosaur.html',
   'src/birth/birth.html',
 ];

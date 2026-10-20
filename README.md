@@ -22,11 +22,13 @@ sci-vis/
     │   ├── dinosaur/              # 恐龙 12 段
     │   ├── circulation/           # 血液循环 21 段
     │   ├── weather/               # 水循环 17 段
-    │   └── garden/                # 江南园林 16 段
+    │   ├── garden/                # 江南园林 16 段
+    │   └── xuanquan/              # 悬泉置 10 段
     ├── solar-system/solar-system.html   # 太阳系（程序化行星 + 卫星 + 泛光 + 漫游）
     ├── circulation/circulation.html     # 血液循环（11 个内脏 + 22 段血管 + 循环分层）
     ├── weather/weather.html             # 水循环（程序化海岛 + 七环节 + 四档天气）
     ├── garden/garden.html               # 江南园林（粉墙黛瓦 + 叠山理水 + 借景框景）
+    ├── xuanquan/xuanquan.html           # 悬泉置（汉代坞院 + 驿道 + 烽墩 + 悬泉汉简）
     ├── dinosaur/                         # 恐龙年代（真实骨骼动画 + 小行星事件）
     │   ├── dinosaur.html
     │   └── models/*.glb                  # CC0 恐龙模型（Trex / Triceratops / ...）
@@ -64,6 +66,7 @@ VOICE=zh-CN-YunxiNeural RATE=-2% node tools/gen-voice.js src/solar-system/solar-
 | 血液循环 | `src/audio/circulation/` | 21 |
 | 水循环 | `src/audio/weather/` | 17 |
 | 江南园林 | `src/audio/garden/` | 16 |
+| 悬泉置 | `src/audio/xuanquan/` | 10 |
 
 其他页面想接入，只需给数据块加这两个标记、给实体加 `id` 与 `say`，再 `S.createVoice({ audioBase: '../audio/<页面>/' })` + `voice.speak(data.say, data.id)`。
 
@@ -183,6 +186,25 @@ VOICE=zh-CN-YunxiNeural RATE=-2% node tools/gen-voice.js src/solar-system/solar-
 - **十四个可点对象 + 15 个 3D 标签**，标签逐帧投影避让
 - **每条目 4 条数据 + 2 条描述 + 2 条冷知识**：狮子林 9 条山路 21 个洞、宋徽宗花石纲、留园一条廊几十种漏窗不重样、荷叶效应 …
 - **神经语音讲解**：16 段（10 景 + 4 植物 + 2 手法），edge-tts 预生成在 `src/audio/garden/`（约 2 MB）
+
+### 🏜️ 悬泉置 · 丝路驿站（src/xuanquan/xuanquan.html）
+
+敦煌以东的戈壁滩上，一座 50 × 50 米的汉代坞院。数据据悬泉置遗址考古资料整理。
+
+**核心功能：**
+
+- **坞院复原**：夯土墙（横夯层 + 模板缝的 canvas 纹理）、**东开**的院门与木构门楼、墙顶女墙、院内地坪
+- **院内 27 间房屋**：北、西、南三面排布，土坯墙（砖块纹理）、平顶 / 草顶、门洞与窗
+- **院外马厩**：南墙外 26 × 15 米的棚架，内外双排柱、单坡草顶、食槽、草料、拴马绳
+- **西南角烽墩**：四棱台收分、顶部女墙、登台土阶——魏晋遗存
+- **驿道**：门前南北向通过，路面与车辙、两列压边石，连接坞院门的支路
+- **悬泉**：南侧土崖三叠，崖下泉潭与细流——"悬泉置"得名于此
+- **生活痕迹**：两辆汉车、货堆、戍卒、六匹马、四匹骆驼的驼队、门楼上的汉旗（顶点波动）
+- **环境**：砾石戈壁、骆驼刺 / 红柳 / 枯胡杨点缀、远处祁连雪峰（双层低多边形山）
+- **十项讲解**：坞院、置、汉简、房屋、马厩、烽墩、驿道、悬泉，外加长罗侯常惠与祁连山
+  - 数据都按考古报告：坞院边长 50 米、墙基宽 1.5 米、汉简 35000 余枚（有字 23000 余枚）、官卒徒御 37 人、传马 40 匹、传车 10 余辆、隶属敦煌郡效谷县
+- **五组视角**：全景 / 坞院 / 马厩 / 烽墩 / 驿道
+- **神经语音讲解**：10 段，edge-tts 预生成在 `src/audio/xuanquan/`（约 1.4 MB）
 
 ### 🦖 恐龙 · 地质年代漫游（src/dinosaur/dinosaur.html）
 
