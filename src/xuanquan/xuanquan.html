@@ -1452,8 +1452,8 @@
         neck: parts.neck || null,
         tail: parts.tail || null,
         gait: 'walk',        // walk 马的对角步 / pace 骆驼的侧对步 / step 人
-        amp: 0.32,           // 髋关节摆幅
-        knee: 0.9,           // 屈膝幅度
+        amp: null,           // 髋关节摆幅；不写则按步幅与腿长自动反推（见下）
+        knee: 0.9,           // 摆动相屈膝幅度
         cyc: Math.random(),  // 步态相位
         stride: 1.7,         // 一个步态周期走多远
         bobY: 0.022,         // 身体起伏
@@ -1461,51 +1461,113 @@
         graze: 0.6,          // 站立时低头进食的幅度
         mode: 'idle',
         speed: 0, path: null, seg: 0, u: 0,
-        turn: 2.0, waitT: 0, way: null, wi: 0, gap: 0, follow: null,
+        turn: 3.0, waitT: 0, way: null, wi: 0, gap: 0, follow: null,
         look: 6, trail: null, slot: 0, after: null,
+        s: 0,                // 跟随者自己的连续进度（沿脚印折线的弧长坐标）
+        convoy: null,        // 共享的“头驼已走弧长”
+        blend: 0,            // 行走 ↔ 站立 的淡入淡出系数
         seed: Math.random() * TAU,
         moving: false,
       }, opt);
-      a.baseY = obj.position.y;
+      /* 先量一下脚底相对身体原点的高度：人和马的模型基准 y 比腿长高了几厘米，
+           一直都是悬空站着的。这里统一压到地面（留 5mm），免得走路时看着像飘。 */
+      let footMin = Infinity;
+      a.legs.forEach((L) => {
+        const grp = L.knee || L.pivot;
+        const mesh = grp.children[grp.children.length - 1];
+        if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+        const y = L.pivot.position.y + (L.knee ? L.knee.position.y : 0)
+          + mesh.position.y + mesh.geometry.boundingBox.min.y;
+        footMin = Math.min(footMin, y);
+      });
+      a.baseY = footMin < Infinity ? 0.005 - footMin : obj.position.y;
+      obj.position.y = a.baseY;
+
+      /* 摆幅由步幅反推：支撑相里脚相对身体后移 2·腿长·sin(摆幅)，
+           必须正好等于这段时间身体前进的距离（支撑相占比 × 步幅），
+           脚落地之后才是“踩住地面”的。两者不匹配，脚就会在地面上前后划。 */
+      const legLen = a.legs.length ? Math.abs(a.legs[0].pivot.position.y - (footMin < Infinity ? footMin : 0)) : 1.2;
+      a.legSpan = legLen || 1.2;                          // 髋到蹄底，用于算躯干起伏
+      if (a.amp == null) {
+        const ratio = ((1 - SWING) * a.stride) / (2 * a.legSpan);
+        a.amp = Math.min(0.72, Math.max(0.22, Math.asin(Math.min(1, Math.max(0, ratio)))));
+      }
       ACTORS.push(a);
       return a;
     }
 
     // 各条腿在步态周期里的相位
     function legPhase(L, gait) {
-      if (gait === 'pace') return L.side < 0 ? 0 : 0.5;              // 同侧两腿并进
-      if (gait === 'walk') return (L.front ? 0 : 0.5) + (L.side < 0 ? 0 : 0.5); // 对角交替
-      return L.side < 0 ? 0 : 0.5;
+      if (gait === 'pace') return L.side < 0 ? 0 : 0.5;              // 骆驼：同侧两腿并进（两拍）
+      if (gait === 'walk') {                                          // 马：四拍 左后→左前→右后→右前
+        if (L.side < 0) return L.front ? 0.25 : 0;
+        return L.front ? 0.75 : 0.5;
+      }
+      return L.side < 0 ? 0 : 0.5;                                   // 人：左右交替
     }
     function wrapAngle(v) { v = (v + Math.PI) % TAU; if (v < 0) v += TAU; return v - Math.PI; }
     function turnTo(cur, want, dt, rate) { return cur + wrapAngle(want - cur) * Math.min(1, dt * rate); }
+    // 按最大角速度匀速转：指数收敛是「先猛转、后磨蹭」，看着像抽搐
+    function turnRate(cur, want, dt, wMax) {
+      const err = wrapAngle(want - cur);
+      const step = wMax * dt;
+      return wrapAngle(cur + Math.max(-step, Math.min(step, err)));
+    }
 
-    // 一条腿：摆髋 + 抬腿时屈膝
-    function swingLeg(L, cyc, a) {
-      const s = Math.sin((cyc + legPhase(L, a.gait)) * TAU);
-      L.pivot.rotation.x = s * a.amp;
-      if (L.knee) L.knee.rotation.x = Math.max(0, -s) * a.knee * (L.front ? 0.9 : -0.9);
+    /* —— 步态曲线 ——
+       一个周期分成两段：
+         摆动相（前 40%）：脚从最后抬起、屈膝快速前伸到最前
+         支撑相（后 60%）：腿伸直、脚贴地随身体匀速后移
+       原先用的纯 sin 有两点毛病：
+         1) 摆动/支撑各占一半，且后蹬不是匀速 —— 脚落地后仍在地面上前后划，像滑冰；
+         2) 屈膝量取 max(0, -sin)，正好错开半拍 —— 该抬腿时僵直、该蹬地时反而弯曲。
+       现在抬腿量只在摆动相为正，且髋角在支撑相线性回摆，落地即"踩住"。 */
+    const SWING = 0.4;
+    // 髋角：+1 = 脚在最后，-1 = 脚在最前
+    function gaitWave(p) {
+      p -= Math.floor(p);
+      if (p < SWING) return Math.cos(Math.PI * (p / SWING));
+      return -1 + 2 * ((p - SWING) / (1 - SWING));
+    }
+    // 抬腿量：只在摆动相为正
+    function liftWave(p) {
+      p -= Math.floor(p);
+      return p < SWING ? Math.sin(Math.PI * (p / SWING)) : 0;
     }
 
     // 走路：沿路径推进
     function walkPath(a, dt) {
-      let d = a.speed * dt;
-      let guard = 0;
-      while (d > 0 && guard++ < 8) {
-        const p0 = a.path[a.seg];
-        const p1 = a.path[(a.seg + 1) % a.path.length];
-        const rest = p1.distanceTo(p0) - a.u;
-        if (d < rest) { a.u += d; d = 0; }
-        else { d -= rest; a.seg = (a.seg + 1) % a.path.length; a.u = 0; }
-      }
       const p0 = a.path[a.seg], p1 = a.path[(a.seg + 1) % a.path.length];
       const len = p1.distanceTo(p0) || 1;
+      const want = Math.atan2(p1.x - p0.x, p1.z - p0.z);
+      const err = wrapAngle(want - a.obj.rotation.y);
+      if (a.waitT > 0) {                                    // 端点：站定转身，再起步
+        a.waitT -= dt;
+        a.obj.rotation.y = turnRate(a.obj.rotation.y, want, dt, 2.3);
+        a.moving = false;
+        return;
+      }
+      // 转弯半径 = v/ω，不减速的话半径趋近于 0 —— 就成了原地打转
+      const v = a.speed * (0.34 + 0.66 * Math.max(0, Math.cos(err)));
+      a.u += v * dt;
+      if (a.u >= len) {                                     // 抵达拐点
+        const q0 = a.path[(a.seg + 1) % a.path.length];
+        const q1 = a.path[(a.seg + 2) % a.path.length];
+        a.seg = (a.seg + 1) % a.path.length;
+        a.u = 0;
+        // 近乎掉头（>115°）就先站定转过身，走弧线会甩出路面
+        if (Math.abs(wrapAngle(Math.atan2(q1.x - q0.x, q1.z - q0.z) - want)) > 2.0) {
+          a.waitT = 0.6 + Math.random() * 0.7;
+        }
+        a.obj.position.set(q0.x, a.baseY, q0.z);
+        a.moving = false;
+        return;
+      }
       const k = a.u / len;
-      a.obj.position.x = p0.x + (p1.x - p0.x) * k;
-      a.obj.position.z = p0.z + (p1.z - p0.z) * k;
-      a.obj.rotation.y = turnTo(a.obj.rotation.y, Math.atan2(p1.x - p0.x, p1.z - p0.z), dt, 4.5);
-      a.cyc += (a.speed * dt) / a.stride;
-      a.moving = a.speed > 0.05;
+      a.obj.position.set(p0.x + (p1.x - p0.x) * k, a.baseY, p0.z + (p1.z - p0.z) * k);
+      a.obj.rotation.y = turnRate(a.obj.rotation.y, want, dt, 3.0);
+      a.cyc += (v * dt) / a.stride;
+      a.moving = v > 0.05;
     }
 
     // 头驼：沿航点往返。转向速率被“最小转弯半径”限幅——
@@ -1517,8 +1579,8 @@
       const fwd = dx * Math.sin(a.obj.rotation.y) + dz * Math.cos(a.obj.rotation.y);
       if (dist < 4 || (fwd < 0 && dist < 10)) a.wi = (a.wi + 1) % a.way.length;   // 到头，调头
       const err = wrapAngle(Math.atan2(dx, dz) - a.obj.rotation.y);
-      const vf = a.speed * Math.max(0.4, Math.cos(err));
-      const wMax = vf / 1.8;                       // 弯再急也不能小于 1.8 米半径
+      const vf = a.speed * Math.max(0.55, Math.cos(err));
+      const wMax = vf / 1.5;                       // 弯再急也不能小于 1.5 米半径
       a.obj.rotation.y = wrapAngle(a.obj.rotation.y + Math.max(-wMax, Math.min(wMax, err * 2.2)) * dt);
       a.obj.position.x += Math.sin(a.obj.rotation.y) * vf * dt;
       a.obj.position.z += Math.cos(a.obj.rotation.y) * vf * dt;
@@ -1526,28 +1588,47 @@
       a.moving = vf > 0.05;
     }
 
-    // 队列：后面的骆驼踩着头驼的脚印走，间距沿路径丈量——
-    // 调头时各自沿着同一条弧线排成单列，永远不会互相穿插
-    function trailPoint(trail, back) {
-      let d = 0;
-      for (let i = trail.length - 1; i > 0; i--) {
+    // 脚印折线上按「累计弧长坐标」取点（数组每个点自带 s）。
+    // 不能像早先那样从数组尾部往回量一个固定距离：数组每 0.12 米才记一个点，
+    // 尾部的弧长原点会在记点那一刻跳变，后驼的站位就跟着锯齿似地抖 0.12 米。
+    function trailAt(trail, s) {
+      const n = trail.length;
+      if (!n) return { x: 0, z: 0, yaw: 0 };
+      const q0 = trail[0], last = trail[n - 1];
+      if (n === 1 || s <= q0.s) return { x: q0.x, z: q0.z, yaw: q0.yaw || 0 };
+      if (s >= last.s) return { x: last.x, z: last.z, yaw: last.yaw || 0 };
+      for (let i = n - 1; i > 0; i--) {
         const p = trail[i], q = trail[i - 1];
-        const seg = Math.hypot(p.x - q.x, p.z - q.z);
-        if (seg > 0 && d + seg >= back) {
-          const t = (back - d) / seg;
-          return { x: p.x + (q.x - p.x) * t, z: p.z + (q.z - p.z) * t, yaw: Math.atan2(p.x - q.x, p.z - q.z) };
+        if (q.s <= s) {
+          const seg = p.s - q.s;
+          const t = seg > 0 ? (s - q.s) / seg : 0;
+          return {
+            x: q.x + (p.x - q.x) * t,
+            z: q.z + (p.z - q.z) * t,
+            yaw: Math.atan2(p.x - q.x, p.z - q.z),
+          };
         }
-        d += seg;
       }
-      const p = trail[trail.length - 1], q = trail[0];
-      return { x: q.x, z: q.z, yaw: trail.length > 1 ? Math.atan2(p.x - q.x, p.z - q.z) : 0 };
+      return { x: last.x, z: last.z, yaw: last.yaw || 0 };
     }
+
+    // 队列：后面的骆驼踩着头驼的脚印走
     function walkTrail(a, dt) {
-      const tp = trailPoint(a.trail, a.slot);
+      /* 每只后驼自己积分出一个连续的弧长坐标 a.s，去追「头驼弧长 − 队形间隔」：
+           落后了就加快、太近了就放缓，于是队形自然保持单列。
+         早先的做法是拿固定间隔直接量离散脚印，后驼 6 帧不动、第 7 帧猛跳 0.12 米，
+           cyc 被拽成阶跃 —— 这就是腿抖的来源。
+         朝向再按最大转向速率限幅，跨过折线顶点时也不会抽搐。 */
+      const cv = a.convoy || { len: 0 };
+      if (a.s == null) a.s = cv.len - a.slot;                  // 开局按队形站好
+      const err = (cv.len - a.slot) - a.s;                      // > 0 表示落后
+      const v = Math.max(0, Math.min(a.speed * 1.8, a.speed + err * 0.9));
+      a.s += v * dt;
+      const tp = trailAt(a.trail, a.s);
       const ox = a.obj.position.x, oz = a.obj.position.z;
       a.obj.position.x = tp.x;
       a.obj.position.z = tp.z;
-      a.obj.rotation.y = tp.yaw;
+      a.obj.rotation.y = turnRate(a.obj.rotation.y, tp.yaw, dt, a.turn);
       const moved = Math.hypot(tp.x - ox, tp.z - oz);
       a.cyc += moved / a.stride;
       a.moving = moved > dt * 0.05;
@@ -1559,32 +1640,50 @@
       else if (a.mode === 'follow') walkTrail(a, dt);
       else a.moving = false;
 
+      // 起步/停下之间做淡入淡出，否则腿会"啪"地一下劈开（到端点转身时最明显）
+      a.blend += ((a.moving ? 1 : 0) - a.blend) * Math.min(1, dt * 4);
+      const b = a.blend;
       const cyc = a.cyc;
-      if (a.moving) {
-        a.legs.forEach((L) => swingLeg(L, cyc, a));
-        a.arms.forEach((L) => {                       // 人：手臂与同侧腿反相
-          const s = Math.sin((cyc + (L.side < 0 ? 0.5 : 0)) * TAU);
-          L.pivot.rotation.x = s * 0.34;
-        });
-        const beats = a.gait === 'pace' ? 2 : (a.gait === 'walk' ? 4 : 2);
-        a.obj.position.y = a.baseY + Math.abs(Math.sin(cyc * Math.PI * beats)) * a.bobY;
-        a.obj.rotation.z = a.roll ? Math.sin(cyc * TAU) * a.roll : 0;
-        if (a.neck) a.neck.rotation.x = Math.sin(cyc * TAU * 1.0 + a.seed) * 0.07;
-      } else {
-        // 站着的时候也别像标本：重心左右倒换 + 偶尔挪半步
-        const w = Math.sin(T * 0.55 + a.seed);
-        a.legs.forEach((L, i) => {
-          L.pivot.rotation.x = w * 0.05 * (L.side < 0 ? 1 : -1);
-          if (L.knee) L.knee.rotation.x = Math.max(0, w) * 0.12 * (i % 2 ? 1 : -1);
-        });
-        a.arms.forEach((L) => { L.pivot.rotation.x = Math.sin(T * 0.7 + a.seed + L.side) * 0.05; });
-        a.obj.rotation.z = 0;
-        // 低头吃草 / 饮水：几秒一个来回
-        if (a.neck) {
-          const g = (Math.sin(T * 0.42 + a.seed) - 0.55) * 1.9;
-          a.neck.rotation.x = Math.max(0, g) * a.graze;
-        }
-        a.obj.position.y = a.baseY + Math.sin(T * 0.9 + a.seed) * 0.006;
+      const w = Math.sin(T * 0.55 + a.seed);            // 站立时的重心左右倒换
+
+      // 腿：站立姿势与行走步态之间插值
+      a.legs.forEach((L, i) => {
+        const p = cyc + legPhase(L, a.gait);
+        const walkA = gaitWave(p) * a.amp;
+        const idleA = w * 0.05 * (L.side < 0 ? 1 : -1);
+        const walkK = liftWave(p) * a.knee * (L.front ? 0.9 : -0.9);
+        const idleK = Math.max(0, w) * 0.12 * (i % 2 ? 1 : -1);
+        L.pivot.rotation.x = idleA + (walkA - idleA) * b;
+        if (L.knee) L.knee.rotation.x = idleK + (walkK - idleK) * b;
+      });
+      // 手臂：与同侧腿反相
+      a.arms.forEach((L) => {
+        const walkA = gaitWave(cyc + (L.side < 0 ? 0.5 : 0)) * 0.34;
+        const idleA = Math.sin(T * 0.7 + a.seed + L.side) * 0.05;
+        L.pivot.rotation.x = idleA + (walkA - idleA) * b;
+      });
+
+      /* 身体高度由"撑得最直的那条腿"定：腿是刚性的，绕髋只能画圆弧，
+           若不跟着沉下去，脚就只有一瞬间够得着地面，看着像踩高跷。
+         下沉量 = 腿长 ×(1 − cos 髋角)，正是四足行走时躯干上下起伏的来源。 */
+      let best = 0;
+      a.legs.forEach((L) => {
+        const th = gaitWave(cyc + legPhase(L, a.gait)) * a.amp;
+        best = Math.max(best, Math.cos(th));
+      });
+      const beats = a.gait === 'pace' ? 2 : (a.gait === 'walk' ? 4 : 2);
+      a.obj.position.y = a.baseY
+        - a.legSpan * (1 - best) * b
+        + (Math.abs(Math.sin(cyc * Math.PI * beats)) - 0.5) * a.bobY * b
+        + Math.sin(T * 0.9 + a.seed) * 0.006 * (1 - b);
+      // 侧对步：重心往"正在支撑的那一侧"倒，一个周期左右各一次
+      a.obj.rotation.z = a.roll ? -Math.sin(cyc * TAU) * a.roll * b : 0;
+
+      // 头颈：走路时随步伐点头（一个周期两步，所以是两倍频）；站定时低头吃料
+      if (a.neck) {
+        const nod = Math.sin(cyc * TAU * 2 + a.seed) * 0.08;
+        const grazeK = Math.max(0, (Math.sin(T * 0.42 + a.seed) - 0.55) * 1.9) * a.graze;
+        a.neck.rotation.x = grazeK + (nod - grazeK) * b;
       }
       // 尾巴：慢慢甩 + 偶尔抽一下
       if (a.tail) {
@@ -1639,12 +1738,12 @@
       g.rotation.y = rot || 0;
       const cloth = std(tone || 0x5a4630, { rough: 0.95 });
       const dark = std(0x2f2620, { rough: 0.95 });
-      // 长袍
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.26, 1.0, 7), cloth);
-      body.position.y = 0.84;
+      // 长袍（下摆提到小腿肚以上，露出腿脚，走起来才看得出步伐）
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.25, 0.78, 7), cloth);
+      body.position.y = 0.94;
       body.castShadow = true;
       g.add(body);
-      g.add(box(0.42, 0.07, 0.36, std(0x3d3226, { rough: 1 }), 0, 0.97, 0));
+      g.add(box(0.42, 0.07, 0.36, std(0x3d3226, { rough: 1 }), 0, 1.05, 0));
       // 肩
       g.add(box(0.46, 0.1, 0.2, cloth, 0, 1.28, 0));
 
@@ -1675,10 +1774,10 @@
       const legs = [];
       [-1, 1].forEach((s) => {
         const hip = new THREE.Group();
-        hip.position.set(s * 0.09, 0.40, 0);
+        hip.position.set(s * 0.09, 0.60, 0);
         g.add(hip);
-        hip.add(box(0.11, 0.4, 0.12, std(0x4a3f30, { rough: 1 }), 0, -0.2, 0));
-        hip.add(box(0.12, 0.07, 0.19, dark, 0, -0.39, 0.03));
+        hip.add(box(0.11, 0.6, 0.12, std(0x4a3f30, { rough: 1 }), 0, -0.3, 0));
+        hip.add(box(0.12, 0.07, 0.19, dark, 0, -0.575, 0.03));
         legs.push({ pivot: hip, knee: null, front: false, side: s });
       });
 
@@ -1780,7 +1879,7 @@
         const man = makePerson(PATH[f.p][0].x, PATH[f.p][0].z, 0, f.tone);
         addActor(man, {
           mode: 'path', path: PATH[f.p], seg: f.seg, u: f.u,
-          speed: f.speed, stride: 1.3, gait: 'step', amp: 0.46, bobY: 0.02,
+          speed: f.speed, stride: 1.0, gait: 'step', bobY: 0.02,
         });
       });
 
@@ -1790,7 +1889,7 @@
         const h = makeHorse(PATH.yardLoop[0].x, PATH.yardLoop[0].z, 0, tone);
         addActor(h, {
           mode: 'path', path: PATH.yardLoop, seg, u,
-          speed: 1.15, stride: 1.75, gait: 'walk', amp: 0.3, knee: 0.85, bobY: 0.022, graze: 0.5,
+          speed: 1.15, stride: 1.75, gait: 'walk', knee: 0.85, bobY: 0.022, graze: 0.5,
         });
       });
       // 门外两匹（迎接来客），在门前空地走动
@@ -1798,7 +1897,7 @@
         const h = makeHorse(PATH.gateLoop[0].x, PATH.gateLoop[0].z, 0, tone);
         addActor(h, {
           mode: 'path', path: PATH.gateLoop, seg, u,
-          speed: 1.0, stride: 1.7, gait: 'walk', amp: 0.28, knee: 0.8, bobY: 0.02, graze: 0.5,
+          speed: 1.0, stride: 1.7, gait: 'walk', knee: 0.8, bobY: 0.02, graze: 0.5,
         });
       });
       // 马厩里的传马：面朝食槽（北），站着低头吃料、甩尾巴
@@ -2221,26 +2320,44 @@
     (function caravan() {
       const RX0 = 37.4;
       const trail = [];
-      for (let d = 25; d >= 0; d -= 0.25) trail.push(P(RX0, 0, 18 + d));   // 预铺 25 米来路，开局即成单列
+      let acc = 0;
+      for (let d = 24; d >= 0; d -= 0.12) {         // 预铺 24 米来路，开局即成单列
+        const pt = P(RX0, 0, 18 + d);
+        pt.s = acc; acc += 0.12;                    // 每个脚印带上自己的弧长坐标
+        trail.push(pt);
+      }
+      const convoy = { len: trail[trail.length - 1].s };   // 头驼当前弧长，全队共享
 
       const lead = makeCamel(RX0, 18, Math.PI, 1.0);
       camels.push(lead);
       addActor(lead, {
-        mode: 'steer', speed: 1.15,
+        mode: 'steer', speed: 1.3, convoy,
         way: [P(RX0, 0, -30), P(RX0 + 0.4, 0, 28)],
-        gait: 'pace', stride: 2.0, amp: 0.34, knee: 0.95, bobY: 0.035, roll: 0.035, graze: 0.16,
+        // stride 与腿长挂钩：太大会让脚在地面上划，太小就成了小碎步
+        gait: 'pace', stride: 1.36, knee: 0.95, bobY: 0.03, roll: 0.035, graze: 0.16,
         after: (a) => {
-          const p = a.obj.position, last = trail[trail.length - 1];
-          if (Math.hypot(p.x - last.x, p.z - last.z) > 0.12) trail.push(P(p.x, 0, p.z));
-          if (trail.length > 600) trail.splice(0, trail.length - 600);
+          const p = a.obj.position, cv = a.convoy;
+          /* 弧长用「帧间位移」精确积分 —— step 若拿“距上个脚印”的距离每帧往里加，
+               两次记点之间会重复计上三四遍，len 的增速变成实际速度的 3.5 倍，
+               后驼追弧长追得全挤成一团。 */
+          if (cv.px !== undefined) cv.len += Math.hypot(p.x - cv.px, p.z - cv.pz);
+          cv.px = p.x; cv.pz = p.z;
+          const last = trail[trail.length - 1];
+          if (Math.hypot(p.x - last.x, p.z - last.z) > 0.12) {
+            const pt = P(p.x, 0, p.z);
+            pt.s = cv.len;                          // 脚印连同它当时的弧长一起存下
+            trail.push(pt);
+            if (trail.length > 700) trail.splice(0, trail.length - 700);
+          }
         },
       });
       [[6.0, 0.95, 0x9c7c4e], [12.4, 0.92, 0xb08e5e], [19.2, 1.0, 0xa5824f]].forEach(([slot, s, tone]) => {
         const c = makeCamel(RX0, 18 + slot, Math.PI, s, tone);
         camels.push(c);
         addActor(c, {
-          mode: 'follow', trail, slot,
-          gait: 'pace', stride: 2.0, amp: 0.34, knee: 0.95, bobY: 0.035, roll: 0.035, graze: 0.16,
+          // speed 必须给：跟随者要跟头驼同速，否则上限 speed*1.8 会把速度钳成 0
+          mode: 'follow', trail, slot, convoy, turn: 2.6, speed: 1.3, s: null,
+          gait: 'pace', stride: 1.36, knee: 0.95, bobY: 0.03, roll: 0.035, graze: 0.16,
         });
       });
       window.__actors = ACTORS;
