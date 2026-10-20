@@ -1072,6 +1072,33 @@
       m.receiveShadow = true;
       return m;
     }
+    // 变半径管：动物的脖子、尾巴
+    function taperTube(points, r0, r1, tubular, radial, mat) {
+      const curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.5);
+      const geo = new THREE.TubeGeometry(curve, tubular, 1, radial, false);
+      const pos = geo.attributes.position;
+      const perRing = radial + 1;
+      const c = new THREE.Vector3();
+      const v = new THREE.Vector3();
+      for (let i = 0; i <= tubular; i++) {
+        const t = i / tubular;
+        curve.getPointAt(t, c);
+        const r = r0 + (r1 - r0) * t;
+        for (let j = 0; j < perRing; j++) {
+          const idx = i * perRing + j;
+          v.fromBufferAttribute(pos, idx);
+          const dx = v.x - c.x, dy = v.y - c.y, dz = v.z - c.z;
+          const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+          const k = r / len;
+          pos.setXYZ(idx, c.x + dx * k, c.y + dy * k, c.z + dz * k);
+        }
+      }
+      geo.computeVertexNormals();
+      const m = new THREE.Mesh(geo, mat);
+      m.castShadow = true;
+      return m;
+    }
+
     // 不规则砾石 / 土块
     function lumpGeo(rx, ry, rz, opt) {
       opt = opt || {};
@@ -1523,6 +1550,19 @@
       // 门外的两匹马（迎接来客）
       makeHorse(30.0, 4.5, 1.9, 0x8a5f3c);
       makeHorse(31.2, 6.4, 2.1, 0x7a5238);
+
+      // 马厩里的传马：面朝食槽（北），分列隔墙两侧
+      const stableHorses = [
+        [-9.6, 0x8a5f3c], [-5.8, 0x6b4a30], [-2.2, 0xa07a52],
+        [2.2, 0x7a5238], [5.8, 0x8a5f3c], [9.6, 0x5e4128],
+      ];
+      stableHorses.forEach(([hx, tone], i) => {
+        const h = makeHorse(hx, 29.9, Math.PI + (i % 2 ? 0.06 : -0.05), tone);
+        h.position.y = 0.06;
+      });
+      // 马厩外侧两头，拴在棚外
+      makeHorse(-12.2, 37.5, -0.5, 0x8a5f3c);
+      makeHorse(12.6, 38.4, 0.6, 0x9a7048);
     })();
 
     /* ==================================================================
@@ -1767,57 +1807,158 @@
     /* ==================================================================
        驼队：驿道上西行
        ================================================================== */
-    function makeCamel(x, z, rot, s) {
+    function makeCamel(x, z, rot, s, tone) {
       const g = new THREE.Group();
       g.position.set(x, 0, z);
       g.rotation.y = rot;
       g.scale.setScalar(s || 1);
-      const fur = std(0xa8895c, { rough: 0.96 });
-      const furDark = std(0x8c7048, { rough: 0.96 });
 
-      // 身体
-      const body = new THREE.Mesh(lumpGeo(0.95, 0.72, 1.45, { seed: Math.random() * 10, noise: 0.12, seg: 12, seg2: 9 }), fur);
-      body.position.y = 1.72;
-      body.castShadow = true;
-      g.add(body);
-      // 双峰
-      [[0.42, 2.28, 0.5], [-0.42, 2.24, -0.42]].forEach(([dx, dy, dz], i) => {
-        const hump = new THREE.Mesh(new THREE.SphereGeometry(0.52, 12, 9), furDark);
-        hump.scale.set(1, 0.95, 1.15);
-        hump.position.set(dx * 0.6, dy, dz);
-        hump.castShadow = true;
-        g.add(hump);
-      });
-      // 脖子 + 头
-      const neckPts = [P(0, 1.95, 1.15), P(0, 2.25, 1.75), P(0, 2.42, 2.25)];
-      const neck = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(neckPts), 10, 0.26, 7, false), fur);
-      neck.castShadow = true;
+      const fur = std(tone || 0xb08e5e, { rough: 0.97 });
+      const furDark = std(0x8d6f47, { rough: 0.97 });
+      const furLight = std(0xc6a87a, { rough: 0.97 });
+      const hoofMat = std(0x4a3a28, { rough: 0.94 });
+      const eyeMat = std(0x1e1610, { rough: 0.5 });
+
+      // —— 躯干：胸腔 + 腰腹 + 臀，三段拼出驼背的起伏 ——
+      const chest = new THREE.Mesh(lumpGeo(0.56, 0.64, 0.8, { seed: Math.random() * 9, noise: 0.05, seg: 16, seg2: 12 }), fur);
+      chest.position.set(0, 1.6, 0.5);
+      chest.castShadow = true;
+      g.add(chest);
+
+      const belly = new THREE.Mesh(lumpGeo(0.5, 0.54, 0.92, { seed: Math.random() * 9, noise: 0.05, seg: 16, seg2: 12 }), fur);
+      belly.position.set(0, 1.5, -0.42);
+      belly.castShadow = true;
+      g.add(belly);
+
+      const rump = new THREE.Mesh(lumpGeo(0.46, 0.5, 0.56, { seed: Math.random() * 9, noise: 0.05, seg: 14, seg2: 10 }), fur);
+      rump.position.set(0, 1.54, -1.06);
+      rump.castShadow = true;
+      g.add(rump);
+
+      // —— 双峰：前高后低，峰间有鞍凹 ——
+      const hump1 = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 12), furDark);
+      hump1.scale.set(1.02, 1.32, 1.06);
+      hump1.position.set(0, 2.08, 0.3);
+      hump1.castShadow = true;
+      g.add(hump1);
+
+      const hump2 = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 12), furDark);
+      hump2.scale.set(1.0, 1.24, 1.02);
+      hump2.position.set(0, 2.0, -0.62);
+      hump2.castShadow = true;
+      g.add(hump2);
+
+      // 峰基的过渡（避免两个球直接插在背上）
+      const humpBase = new THREE.Mesh(lumpGeo(0.42, 0.16, 0.75, { seed: 7.7, noise: 0.06, seg: 14, seg2: 10 }), furDark);
+      humpBase.position.set(0, 1.94, -0.16);
+      g.add(humpBase);
+
+      // —— 脖子：S 形，根部粗、接近头变细 ——
+      const neckPts = [
+        P(0, 1.72, 1.06),
+        P(0, 1.44, 1.42),
+        P(0, 1.34, 1.78),
+        P(0, 1.56, 2.08),
+        P(0, 1.7, 2.28),
+      ];
+      const neck = taperTube(neckPts, 0.3, 0.17, 22, 9, fur);
       g.add(neck);
-      const head = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.32, 0.72), fur);
-      head.position.set(0, 2.42, 2.58);
+
+      // 肩部隆起
+      const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 10), fur);
+      shoulder.scale.set(0.95, 0.9, 1.0);
+      shoulder.position.set(0, 1.72, 1.02);
+      g.add(shoulder);
+
+      // —— 头：长脸、吻部、耳、眼 ——
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.28, 0.52), fur);
+      head.position.set(0, 1.78, 2.46);
+      head.rotation.x = -0.18;
       head.castShadow = true;
       g.add(head);
-      g.add(box(0.1, 0.16, 0.1, furDark, -0.14, 2.62, 2.3));
-      g.add(box(0.1, 0.16, 0.1, furDark, 0.14, 2.62, 2.3));
-      // 四腿
-      [[-0.52, 0.78], [0.52, 0.78], [-0.52, -0.72], [0.52, -0.72]].forEach(([lx, lz]) => {
-        g.add(box(0.19, 1.35, 0.21, fur, lx, 0.68, lz));
-        g.add(box(0.24, 0.12, 0.34, furDark, lx, 0.06, lz));
+
+      const muzzle = new THREE.Mesh(lumpGeo(0.15, 0.15, 0.24, { seed: 3.3, noise: 0.06, seg: 10, seg2: 8 }), furLight);
+      muzzle.position.set(0, 1.68, 2.72);
+      g.add(muzzle);
+
+      // 上唇裂（骆驼标志性的分瓣嘴）
+      g.add(box(0.06, 0.09, 0.1, furDark, 0, 1.6, 2.78));
+      // 鼻孔
+      g.add(box(0.04, 0.04, 0.05, hoofMat, -0.07, 1.72, 2.86));
+      g.add(box(0.04, 0.04, 0.05, hoofMat, 0.07, 1.72, 2.86));
+
+      // 耳朵
+      [-1, 1].forEach((sx) => {
+        const ear = cyl(0.02, 0.07, 0.17, 5, furDark, sx * 0.11, 1.96, 2.28);
+        ear.rotation.z = sx * 0.34;
+        ear.rotation.x = -0.2;
+        g.add(ear);
       });
-      // 尾巴
-      g.add(box(0.08, 0.62, 0.08, furDark, 0, 1.55, -1.45));
-      // 缰绳
-      g.add(box(0.02, 0.02, 0.9, std(0x7a5c38, { rough: 1 }), 0, 2.5, 1.7));
-      // 货包
-      [-1, 1].forEach((s2) => {
-        const pack = box(0.5, 0.56, 0.9, MAT.cloth, s2 * 0.62, 1.9, -0.1);
+      // 眼睛
+      [-1, 1].forEach((sx) => {
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 6), eyeMat);
+        eye.position.set(sx * 0.115, 1.83, 2.42);
+        g.add(eye);
+      });
+
+      // —— 腿：大腿 + 小腿 + 关节 + 蹄 ——
+      function leg(sx, sz, front) {
+        const upper = cyl(0.14, 0.105, 0.72, 9, fur, sx, 1.02, sz);
+        upper.rotation.x = front ? 0.04 : -0.04;
+        g.add(upper);
+        const knee = new THREE.Mesh(new THREE.SphereGeometry(0.105, 9, 7), fur);
+        knee.position.set(sx, 0.68, sz);
+        g.add(knee);
+        const lower = cyl(0.085, 0.072, 0.62, 9, fur, sx, 0.35, sz);
+        g.add(lower);
+        // 蹄（两瓣）
+        g.add(box(0.16, 0.11, 0.2, hoofMat, sx, 0.06, sz + 0.02));
+      }
+      leg(-0.36, 0.72, true);
+      leg(0.36, 0.72, true);
+      leg(-0.36, -0.82, false);
+      leg(0.36, -0.82, false);
+
+      // 腿根与身体的过渡
+      [[-0.36, 0.72], [0.36, 0.72], [-0.36, -0.82], [0.36, -0.82]].forEach(([lx, lz]) => {
+        const hip = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), fur);
+        hip.scale.set(0.85, 0.9, 1.0);
+        hip.position.set(lx, 1.24, lz);
+        g.add(hip);
+      });
+
+      // —— 尾：细长带毛簇 ——
+      const tail = taperTube([P(0, 1.72, -1.5), P(0, 1.32, -1.62), P(0, 0.86, -1.6)], 0.075, 0.045, 10, 6, fur);
+      g.add(tail);
+      const tuft = new THREE.Mesh(lumpGeo(0.09, 0.16, 0.09, { seed: 5.5, noise: 0.2, seg: 8, seg2: 6 }), furDark);
+      tuft.position.set(0, 0.74, -1.6);
+      g.add(tuft);
+
+      // —— 鞍毯与货包 ——
+      const blanket = box(1.08, 0.06, 1.15, std(0x8c3a2e, { rough: 0.92 }), 0, 2.02, -0.18);
+      g.add(blanket);
+      // 毯边垂下的流苏
+      [-0.54, 0.54].forEach((sx) => {
+        g.add(box(0.05, 0.3, 1.1, std(0x6d2c22, { rough: 0.94 }), sx, 1.88, -0.18));
+      });
+
+      [-1, 1].forEach((sx) => {
+        // 货包（毛毡色）
+        const pack = box(0.36, 0.56, 0.82, std(0x9c8763, { rough: 0.95 }), sx * 0.6, 1.76, -0.12);
         g.add(pack);
+        // 捆绳
+        g.add(box(0.4, 0.035, 0.86, std(0x5a4632, { rough: 1 }), sx * 0.6, 1.92, -0.12));
+        g.add(box(0.38, 0.035, 0.05, std(0x5a4632, { rough: 1 }), sx * 0.6, 1.76, 0.28));
       });
+
+      // 缰绳
+      g.add(box(0.02, 0.02, 0.75, std(0x6b5232, { rough: 1 }), 0, 1.86, 2.0));
 
       g.userData = { kind: 'spot', key: 'yidao' };
       scene.add(g);
       return g;
     }
+
     const camels = [
       makeCamel(38, 14, Math.PI, 1.0),
       makeCamel(38, 22, Math.PI, 0.95),
@@ -2028,7 +2169,7 @@
       fangwu: { pos: P(22, 14, -52), target: P(-4, 3, -14) },
       majiu: { pos: P(10, 13, 70), target: P(0, 3, 37) },
       fengdun: { pos: P(8, 19, 56), target: P(-20, 8, 22) },
-      yidao: { pos: P(56, 10, 52), target: P(38, 1, 8) },
+      yidao: { pos: P(46, 3.4, 17), target: P(38, 1.6, 9) },
       xuanquan: { pos: P(34, 13, 120), target: P(14, 3, 96) },
       changhui: { pos: P(44, 15, -30), target: P(24, 3, 0) },
       qilian: { pos: P(40, 60, 40), target: P(0, 62, 520) },
@@ -2080,9 +2221,9 @@
     const VIEWS = {
       overview: { pos: P(30, 26, -80), target: P(0, 6, 6) },
       yard: { pos: P(10, 20, -62), target: P(0, 3, 4) },
-      stable: { pos: P(10, 12, 74), target: P(0, 3, 36) },
+      stable: { pos: P(9, 6.5, 54), target: P(0, 2.2, 33) },
       tower: { pos: P(12, 20, 62), target: P(-20, 8, 22) },
-      road: { pos: P(58, 9, 56), target: P(38, 1.5, 10) },
+      road: { pos: P(46, 3.4, 17), target: P(38, 1.6, 9) },
     };
 
     function setView(name) {
