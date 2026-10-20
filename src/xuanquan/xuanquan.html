@@ -126,7 +126,7 @@
     <button class="sv-btn sv-btn--ghost" id="resetBtn"><span class="sv-btn__icon">🔄</span><span>重置</span></button>
   </div>
 
-  <div class="sv-hint">点击坞院、马厩、烽墩或驿道查看讲解 · 拖拽环视 · 滚轮缩放</div>
+  <div class="sv-hint">驼队、马匹、人物都在走动 · 点击坞院、马厩、烽墩或驿道查看讲解 · 拖拽环视 · 滚轮缩放</div>
 
   <script type="importmap">
   {
@@ -1416,9 +1416,9 @@
         g.add(m);
       });
 
-      // 陶罐若干
+      // 陶罐若干（收在东南角，别挡住遛马道）
       for (let i = 0; i < 5; i++) {
-        const jx = 6 + Math.random() * 10, jz = 8 + Math.random() * 8;
+        const jx = 6 + Math.random() * 4, jz = 8 + Math.random() * 5;
         const r = 0.24 + Math.random() * 0.12;
         const jar = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), std(0x8a6444, { rough: 0.9 }));
         jar.scale.y = 1.25;
@@ -1429,6 +1429,170 @@
 
       scene.add(g);
     })();
+
+    /* ==================================================================
+       角色动画系统：让骆驼、马、人真的走起来
+       ------------------------------------------------------------------
+       约定：模型局部 +z 为前进方向，脚底落在 y = 0。
+       每个角色登记一份“骨架”（髋枢轴 / 膝枢轴 / 头颈枢轴 / 尾根枢轴），
+       再用三种行为驱动：
+         idle  站在原地 —— 低头吃草、甩尾、重心左右倒换
+         path  沿闭合折线巡逻 —— 到拐角自动转向
+         steer 追随目标 —— 驼队用“头驼领航 + 后续跟随”，转弯自然成弧
+       ================================================================== */
+    const ACTORS = [];
+    const TAU = Math.PI * 2;
+
+    function addActor(obj, opt) {
+      const parts = (obj.userData && obj.userData.parts) || {};
+      const a = Object.assign({
+        obj,
+        legs: parts.legs || [],
+        arms: parts.arms || [],
+        neck: parts.neck || null,
+        tail: parts.tail || null,
+        gait: 'walk',        // walk 马的对角步 / pace 骆驼的侧对步 / step 人
+        amp: 0.32,           // 髋关节摆幅
+        knee: 0.9,           // 屈膝幅度
+        cyc: Math.random(),  // 步态相位
+        stride: 1.7,         // 一个步态周期走多远
+        bobY: 0.022,         // 身体起伏
+        roll: 0,             // 左右摇晃（骆驼侧对步明显）
+        graze: 0.6,          // 站立时低头进食的幅度
+        mode: 'idle',
+        speed: 0, path: null, seg: 0, u: 0,
+        turn: 2.0, waitT: 0, way: null, wi: 0, gap: 0, follow: null,
+        look: 6, trail: null, slot: 0, after: null,
+        seed: Math.random() * TAU,
+        moving: false,
+      }, opt);
+      a.baseY = obj.position.y;
+      ACTORS.push(a);
+      return a;
+    }
+
+    // 各条腿在步态周期里的相位
+    function legPhase(L, gait) {
+      if (gait === 'pace') return L.side < 0 ? 0 : 0.5;              // 同侧两腿并进
+      if (gait === 'walk') return (L.front ? 0 : 0.5) + (L.side < 0 ? 0 : 0.5); // 对角交替
+      return L.side < 0 ? 0 : 0.5;
+    }
+    function wrapAngle(v) { v = (v + Math.PI) % TAU; if (v < 0) v += TAU; return v - Math.PI; }
+    function turnTo(cur, want, dt, rate) { return cur + wrapAngle(want - cur) * Math.min(1, dt * rate); }
+
+    // 一条腿：摆髋 + 抬腿时屈膝
+    function swingLeg(L, cyc, a) {
+      const s = Math.sin((cyc + legPhase(L, a.gait)) * TAU);
+      L.pivot.rotation.x = s * a.amp;
+      if (L.knee) L.knee.rotation.x = Math.max(0, -s) * a.knee * (L.front ? 0.9 : -0.9);
+    }
+
+    // 走路：沿路径推进
+    function walkPath(a, dt) {
+      let d = a.speed * dt;
+      let guard = 0;
+      while (d > 0 && guard++ < 8) {
+        const p0 = a.path[a.seg];
+        const p1 = a.path[(a.seg + 1) % a.path.length];
+        const rest = p1.distanceTo(p0) - a.u;
+        if (d < rest) { a.u += d; d = 0; }
+        else { d -= rest; a.seg = (a.seg + 1) % a.path.length; a.u = 0; }
+      }
+      const p0 = a.path[a.seg], p1 = a.path[(a.seg + 1) % a.path.length];
+      const len = p1.distanceTo(p0) || 1;
+      const k = a.u / len;
+      a.obj.position.x = p0.x + (p1.x - p0.x) * k;
+      a.obj.position.z = p0.z + (p1.z - p0.z) * k;
+      a.obj.rotation.y = turnTo(a.obj.rotation.y, Math.atan2(p1.x - p0.x, p1.z - p0.z), dt, 4.5);
+      a.cyc += (a.speed * dt) / a.stride;
+      a.moving = a.speed > 0.05;
+    }
+
+    // 头驼：沿航点往返。转向速率被“最小转弯半径”限幅——
+    // 调头时减速走出约 2.5 米半径的大弧线，不会原地打转
+    function walkSteer(a, dt) {
+      const w = a.way[a.wi];
+      const dx = w.x - a.obj.position.x, dz = w.z - a.obj.position.z;
+      const dist = Math.hypot(dx, dz);
+      const fwd = dx * Math.sin(a.obj.rotation.y) + dz * Math.cos(a.obj.rotation.y);
+      if (dist < 4 || (fwd < 0 && dist < 10)) a.wi = (a.wi + 1) % a.way.length;   // 到头，调头
+      const err = wrapAngle(Math.atan2(dx, dz) - a.obj.rotation.y);
+      const vf = a.speed * Math.max(0.4, Math.cos(err));
+      const wMax = vf / 1.8;                       // 弯再急也不能小于 1.8 米半径
+      a.obj.rotation.y = wrapAngle(a.obj.rotation.y + Math.max(-wMax, Math.min(wMax, err * 2.2)) * dt);
+      a.obj.position.x += Math.sin(a.obj.rotation.y) * vf * dt;
+      a.obj.position.z += Math.cos(a.obj.rotation.y) * vf * dt;
+      a.cyc += (vf * dt) / a.stride;
+      a.moving = vf > 0.05;
+    }
+
+    // 队列：后面的骆驼踩着头驼的脚印走，间距沿路径丈量——
+    // 调头时各自沿着同一条弧线排成单列，永远不会互相穿插
+    function trailPoint(trail, back) {
+      let d = 0;
+      for (let i = trail.length - 1; i > 0; i--) {
+        const p = trail[i], q = trail[i - 1];
+        const seg = Math.hypot(p.x - q.x, p.z - q.z);
+        if (seg > 0 && d + seg >= back) {
+          const t = (back - d) / seg;
+          return { x: p.x + (q.x - p.x) * t, z: p.z + (q.z - p.z) * t, yaw: Math.atan2(p.x - q.x, p.z - q.z) };
+        }
+        d += seg;
+      }
+      const p = trail[trail.length - 1], q = trail[0];
+      return { x: q.x, z: q.z, yaw: trail.length > 1 ? Math.atan2(p.x - q.x, p.z - q.z) : 0 };
+    }
+    function walkTrail(a, dt) {
+      const tp = trailPoint(a.trail, a.slot);
+      const ox = a.obj.position.x, oz = a.obj.position.z;
+      a.obj.position.x = tp.x;
+      a.obj.position.z = tp.z;
+      a.obj.rotation.y = tp.yaw;
+      const moved = Math.hypot(tp.x - ox, tp.z - oz);
+      a.cyc += moved / a.stride;
+      a.moving = moved > dt * 0.05;
+    }
+
+    function updateActor(a, dt, T) {
+      if (a.mode === 'path') walkPath(a, dt);
+      else if (a.mode === 'steer') walkSteer(a, dt);
+      else if (a.mode === 'follow') walkTrail(a, dt);
+      else a.moving = false;
+
+      const cyc = a.cyc;
+      if (a.moving) {
+        a.legs.forEach((L) => swingLeg(L, cyc, a));
+        a.arms.forEach((L) => {                       // 人：手臂与同侧腿反相
+          const s = Math.sin((cyc + (L.side < 0 ? 0.5 : 0)) * TAU);
+          L.pivot.rotation.x = s * 0.34;
+        });
+        const beats = a.gait === 'pace' ? 2 : (a.gait === 'walk' ? 4 : 2);
+        a.obj.position.y = a.baseY + Math.abs(Math.sin(cyc * Math.PI * beats)) * a.bobY;
+        a.obj.rotation.z = a.roll ? Math.sin(cyc * TAU) * a.roll : 0;
+        if (a.neck) a.neck.rotation.x = Math.sin(cyc * TAU * 1.0 + a.seed) * 0.07;
+      } else {
+        // 站着的时候也别像标本：重心左右倒换 + 偶尔挪半步
+        const w = Math.sin(T * 0.55 + a.seed);
+        a.legs.forEach((L, i) => {
+          L.pivot.rotation.x = w * 0.05 * (L.side < 0 ? 1 : -1);
+          if (L.knee) L.knee.rotation.x = Math.max(0, w) * 0.12 * (i % 2 ? 1 : -1);
+        });
+        a.arms.forEach((L) => { L.pivot.rotation.x = Math.sin(T * 0.7 + a.seed + L.side) * 0.05; });
+        a.obj.rotation.z = 0;
+        // 低头吃草 / 饮水：几秒一个来回
+        if (a.neck) {
+          const g = (Math.sin(T * 0.42 + a.seed) - 0.55) * 1.9;
+          a.neck.rotation.x = Math.max(0, g) * a.graze;
+        }
+        a.obj.position.y = a.baseY + Math.sin(T * 0.9 + a.seed) * 0.006;
+      }
+      // 尾巴：慢慢甩 + 偶尔抽一下
+      if (a.tail) {
+        a.tail.rotation.z = Math.sin(T * 0.9 + a.seed) * 0.22
+          + Math.sin(T * 3.1 + a.seed * 2) * 0.05;
+      }
+      if (a.after) a.after(a, dt);      // 头驼每帧留下脚印，给后面排队用
+    }
 
     /* ==================================================================
        院内生活痕迹：汉车、货堆、戍卒、马匹
@@ -1468,32 +1632,62 @@
       return g;
     }
 
+    // 人：头可转、双臂双腿都有枢轴，袍子下摆提高露出腿脚
     function makePerson(x, z, rot, tone) {
       const g = new THREE.Group();
       g.position.set(x, 0.06, z);
       g.rotation.y = rot || 0;
       const cloth = std(tone || 0x5a4630, { rough: 0.95 });
-      // 身体（长袍）
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.24, 1.15, 7), cloth);
-      body.position.y = 0.72;
+      const dark = std(0x2f2620, { rough: 0.95 });
+      // 长袍
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.26, 1.0, 7), cloth);
+      body.position.y = 0.84;
       body.castShadow = true;
       g.add(body);
-      // 头
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 9, 7), std(0xb08d68, { rough: 0.9 }));
-      head.position.y = 1.42;
-      head.castShadow = true;
-      g.add(head);
-      // 幞头 / 发髻
-      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), std(0x2f2620, { rough: 0.95 }));
-      cap.scale.set(1, 0.7, 1);
-      cap.position.y = 1.52;
-      g.add(cap);
+      g.add(box(0.42, 0.07, 0.36, std(0x3d3226, { rough: 1 }), 0, 0.97, 0));
       // 肩
-      g.add(box(0.46, 0.1, 0.2, cloth, 0, 1.18, 0));
+      g.add(box(0.46, 0.1, 0.2, cloth, 0, 1.28, 0));
+
+      // 头（挂在颈枢轴上）
+      const headPivot = new THREE.Group();
+      headPivot.position.set(0, 1.30, 0);
+      g.add(headPivot);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 9, 7), std(0xb08d68, { rough: 0.9 }));
+      head.position.y = 0.18;
+      head.castShadow = true;
+      headPivot.add(head);
+      // 幞头 / 发髻
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), dark);
+      cap.scale.set(1, 0.7, 1);
+      cap.position.y = 0.28;
+      headPivot.add(cap);
+
+      // 双臂
+      const arms = [];
+      [-1, 1].forEach((s) => {
+        const sh = new THREE.Group();
+        sh.position.set(s * 0.22, 1.24, 0);
+        g.add(sh);
+        sh.add(box(0.09, 0.58, 0.11, cloth, 0, -0.29, 0));
+        arms.push({ pivot: sh, side: s });
+      });
+      // 双腿
+      const legs = [];
+      [-1, 1].forEach((s) => {
+        const hip = new THREE.Group();
+        hip.position.set(s * 0.09, 0.40, 0);
+        g.add(hip);
+        hip.add(box(0.11, 0.4, 0.12, std(0x4a3f30, { rough: 1 }), 0, -0.2, 0));
+        hip.add(box(0.12, 0.07, 0.19, dark, 0, -0.39, 0.03));
+        legs.push({ pivot: hip, knee: null, front: false, side: s });
+      });
+
+      g.userData = { parts: { legs, arms, head: headPivot } };
       scene.add(g);
       return g;
     }
 
+    // 马：肩部头颈枢轴 + 尾根枢轴 + 四腿髋/膝双枢轴
     function makeHorse(x, z, rot, tone) {
       const g = new THREE.Group();
       g.position.set(x, 0.06, z);
@@ -1505,34 +1699,67 @@
       body.position.y = 1.18;
       body.castShadow = true;
       g.add(body);
-      // 脖子
+
+      // 头颈：挂在肩部，能低头吃槽里的草料
+      const headPivot = new THREE.Group();
+      headPivot.position.set(0, 1.40, 0.72);
+      g.add(headPivot);
       const neck = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
-        P(0, 1.42, 0.8), P(0, 1.72, 1.15), P(0, 1.82, 1.4),
+        P(0, 0.02, 0.08), P(0, 0.32, 0.43), P(0, 0.42, 0.68),
       ]), 8, 0.22, 6, false), fur);
       neck.castShadow = true;
-      g.add(neck);
-      // 头
-      g.add(box(0.22, 0.24, 0.52, fur, 0, 1.83, 1.62));
-      // 耳
-      g.add(box(0.06, 0.16, 0.06, dark, -0.08, 1.98, 1.42));
-      g.add(box(0.06, 0.16, 0.06, dark, 0.08, 1.98, 1.42));
-      // 鬃毛
-      g.add(box(0.1, 0.3, 0.7, dark, 0, 1.68, 1.05));
-      // 四腿
-      [[-0.3, 0.62], [0.3, 0.62], [-0.3, -0.62], [0.3, -0.62]].forEach(([lx, lz]) => {
-        g.add(box(0.13, 0.95, 0.14, fur, lx, 0.48, lz));
+      headPivot.add(neck);
+      headPivot.add(box(0.22, 0.24, 0.52, fur, 0, 0.43, 0.90));
+      headPivot.add(box(0.06, 0.16, 0.06, dark, -0.08, 0.58, 0.70));
+      headPivot.add(box(0.06, 0.16, 0.06, dark, 0.08, 0.58, 0.70));
+      headPivot.add(box(0.1, 0.3, 0.7, dark, 0, 0.28, 0.33));
+
+      // 尾：挂在尾根
+      const tailPivot = new THREE.Group();
+      tailPivot.position.set(0, 1.50, -1.0);
+      g.add(tailPivot);
+      tailPivot.add(box(0.1, 0.6, 0.1, dark, 0, -0.28, -0.05));
+
+      // 四腿：髋枢轴 + 膝关节
+      const legs = [];
+      [[-0.3, 0.62, true], [0.3, 0.62, true], [-0.3, -0.62, false], [0.3, -0.62, false]].forEach(([lx, lz, front]) => {
+        const hip = new THREE.Group();
+        hip.position.set(lx, 0.98, lz);
+        g.add(hip);
+        hip.add(box(0.13, 0.5, 0.14, fur, 0, -0.25, 0));
+        const kn = new THREE.Mesh(new THREE.SphereGeometry(0.075, 7, 5), fur);
+        kn.position.y = -0.5;
+        hip.add(kn);
+        const knee = new THREE.Group();
+        knee.position.y = -0.5;
+        hip.add(knee);
+        knee.add(box(0.11, 0.45, 0.12, fur, 0, -0.225, 0));
+        knee.add(box(0.13, 0.09, 0.17, dark, 0, -0.45, 0.01));   // 蹄
+        legs.push({ pivot: hip, knee, front, side: lx < 0 ? -1 : 1 });
       });
-      // 尾
-      g.add(box(0.1, 0.6, 0.1, dark, 0, 1.25, -1.05));
-      scene.add(g);
+
       g.userData = { kind: 'spot', key: 'majiu' };
+      g.userData.parts = { legs, neck: headPivot, tail: tailPivot };
+      scene.add(g);
       return g;
     }
+
+    // 行走路线：闭合折线，角色沿它自动转向；两点即“来回走”
+    const PATH = {
+      yardWest: [P(-13, 0.06, -12), P(-13, 0.06, 10.5)],                                // 院内西侧走廊
+      yardMid: [P(1, 0.06, -12), P(1, 0.06, 12)],                                       // 院内中央过道
+      yardSouth: [P(-8, 0.06, 15), P(8, 0.06, 15)],                                     // 南排房前的空地
+      yardLoop: [P(4, 0.06, -11), P(12, 0.06, -11), P(12, 0.06, 14), P(4, 0.06, 14)],   // 东侧遛马道
+      gateLoop: [P(29.5, 0.06, 5), P(33, 0.06, 5), P(33, 0.06, 12), P(29.5, 0.06, 12)], // 门外空地
+      aisle: [P(-11, 0.06, 34.5), P(-2.5, 0.06, 34.5)],                                 // 马厩内的走道
+      spur: [P(26.5, 0.06, 0.8), P(34.0, 0.06, 0.8)],                                   // 门前支路
+      road: [P(35.2, 0.06, -22), P(35.2, 0.06, 46)],                                    // 驿道（靠西侧行走，避开驼队）
+    };
 
     (function yardLife() {
       // 两辆汉车停在院里
       makeCart(-2.5, 3.5, 0.15);
-      makeCart(13.0, -3.0, -1.35);
+      makeCart(11.0, -14.0, -1.35);
       // 货堆
       [[-8.0, 6.0], [-6.4, 7.4], [6.0, 11.0], [15.5, 8.0]].forEach(([px, pz], i) => {
         const stack = new THREE.Mesh(lumpGeo(1.0, 0.55, 0.9, { seed: 300 + i, noise: 0.22, seg: 9, seg2: 7 }), i % 2 ? MAT.thatch : MAT.woodLight);
@@ -1540,29 +1767,51 @@
         stack.castShadow = true;
         scene.add(stack);
       });
-      // 戍卒 / 行人
-      [[-4.0, 1.0, 0.6], [1.5, 4.5, -2.2], [10.0, 2.0, 1.1], [18.0, -2.0, 2.6], [-12.0, 3.0, 0.3], [6.5, -8.0, -1.8]]
-        .forEach(([px, pz, r], i) => makePerson(px, pz, r, i % 3 === 0 ? 0x6b4a30 : i % 3 === 1 ? 0x4a4a52 : 0x7a5a3e));
-      // 院内几匹马
-      makeHorse(16.5, 4.0, 0.4, 0x8a5f3c);
-      makeHorse(17.6, 6.2, 0.1, 0x6b4a30);
-      makeHorse(-15.5, 2.0, 2.2, 0xa07a52);
-      // 门外的两匹马（迎接来客）
-      makeHorse(30.0, 4.5, 1.9, 0x8a5f3c);
-      makeHorse(31.2, 6.4, 2.1, 0x7a5238);
 
-      // 马厩里的传马：面朝食槽（北），分列隔墙两侧
-      const stableHorses = [
-        [-9.6, 0x8a5f3c], [-5.8, 0x6b4a30], [-2.2, 0xa07a52],
-        [2.2, 0x7a5238], [5.8, 0x8a5f3c], [9.6, 0x5e4128],
-      ];
-      stableHorses.forEach(([hx, tone], i) => {
+      /* —— 人：各有各的路线 —— */
+      [
+        { p: 'yardWest', tone: 0x6b4a30, speed: 1.05, seg: 0, u: 6 },
+        { p: 'yardMid', tone: 0x4a4a52, speed: 1.2, seg: 1, u: 4 },
+        { p: 'yardSouth', tone: 0x7a5a3e, speed: 1.0, seg: 0, u: 3 },
+        { p: 'aisle', tone: 0x5a4630, speed: 0.95, seg: 1, u: 2 },
+        { p: 'spur', tone: 0x6b4a30, speed: 1.15, seg: 0, u: 1 },
+        { p: 'road', tone: 0x4a4a52, speed: 1.3, seg: 1, u: 10 },
+      ].forEach((f) => {
+        const man = makePerson(PATH[f.p][0].x, PATH[f.p][0].z, 0, f.tone);
+        addActor(man, {
+          mode: 'path', path: PATH[f.p], seg: f.seg, u: f.u,
+          speed: f.speed, stride: 1.3, gait: 'step', amp: 0.46, bobY: 0.02,
+        });
+      });
+
+      /* —— 马 —— */
+      // 院里三匹，沿东侧遛马道慢慢走，彼此错开
+      [[0, 0, 0x8a5f3c], [1, 12, 0x6b4a30], [3, 8, 0xa07a52]].forEach(([seg, u, tone]) => {
+        const h = makeHorse(PATH.yardLoop[0].x, PATH.yardLoop[0].z, 0, tone);
+        addActor(h, {
+          mode: 'path', path: PATH.yardLoop, seg, u,
+          speed: 1.15, stride: 1.75, gait: 'walk', amp: 0.3, knee: 0.85, bobY: 0.022, graze: 0.5,
+        });
+      });
+      // 门外两匹（迎接来客），在门前空地走动
+      [[0, 0, 0x8a5f3c], [2, 0, 0x7a5238]].forEach(([seg, u, tone]) => {
+        const h = makeHorse(PATH.gateLoop[0].x, PATH.gateLoop[0].z, 0, tone);
+        addActor(h, {
+          mode: 'path', path: PATH.gateLoop, seg, u,
+          speed: 1.0, stride: 1.7, gait: 'walk', amp: 0.28, knee: 0.8, bobY: 0.02, graze: 0.5,
+        });
+      });
+      // 马厩里的传马：面朝食槽（北），站着低头吃料、甩尾巴
+      [[-9.6, 0x8a5f3c], [-5.8, 0x6b4a30], [-2.2, 0xa07a52],
+        [2.2, 0x7a5238], [5.8, 0x8a5f3c], [9.6, 0x5e4128]].forEach(([hx, tone], i) => {
         const h = makeHorse(hx, 29.9, Math.PI + (i % 2 ? 0.06 : -0.05), tone);
         h.position.y = 0.06;
+        addActor(h, { mode: 'idle', gait: 'walk', amp: 0.3, graze: 0.85 });
       });
       // 马厩外侧两头，拴在棚外
-      makeHorse(-12.2, 37.5, -0.5, 0x8a5f3c);
-      makeHorse(12.6, 38.4, 0.6, 0x9a7048);
+      [[-13.0, 37.5, -0.5, 0x8a5f3c], [12.6, 38.4, 0.6, 0x9a7048]].forEach(([hx, hz, r, tone]) => {
+        addActor(makeHorse(hx, hz, r, tone), { mode: 'idle', gait: 'walk', amp: 0.3, graze: 0.6 });
+      });
     })();
 
     /* ==================================================================
@@ -1724,7 +1973,7 @@
         [-1, 1].forEach((s) => {
           if (Math.random() > 0.72) return;
           const m = new THREE.Mesh(lumpGeo(0.5, 0.28, 0.42, { seed: i * 1.7 + s, noise: 0.32, seg: 6, seg2: 5 }), MAT.stone);
-          m.position.set(RX + s * 4.0 + (Math.random() - 0.5) * 0.5, 0.16, i * 10 + Math.random() * 4);
+          m.position.set(RX + s * 4.4 + (Math.random() - 0.5) * 0.5, 0.16, i * 10 + Math.random() * 4);
           m.rotation.y = Math.random() * 6.28;
           g.add(m);
         });
@@ -1853,16 +2102,18 @@
       humpBase.position.set(0, 1.94, -0.16);
       g.add(humpBase);
 
-      // —— 脖子：S 形，根部粗、接近头变细 ——
-      const neckPts = [
-        P(0, 1.72, 1.06),
-        P(0, 1.44, 1.42),
-        P(0, 1.34, 1.78),
-        P(0, 1.56, 2.08),
-        P(0, 1.7, 2.28),
-      ];
-      const neck = taperTube(neckPts, 0.3, 0.17, 22, 9, fur);
-      g.add(neck);
+      // —— 头颈：挂在肩部枢轴上，走路时随步伐点头 ——
+      const headPivot = new THREE.Group();
+      headPivot.position.set(0, 1.72, 1.02);
+      g.add(headPivot);
+      const neck = taperTube([
+        P(0, 0, 0.04),
+        P(0, -0.28, 0.40),
+        P(0, -0.38, 0.76),
+        P(0, -0.16, 1.06),
+        P(0, -0.02, 1.26),
+      ], 0.3, 0.17, 22, 9, fur);
+      headPivot.add(neck);
 
       // 肩部隆起
       const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.34, 14, 10), fur);
@@ -1872,67 +2123,72 @@
 
       // —— 头：长脸、吻部、耳、眼 ——
       const head = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.28, 0.52), fur);
-      head.position.set(0, 1.78, 2.46);
+      head.position.set(0, 0.06, 1.44);
       head.rotation.x = -0.18;
       head.castShadow = true;
-      g.add(head);
+      headPivot.add(head);
 
       const muzzle = new THREE.Mesh(lumpGeo(0.15, 0.15, 0.24, { seed: 3.3, noise: 0.06, seg: 10, seg2: 8 }), furLight);
-      muzzle.position.set(0, 1.68, 2.72);
-      g.add(muzzle);
+      muzzle.position.set(0, -0.04, 1.70);
+      headPivot.add(muzzle);
 
       // 上唇裂（骆驼标志性的分瓣嘴）
-      g.add(box(0.06, 0.09, 0.1, furDark, 0, 1.6, 2.78));
+      headPivot.add(box(0.06, 0.09, 0.1, furDark, 0, -0.12, 1.76));
       // 鼻孔
-      g.add(box(0.04, 0.04, 0.05, hoofMat, -0.07, 1.72, 2.86));
-      g.add(box(0.04, 0.04, 0.05, hoofMat, 0.07, 1.72, 2.86));
+      headPivot.add(box(0.04, 0.04, 0.05, hoofMat, -0.07, 0, 1.84));
+      headPivot.add(box(0.04, 0.04, 0.05, hoofMat, 0.07, 0, 1.84));
 
       // 耳朵
       [-1, 1].forEach((sx) => {
-        const ear = cyl(0.02, 0.07, 0.17, 5, furDark, sx * 0.11, 1.96, 2.28);
+        const ear = cyl(0.02, 0.07, 0.17, 5, furDark, sx * 0.11, 0.24, 1.26);
         ear.rotation.z = sx * 0.34;
         ear.rotation.x = -0.2;
-        g.add(ear);
+        headPivot.add(ear);
       });
       // 眼睛
       [-1, 1].forEach((sx) => {
         const eye = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 6), eyeMat);
-        eye.position.set(sx * 0.115, 1.83, 2.42);
-        g.add(eye);
+        eye.position.set(sx * 0.115, 0.11, 1.40);
+        headPivot.add(eye);
       });
 
-      // —— 腿：大腿 + 小腿 + 关节 + 蹄 ——
+      // —— 腿：髋枢轴 + 膝关节 + 两瓣蹄 ——
+      const legs = [];
       function leg(sx, sz, front) {
-        const upper = cyl(0.14, 0.105, 0.72, 9, fur, sx, 1.02, sz);
+        const hip = new THREE.Group();
+        hip.position.set(sx, 1.38, sz);
+        g.add(hip);
+        const upper = cyl(0.14, 0.105, 0.72, 9, fur, 0, -0.36, 0);
         upper.rotation.x = front ? 0.04 : -0.04;
-        g.add(upper);
-        const knee = new THREE.Mesh(new THREE.SphereGeometry(0.105, 9, 7), fur);
-        knee.position.set(sx, 0.68, sz);
-        g.add(knee);
-        const lower = cyl(0.085, 0.072, 0.62, 9, fur, sx, 0.35, sz);
-        g.add(lower);
-        // 蹄（两瓣）
-        g.add(box(0.16, 0.11, 0.2, hoofMat, sx, 0.06, sz + 0.02));
+        hip.add(upper);
+        const kneeBall = new THREE.Mesh(new THREE.SphereGeometry(0.105, 9, 7), fur);
+        kneeBall.position.y = -0.70;
+        hip.add(kneeBall);
+        // 腿根与身体的过渡（跟着腿一起摆）
+        const hipBlend = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), fur);
+        hipBlend.scale.set(0.85, 0.9, 1.0);
+        hipBlend.position.y = -0.14;
+        hip.add(hipBlend);
+        const knee = new THREE.Group();
+        knee.position.y = -0.70;
+        hip.add(knee);
+        knee.add(cyl(0.085, 0.072, 0.62, 9, fur, 0, -0.33, 0));
+        knee.add(box(0.16, 0.11, 0.2, hoofMat, 0, -0.62, 0.02));
+        legs.push({ pivot: hip, knee, front, side: sx < 0 ? -1 : 1 });
       }
       leg(-0.36, 0.72, true);
       leg(0.36, 0.72, true);
       leg(-0.36, -0.82, false);
       leg(0.36, -0.82, false);
 
-      // 腿根与身体的过渡
-      [[-0.36, 0.72], [0.36, 0.72], [-0.36, -0.82], [0.36, -0.82]].forEach(([lx, lz]) => {
-        const hip = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), fur);
-        hip.scale.set(0.85, 0.9, 1.0);
-        hip.position.set(lx, 1.24, lz);
-        g.add(hip);
-      });
-
-      // —— 尾：细长带毛簇 ——
-      const tail = taperTube([P(0, 1.72, -1.5), P(0, 1.32, -1.62), P(0, 0.86, -1.6)], 0.075, 0.045, 10, 6, fur);
-      g.add(tail);
+      // —— 尾：挂在尾根上，会甩 ——
+      const tailPivot = new THREE.Group();
+      tailPivot.position.set(0, 1.72, -1.5);
+      g.add(tailPivot);
+      tailPivot.add(taperTube([P(0, 0, 0), P(0, -0.40, -0.12), P(0, -0.86, -0.10)], 0.075, 0.045, 10, 6, fur));
       const tuft = new THREE.Mesh(lumpGeo(0.09, 0.16, 0.09, { seed: 5.5, noise: 0.2, seg: 8, seg2: 6 }), furDark);
-      tuft.position.set(0, 0.74, -1.6);
-      g.add(tuft);
+      tuft.position.set(0, -0.98, -0.10);
+      tailPivot.add(tuft);
 
       // —— 鞍毯与货包 ——
       const blanket = box(1.08, 0.06, 1.15, std(0x8c3a2e, { rough: 0.92 }), 0, 2.02, -0.18);
@@ -1951,20 +2207,44 @@
         g.add(box(0.38, 0.035, 0.05, std(0x5a4632, { rough: 1 }), sx * 0.6, 1.76, 0.28));
       });
 
-      // 缰绳
+      // 缰绳（固定在鞍与头之间，不随头摆）
       g.add(box(0.02, 0.02, 0.75, std(0x6b5232, { rough: 1 }), 0, 1.86, 2.0));
 
       g.userData = { kind: 'spot', key: 'yidao' };
+      g.userData.parts = { legs, neck: headPivot, tail: tailPivot };
       scene.add(g);
       return g;
     }
 
-    const camels = [
-      makeCamel(38, 14, Math.PI, 1.0),
-      makeCamel(38, 22, Math.PI, 0.95),
-      makeCamel(37.2, 30, Math.PI + 0.06, 0.9),
-      makeCamel(38.6, 6, Math.PI - 0.04, 1.02),
-    ];
+    // 驼队西行：头驼领航（纯追踪转向），后三只踩着脚印排成单列
+    const camels = [];
+    (function caravan() {
+      const RX0 = 37.4;
+      const trail = [];
+      for (let d = 25; d >= 0; d -= 0.25) trail.push(P(RX0, 0, 18 + d));   // 预铺 25 米来路，开局即成单列
+
+      const lead = makeCamel(RX0, 18, Math.PI, 1.0);
+      camels.push(lead);
+      addActor(lead, {
+        mode: 'steer', speed: 1.15,
+        way: [P(RX0, 0, -30), P(RX0 + 0.4, 0, 28)],
+        gait: 'pace', stride: 2.0, amp: 0.34, knee: 0.95, bobY: 0.035, roll: 0.035, graze: 0.16,
+        after: (a) => {
+          const p = a.obj.position, last = trail[trail.length - 1];
+          if (Math.hypot(p.x - last.x, p.z - last.z) > 0.12) trail.push(P(p.x, 0, p.z));
+          if (trail.length > 600) trail.splice(0, trail.length - 600);
+        },
+      });
+      [[6.0, 0.95, 0x9c7c4e], [12.4, 0.92, 0xb08e5e], [19.2, 1.0, 0xa5824f]].forEach(([slot, s, tone]) => {
+        const c = makeCamel(RX0, 18 + slot, Math.PI, s, tone);
+        camels.push(c);
+        addActor(c, {
+          mode: 'follow', trail, slot,
+          gait: 'pace', stride: 2.0, amp: 0.34, knee: 0.95, bobY: 0.035, roll: 0.035, graze: 0.16,
+        });
+      });
+      window.__actors = ACTORS;
+    })();
 
     /* ==================================================================
        汉旗：门楼上一面红旗
@@ -2286,7 +2566,7 @@
     }
 
     /* ==================================================================
-       动画：旗面飘动 + 骆驼缓步
+       动画：旗面飘动 + 骆驼/马/人行走
        ================================================================== */
     let elapsed = 0;
 
@@ -2305,10 +2585,8 @@
           pos.needsUpdate = true;
           window.__flag.geometry.computeVertexNormals();
         }
-        // 骆驼轻微起伏（模拟步行）
-        camels.forEach((c, i) => {
-          c.position.y = Math.abs(Math.sin(elapsed * 1.6 + i * 1.2)) * 0.06;
-        });
+        // 角色：骆驼成队走驿道，马遛圈、在厩里吃料，人各走各的路
+        for (let i = 0; i < ACTORS.length; i++) updateActor(ACTORS[i], dt, elapsed);
       }
       fly.update(dt);
       controls.update();
