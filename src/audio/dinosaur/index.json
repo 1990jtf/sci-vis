@@ -1,74 +1,74 @@
 {
   "tri": {
     "file": "v_tri.mp3",
-    "hash": "413952367d0a",
+    "hash": "2b966559c838",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 193824
+    "bytes": 145296
   },
   "jur": {
     "file": "v_jur.mp3",
-    "hash": "09d37c120ca1",
+    "hash": "faac899e3e55",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 189216
+    "bytes": 156384
   },
   "cre": {
     "file": "v_cre.mp3",
-    "hash": "11a90aa19e2a",
+    "hash": "cc14961531bf",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 216288
+    "bytes": 181008
   },
   "trex": {
     "file": "v_trex.mp3",
-    "hash": "57730f7d4a5d",
+    "hash": "d20a5dcb850c",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 200736
+    "bytes": 188640
   },
   "triceratops": {
     "file": "v_triceratops.mp3",
-    "hash": "a6ee8bf7f226",
+    "hash": "02cb955f8805",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 196704
+    "bytes": 178848
   },
   "ankylosaurus": {
     "file": "v_ankylosaurus.mp3",
-    "hash": "a0b132e425c5",
+    "hash": "cdceb90fb067",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 162144
+    "bytes": 154800
   },
   "stegosaurus": {
     "file": "v_stegosaurus.mp3",
-    "hash": "41899654d64d",
+    "hash": "94b91f6d5ecd",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 188352
+    "bytes": 178128
   },
   "pterodactylus": {
     "file": "v_pterodactylus.mp3",
-    "hash": "f91fb977136f",
+    "hash": "e207d1c7e62d",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 171792
+    "bytes": 155808
   },
   "carnotaurus": {
     "file": "v_carnotaurus.mp3",
-    "hash": "a157c22aa721",
+    "hash": "bc57727873c0",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 146592
+    "bytes": 148320
   },
   "coelophysis": {
     "file": "v_coelophysis.mp3",
-    "hash": "06e997a14e22",
+    "hash": "c99f39d51628",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 167040
+    "bytes": 157104
   },
   "impact": {
     "file": "v_impact.mp3",
-    "hash": "915fb26e692f",
+    "hash": "669595bc3425",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 148752
+    "bytes": 167472
   },
   "eudimorphodon": {
     "file": "v_eudimorphodon.mp3",
-    "hash": "ae14ea133393",
+    "hash": "b67336873fcf",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 149328
+    "bytes": 149184
   }
 }

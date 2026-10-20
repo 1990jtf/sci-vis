@@ -3,82 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>恐龙 · 地质年代漫游</title>
+  <title>恐龙自然博物馆 · 史前世界探索</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJnIiBjeD0iMzUlIiBjeT0iMzAlIiByPSI3NSUiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2M3ZDJmZSIvPjxzdG9wIG9mZnNldD0iLjU1IiBzdG9wLWNvbG9yPSIjNjM2NmYxIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMzEyZTgxIi8+PC9yYWRpYWxHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwYjEwMjAiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNyIgZmlsbD0idXJsKCNnKSIvPjxlbGxpcHNlIGN4PSIzMiIgY3k9IjMyIiByeD0iMjUiIHJ5PSI4IiBmaWxsPSJub25lIiBzdHJva2U9IiNhNWI0ZmMiIHN0cm9rZS13aWR0aD0iMi42IiBvcGFjaXR5PSIuOSIgdHJhbnNmb3JtPSJyb3RhdGUoLTIyIDMyIDMyKSIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjE3IiBmaWxsPSJub25lIiBzdHJva2U9IiNlMGU3ZmYiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iLjUiLz48L3N2Zz4=" />
   <link rel="stylesheet" href="../shared/theme.css" />
+  <link rel="stylesheet" href="dinosaur-explorer.css" />
 </head>
 <body>
-  <div class="sv-loader" id="loader">
-    <div class="sv-loader__ring"></div>
-    <div class="sv-loader__text">正在孵化恐龙…</div>
-  </div>
 
-  <div class="sv-brand sv-in" style="--sv-accent:#4ade80; --sv-accent-2:#a3e635">
-    <div class="sv-brand__eyebrow">Age of Dinosaurs</div>
-    <div class="sv-brand__title">恐龙 · 地质年代漫游</div>
-    <div class="sv-brand__sub">登上时间机器，穿越 2.5 亿年</div>
-  </div>
+  <div class="sv-loader" id="loader"><div class="sv-loader__ring"></div><div class="sv-loader__text">正在唤醒史前森林…</div></div>
+  <div class="de-vignette" aria-hidden="true"></div>
+  <header class="de-header"><a href="../../index.html">‹ 返回科学探索馆</a><div class="de-eyebrow">FIELD NOTES / 03 · PALEONTOLOGY</div><h1>恐龙自然博物馆<span>走进史前世界，像科学家一样观察</span></h1></header>
+  <nav class="de-modes" aria-label="观察模式"><button data-mode="habitat" class="is-on" aria-pressed="true">栖息地观察</button><button data-mode="detail" aria-pressed="false">形态细节</button><button data-mode="compare" aria-pressed="false">体型对比</button></nav>
+  <div class="de-top-actions"><span>给好奇的小小自然学家</span><button id="mobileInfoBtn" aria-expanded="false" aria-controls="dossier">知识卡</button><button class="sv-iconbtn" id="voiceBtn" title="语音开关" aria-label="语音开关">♪</button></div>
+  <aside class="de-nav de-panel" aria-label="史前动物目录"><div class="de-section-label">史前动物图鉴 <span id="speciesCount">8 个观察对象</span></div><div class="de-filter" aria-label="年代筛选"><button data-era="all" aria-pressed="true" class="is-on">全部</button><button data-era="tri" aria-pressed="false">三叠</button><button data-era="jur" aria-pressed="false">侏罗</button><button data-era="cre" aria-pressed="false">白垩</button></div><div id="speciesList" class="de-species-list"></div><div class="de-nav-foot"><span class="de-dot"></span> 发现不一样的生存本领<p>6 种恐龙 · 2 种翼龙近亲</p></div></aside>
+  <main class="de-viewport" id="viewportFrame" aria-label="恐龙三维观察区"><div class="de-stage-title"><span id="stageKicker">LATE CRETACEOUS / NORTH AMERICA</span><h2 id="stageName">霸王龙</h2><p id="stageSubtitle">一条长尾巴，平衡一个大脑袋。</p></div><div class="de-stage-meta"><span id="eraBadge">白垩纪晚期</span><span id="sceneRegion">北美洲 · 河岸林地</span></div><div class="de-stage-bottom"><span id="stageHelp">拖动转动视角 · 滚轮或双指缩放</span><div class="de-layer-buttons"><button id="labelsBtn" aria-pressed="true">特征标注</button><button id="childBtn" aria-pressed="false">身高参照</button></div></div></main>
+  <aside class="de-dossier de-panel" id="dossier" aria-label="动物知识卡"><div class="de-dossier-top"><span id="classification">兽脚类 · 肉食</span><button id="speakBtn">▷ 听讲解</button><button id="closeInfoBtn" aria-label="关闭知识卡">×</button></div><h2 id="infoName">霸王龙</h2><p id="infoLatin" class="de-latin">Tyrannosaurus rex</p><div class="de-stats" id="statGrid"></div><section class="de-feature"><span>观察它的生存本领</span><h3 id="featureTitle"></h3><p id="featureBody"></p></section><div class="de-parts" id="partsList" aria-label="身体特征"></div><div class="de-observation" id="observation" aria-live="polite"><span>小小观察员</span><p id="observationText">点选模型上的标记，看看身体结构有什么用。</p></div><section class="de-child"><label for="childHeight">如果我有 <output id="heightOutput">120</output> 厘米高</label><input id="childHeight" type="range" min="80" max="180" value="120" step="5"/><p id="childFact"></p></section><section class="de-question"><div>想一想 <span id="quizCount">01 / 03</span></div><h3 id="quizPrompt"></h3><div id="quizOptions"></div><p id="quizFeedback" aria-live="polite"></p><button id="nextQuizBtn">下一题 →</button></section><details class="de-sources"><summary>化石证据与复原说明</summary><p>体长、体重为估算，不同个体与研究结果有差异。三维模型为形态教学示意，皮肤颜色、软组织、动作与部分骨板排列含推测。</p><p>栖息地为对应时代的环境示意，展示对象分开观察；体型对比不表示它们曾经共同生活。</p><p><a id="speciesSource" href="https://www.nhm.ac.uk/discover/dino-directory/tyrannosaurus.html" target="_blank" rel="noopener">自然历史博物馆 · 物种资料 ↗</a><br><a href="https://www.amnh.org/explore/news-blogs/what-is-a-pterosaur" target="_blank" rel="noopener">美国自然历史博物馆 · 翼龙 ↗</a><br><a href="https://stratigraphy.org/chart" target="_blank" rel="noopener">国际地层委员会 · 年代表 ↗</a></p><p>三维造型与材质：本项目原创程序化复原。</p></details></aside>
+  <section class="de-timeline de-panel" aria-label="中生代时间轴"><div class="de-timeline-head"><h2>一条时间轴，看懂恐龙时代</h2><button id="eraSpeakBtn">▷ 听这一纪</button><button id="impactBtn">6600 万年前发生了什么 ↗</button></div><div class="de-era-track" id="eraTrack"></div><div class="de-era-fact"><span id="eraYears"></span><p id="eraFact"></p></div></section>
+  <section class="de-impact de-panel" id="impactPanel" hidden aria-label="大灭绝的科学故事"><div><span>地球的一次巨大改变</span><button id="closeImpactBtn" aria-label="关闭大灭绝故事">×</button></div><h2>为什么恐龙消失了？</h2><nav id="impactSteps" aria-label="大灭绝故事步骤"></nav><p id="impactText" aria-live="polite"></p><button id="impactSpeakBtn">▷ 听完整故事</button><button id="resetImpactBtn">↺ 回到生机勃勃的森林</button></section>
+  <div class="de-footer-note">观察 · 比较 · 提问 <span>形态复原示意 / 尺寸为估算</span></div>
+  <div class="sv-dock"><button class="sv-btn" id="playBtn" aria-pressed="false">Ⅱ 暂停动作</button><span class="sv-dock__sep"></span><button class="sv-btn" id="walkBtn" aria-pressed="false">足步观察</button><button class="sv-btn" id="tourBtn" aria-pressed="false">▷ 自动导览</button><button class="sv-btn" id="resetBtn">↺ 重置视角</button></div>
 
-  <button class="sv-iconbtn sv-iconbtn--top" id="voiceBtn" title="语音开关">🔊</button>
-
-  <div class="sv-card" id="card"></div>
-
-  <!-- 时间机器面板 -->
-  <div class="sv-panel sv-in" id="timeMachine" style="left:24px; bottom:24px; width:300px;">
-    <div class="sv-panel__title">时间机器 · Time Machine</div>
-    <div style="font-size:24px; font-weight:700; letter-spacing:2px;" id="eraName">三叠纪</div>
-    <div style="font-size:12px; color:var(--sv-text-dim); margin:4px 0 2px;" id="eraYears">2.52 亿 ~ 2.01 亿年前</div>
-    <div style="font-size:11.5px; color:var(--sv-text-faint); line-height:1.5; margin-bottom:12px;" id="eraTagline">恐龙刚刚登场，全世界只有一块大陆</div>
-    <div style="position:relative; height:6px; border-radius:3px; background:rgba(255,255,255,0.12); margin:14px 0 6px;">
-      <div id="barFill" style="position:absolute; left:0; top:0; height:100%; border-radius:3px; width:33%;
-        background:linear-gradient(90deg,#4ade80,#a3e635); transition:width 0.6s cubic-bezier(0.2,0.8,0.2,1);"></div>
-    </div>
-    <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--sv-text-faint); margin-bottom:12px;">
-      <span>三叠纪</span><span>侏罗纪</span><span>白垩纪</span>
-    </div>
-    <div style="display:flex; gap:8px;">
-      <button class="sv-btn sv-btn--ghost" id="prevBtn" style="flex:1; justify-content:center;">◀ 上一纪</button>
-      <button class="sv-btn sv-btn--ghost" id="nextBtn" style="flex:1; justify-content:center;">下一纪 ▶</button>
-    </div>
-    <button class="sv-btn sv-btn--primary" id="autoTour" style="width:100%; justify-content:center; margin-top:8px;">🚀 时间漫游</button>
-    <button class="sv-btn sv-btn--ghost" id="replayBtn" style="width:100%; justify-content:center; margin-top:6px;">🎧 再讲一遍</button>
-    <button class="sv-btn" id="asteroidBtn" style="width:100%; justify-content:center; margin-top:6px; color:var(--sv-warn);">☄️ 小行星撞击（白垩纪）</button>
-  </div>
-
-  <div class="sv-hint">点恐龙听讲解 · 点标签下方更容易点中 · 拖拽旋转 · 滚轮缩放</div>
-  <div class="sv-veil" id="veil"></div>
-
-  <div class="sv-dock sv-in">
-    <button class="sv-btn" id="playBtn"><span class="sv-btn__icon">⏸</span><span>暂停</span></button>
-    <span class="sv-dock__sep"></span>
-    <button class="sv-btn sv-btn--ghost" id="resetBtn">🔄 全景</button>
-  </div>
-
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-    }
-  }
-  </script>
-
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-    import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-    import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
-    
-
-
-
-
-
-
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { mountDinosaurExplorer } from './dinosaur-explorer.js';
     // ===== SciVis Kit（由 tools/inline-kit.js 自动内联，勿手改） =====
     const SciVis = (function () {
     
@@ -614,782 +566,336 @@
     })();
 
 
-    const S = SciVis.init(THREE, { OrbitControls, EffectComposer, RenderPass, UnrealBloomPass });
 
-    /* ==========================================================================
-       数据区
-       @voice-data-begin / @voice-data-end 之间的内容会被 tools/gen-voice.js
-       读取并批量合成神经语音；这里只放纯数据，不要调用浏览器 API。
-       ========================================================================== */
-    /* @voice-data-begin */
-    const ERAS = [
-      {
-        id: 'tri', name: '三叠纪', years: '2.52 亿 ~ 2.01 亿年前', accent: 0xd8b06a,
-        skyTop: 0x8a7fa0, skyBottom: 0xe8c890, ground: 0x9a8f62, fog: 0xd8c8a0,
-        tagline: '恐龙刚刚登场，全世界只有一块大陆',
-        stats: [
-          ['持续时间', '约 5000 万年'],
-          ['大陆', '盘古大陆连成一片'],
-          ['气候', '炎热干燥'],
-          ['植物', '蕨类、苏铁、木贼'],
-          ['没有的东西', '没有花，也没有草'],
-          ['代表生物', '始盗龙、腔骨龙、板龙'],
-        ],
-        desc: [
-          '恐龙大约在 2.3 亿年前出现，一开始只有一只大狗那么大',
-          '所有大陆连在一起叫盘古大陆，动物走哪儿都不用坐船',
-          '又热又干，河床边长满蕨类和苏铁，一年到头很少下雨',
-          '这一纪结束时发生大灭绝，恐龙抓住机会，成了地球的主人',
-        ],
-        facts: [
-          '那时候地球上还没有草，也没有会开花的植物——草地要再等一亿多年才出现',
-          '最早的恐龙只有一米多长，跑起来跟大狗差不多快',
-        ],
-        say: '欢迎来到三叠纪，两亿五千万年前。这时候地球上只有一块大陆，叫盘古大陆，四周是一片巨大的海洋。恐龙刚刚登场，个头很小，跟一只大狗差不多。天气又热又干，地上长的是蕨类和苏铁，还没有花，也没有草。三叠纪快结束的时候，地球发生了一次大灭绝，很多动物消失了，恐龙却抓住了机会，从此变成了地球的主人。',
-      },
-      {
-        id: 'jur', name: '侏罗纪', years: '2.01 亿 ~ 1.45 亿年前', accent: 0x6ecb8b,
-        skyTop: 0x3f7fbf, skyBottom: 0xbfe0d8, ground: 0x5c9a54, fog: 0xa8d0c0,
-        tagline: '巨型恐龙的时代，森林从这一头连到那一头',
-        stats: [
-          ['持续时间', '约 5600 万年'],
-          ['大陆', '盘古大陆开始分裂'],
-          ['气候', '温暖潮湿'],
-          ['植物', '针叶树、苏铁、银杏'],
-          ['代表生物', '梁龙、腕龙、剑龙、始祖鸟'],
-          ['恐龙体型', '出现史上最大的陆生动物'],
-        ],
-        desc: [
-          '大陆开始裂开，海水涌进裂缝，大西洋慢慢成形',
-          '空气温暖潮湿，森林茂密，长得比现在的树高得多',
-          '蜥脚类恐龙把身体长到三十多米，是陆地上出现过最大的动物',
-          '最早的鸟类“始祖鸟”在这一纪出现，长着羽毛和牙齿',
-        ],
-        facts: [
-          '梁龙的一条腿骨就有一个人那么高，尾巴又长又细，甩起来像一根大鞭子',
-          '侏罗纪的空气比现在更暖、更潮湿，森林里的树能长到四十米以上',
-        ],
-        say: '侏罗纪，巨型恐龙的时代。大陆开始裂开，海水涌了进去，大西洋慢慢出现。那时候空气又暖又湿，森林长得非常茂盛。蜥脚类恐龙把身体长到三十多米长，是陆地上出现过最大的动物，一条腿骨就有一个人那么高。它的尾巴又长又细，甩起来像一根大鞭子。也在这一纪，最早长着羽毛的鸟出现了，它就是始祖鸟。',
-      },
-      {
-        id: 'cre', name: '白垩纪', years: '1.45 亿 ~ 6600 万年前', accent: 0x7fb6f0,
-        skyTop: 0x4a8fd0, skyBottom: 0xc8e2f0, ground: 0x6b9a4a, fog: 0xb8d8e8,
-        tagline: '恐龙最热闹的时代，也是最后的时代',
-        stats: [
-          ['持续时间', '约 7900 万年'],
-          ['大陆', '大陆分裂成今天的样子'],
-          ['气候', '先温暖，后来变冷'],
-          ['植物', '开花植物出现，蜜蜂登场'],
-          ['代表生物', '霸王龙、三角龙、甲龙、鸭嘴龙'],
-          ['结局', '小行星撞击，非鸟恐龙全部消失'],
-        ],
-        desc: [
-          '开花植物第一次出现，花朵和蜜蜂一起改变了整个陆地',
-          '恐龙种类达到最多，霸王龙、三角龙都生活在这一纪',
-          '大陆已经分成好几块，和今天的地图很像',
-          '6600 万年前小行星撞上地球，四分之三的物种消失',
-        ],
-        facts: [
-          '今天窗外的鸟，就是恐龙留下的后代——鸟类是兽脚类恐龙的直系子孙',
-          '撞击坑在墨西哥尤卡坦半岛，直径约 180 公里，是地球上最大的撞击坑之一',
-        ],
-        say: '白垩纪，恐龙最热闹的时代，也是最后的时代。开花植物第一次出现，花朵和蜜蜂一起改变了整个陆地。恐龙种类达到最多，霸王龙、三角龙、甲龙都生活在这一纪。大陆已经分成好几块，和今天的地图很像。六千六百万年前，一颗大约十公里宽的小行星撞上了地球，四分之三的物种消失，恐龙的时代结束了。不过别难过，今天窗外的鸟，就是恐龙留下的后代。',
-      },
-    ];
-
-    /* ---- 物种资料 ---- */
-    const SPECIES = {
-      霸王龙: {
-        id: 'trex', color: 0x8fa84e, model: 'Trex', height: 3.4, type: '白垩纪晚期 · 兽脚类',
-        stats: [
-          ['体长', '约 12 m'], ['身高', '约 4 m（到臀部）'], ['体重', '约 8 吨'],
-          ['牙齿', '约 18 cm'], ['咬合力', '约 5 万牛顿'], ['食性', '肉食'],
-        ],
-        desc: [
-          '已知最大的陆地肉食动物之一，一口能咬碎骨头',
-          '眼睛朝前，能像我们一样判断远近，嗅觉比猎狗还灵',
-          '前肢很短，但每根手指都很粗壮有力',
-          '生活在 6800 万年前的北美洲，河岸边是茂密的森林',
-        ],
-        facts: [
-          '把牙齿连着牙根算上，一颗牙有香蕉那么长',
-          '咬合力是现在鳄鱼的两倍多，能直接咬穿猎物的骨头',
-          '它其实跑不快，估计时速只有 20 公里，比骑自行车快一点',
-        ],
-        say: '霸王龙，白垩纪最著名的猎手。它身长十二米，抬起头有四米高，体重相当于五六辆小汽车。它的牙齿连着牙根有十八厘米，就像一根香蕉那么长。咬合力大约五万牛顿，是现在鳄鱼的两倍多，一口就能咬穿骨头。它的眼睛朝前，能像我们一样判断远近，鼻子还能闻到很远的气味。不过它跑得并不快，时速大约二十公里，只比骑自行车快一点。',
-      },
-      三角龙: {
-        id: 'triceratops', color: 0xb09a72, model: 'Triceratops', height: 2.4, type: '白垩纪晚期 · 角龙类',
-        stats: [
-          ['体长', '约 9 m'], ['体重', '约 8 吨'], ['头盾', '宽约 2 m'],
-          ['角', '3 只（1 鼻角 + 2 额角）'], ['食性', '草食'], ['年代', '6800 ~ 6600 万年前'],
-        ],
-        desc: [
-          '三只角和巨大的骨质颈盾是它的招牌',
-          '角和颈盾既用来吓退对手，也用来争夺配偶',
-          '鹦鹉一样的喙能咬断坚硬的植物',
-          '它和霸王龙生活在同一片土地上，是真正的老对手',
-        ],
-        facts: [
-          '颈盾最宽能有两米，比一个成年人张开双臂还宽',
-          '牙齿像剪刀一样排成一排，一生会不断替换，能换几百颗',
-        ],
-        say: '三角龙，头上长着三只角。它身体有九米长，体重差不多八吨，比一头大象还重。脖子后面那块巨大的骨头叫颈盾，最宽能有两米，比一个大人张开双臂还宽。三只角和颈盾不光是武器，也用来吓唬对手、争取同伴。它的嘴巴像鹦鹉的喙，能咬断很硬的植物。三角龙和霸王龙生活在同一个时代、同一片土地上，是真正的老对手。',
-      },
-      甲龙: {
-        id: 'ankylosaurus', color: 0x9a8a6e, model: 'Ankylosaurus', height: 1.7, type: '白垩纪晚期 · 甲龙类',
-        stats: [
-          ['体长', '约 8 m'], ['体重', '约 6 吨'], ['装甲', '全身骨质甲板'],
-          ['武器', '尾巴末端骨锤'], ['食性', '草食'], ['年代', '7000 ~ 6600 万年前'],
-        ],
-        desc: [
-          '背上铺满骨板，连眼皮上都长了骨头',
-          '尾巴末端是一块骨质大锤，甩起来能打断掠食者的腿',
-          '身体又低又宽，像一辆会走路的坦克',
-          '遇到危险就趴下，把柔软的肚子藏在装甲下面',
-        ],
-        facts: [
-          '骨板不是长在皮肤外面，而是嵌在皮肤里，和脊椎牢牢连在一起',
-          '它的鼻孔长在吻部两侧，就算低头吃草也能顺畅呼吸',
-        ],
-        say: '甲龙，一辆会走路的坦克。它八米长，六吨重，从头顶到尾巴盖满了骨板，连眼皮上都有骨头。遇到危险，它就趴下来，把柔软的肚子藏在装甲下面。它最厉害的武器是尾巴，末端有一块骨质大锤，甩起来能打断掠食者的腿。它吃东西很慢，靠像鸟一样的喙啃低矮的植物。',
-      },
-      剑龙: {
-        id: 'stegosaurus', color: 0x8a7a5e, model: 'Stegosaurus', height: 2.6, type: '侏罗纪晚期 · 剑龙类',
-        stats: [
-          ['体长', '约 9 m'], ['体重', '约 5 吨'], ['背板', '17 块'],
-          ['尾刺', '4 根'], ['食性', '草食'], ['年代', '1.55 ~ 1.45 亿年前'],
-        ],
-        desc: [
-          '背上一排大骨板，最大的一块有洗脸盆那么大',
-          '尾巴末端有四根尖刺，甩起来像一条带刺的鞭子',
-          '头很小，脑子只有核桃大小',
-          '前腿比后腿短，走路时头几乎贴着地面',
-        ],
-        facts: [
-          '骨板里布满血管，科学家猜它既能用来展示，也能帮忙调节体温',
-          '它没有能嚼东西的牙齿，会把植物整块吞下去，靠肚子里的石头磨碎',
-        ],
-        say: '剑龙，背上插着一排大骨板。它身长九米，体重五吨。背上那十七块骨板，最大的有洗脸盆那么大，里面布满血管，也许能帮它调节体温，也能向同伴展示自己。尾巴末端有四根尖刺，像一条带刺的鞭子。它的头很小，脑子只有核桃那么大。它没有能嚼东西的牙齿，会把植物整块吞下去，靠肚子里的石头慢慢磨碎。',
-      },
-      翼龙: {
-        id: 'pterodactylus', color: 0xc9b48a, model: 'Pterodactylus', height: 1.1, type: '侏罗纪晚期 · 飞行爬行动物',
-        stats: [
-          ['翼展', '约 1 m'], ['体重', '约 1 kg'], ['食性', '鱼、昆虫'],
-          ['年代', '约 1.5 亿年前'], ['分类', '不是恐龙'], ['起飞', '四肢撑地弹跳'],
-        ],
-        desc: [
-          '翼龙不是恐龙，而是恐龙的近亲，属于会飞的爬行动物',
-          '翅膀是一层皮膜，靠一根特别长的手指撑开',
-          '骨头中间是空的，轻得像纸筒',
-          '在悬崖和树上筑巢、产卵',
-        ],
-        facts: [
-          '它是最早飞上天空的脊椎动物，比鸟类早了几千万年',
-          '页面里这只是翼手龙，翼展只有一米，和海鸥差不多大',
-        ],
-        say: '翼龙，最早飞上天空的脊椎动物。注意，它不是恐龙，而是恐龙的近亲。它的翅膀是一层皮膜，靠一根特别长的手指撑开。骨头中间是空的，轻得像纸筒，所以它体重只有一公斤左右。这一只叫翼手龙，翼展一米，跟海鸥差不多大，靠抓鱼和昆虫为生。它比鸟早几千万年就飞上了天空。',
-      },
-      食肉牛龙: {
-        id: 'carnotaurus', color: 0xa8763f, model: 'Carnotaurus', height: 2.2, type: '白垩纪晚期 · 兽脚类',
-        stats: [
-          ['体长', '约 8 m'], ['体重', '约 1.5 吨'], ['角', '头顶一对短角'],
-          ['前肢', '极短'], ['食性', '肉食'], ['年代', '约 7000 万年前'],
-        ],
-        desc: [
-          '头顶长着一对像牛角一样的短角，名字就是这么来的',
-          '前肢比霸王龙的还短，几乎派不上用场',
-          '腿又长又有力，是跑得很快的猎手',
-          '化石发现于南美洲的阿根廷',
-        ],
-        facts: [
-          '它的皮肤印痕化石保存得很好，能看出一排排小鳞片',
-          '眼睛比较小，可能主要靠嗅觉和听觉寻找猎物',
-        ],
-        say: '食肉牛龙，名字来自它头顶的一对短角，长得像牛角。它八米长，一点五吨重，生活在七千万年前的南美洲。它的前肢比霸王龙的还短，几乎派不上用场，但腿又长又有力，跑起来非常快。它的皮肤印痕化石保存得很好，能看出一排排小鳞片。',
-      },
-      腔骨龙: {
-        id: 'coelophysis', color: 0xb08a5a, model: 'Carnotaurus', height: 1.15, type: '三叠纪晚期 · 兽脚类',
-        stats: [
-          ['体长', '约 3 m'], ['体重', '约 20 kg'], ['骨头', '中空、很轻'],
-          ['食性', '肉食'], ['年代', '约 2.1 亿年前'], ['发现地', '北美洲'],
-        ],
-        desc: [
-          '三叠纪最常见的小型肉食恐龙，跑得又快又灵活',
-          '身体细长，尾巴占了一半身长，奔跑时用来保持平衡',
-          '名字的意思是“空心的形态”，因为它的骨头中间是空的',
-          '页面里的模型用兽脚类骨架按腔骨龙的体型缩小示意',
-        ],
-        facts: [
-          '在美国新墨西哥州，科学家在一个地点挖出了上百具腔骨龙化石，它们挤在一起',
-          '三叠纪的恐龙都很小，腔骨龙站直了也只到成年人的腰那么高',
-        ],
-        say: '腔骨龙，三叠纪的跑步高手。它身长三米左右，站直了只到成年人的腰那么高，体重只有二十公斤。它的骨头中间是空的，所以身体特别轻，跑起来又快又灵活。在美国新墨西哥州，科学家在一个地方挖出了上百具腔骨龙的化石，它们全都挤在一起，可能是一场洪水把它们冲到了同一个地方。',
-      },
-      真双型齿翼龙: {
-        id: 'eudimorphodon', color: 0xb9a27a, model: 'Pterodactylus', height: 0.75, type: '三叠纪晚期 · 早期翼龙',
-        stats: [
-          ['翼展', '约 0.8 m'], ['体重', '约 0.1 kg'], ['食性', '鱼'],
-          ['年代', '约 2.1 亿年前'], ['发现地', '意大利'], ['分类', '不是恐龙'],
-        ],
-        desc: [
-          '最早的翼龙之一，三叠纪就飞上了天空',
-          '嘴里长着两种形状的牙齿，名字就是这么来的',
-          '翅膀是一层皮膜，靠一根特别长的手指撑开',
-          '页面里的模型用翼龙骨架按比例缩小示意',
-        ],
-        facts: [
-          '它的化石在意大利的石灰岩里保存得很好，有些标本连翅膀皮膜的印痕都留了下来',
-          '它跟一只乌鸦差不多大，是翼龙家族里的小个子',
-        ],
-        say: '真双型齿翼龙，三叠纪天空里的小飞侠。它是最早飞上天空的翼龙之一，翼展只有八十厘米，跟一只乌鸦差不多大。它嘴里长着两种形状的牙齿，所以名字叫真双型齿。它的翅膀是一层皮膜，靠一根特别长的手指撑开。它不属于恐龙，只是恐龙的远房亲戚。',
-      },
-    };
-
-    /* ---- 事件旁白 ---- */
-    const LINES = {
-      impact: {
-        id: 'impact', name: '小行星撞击',
-        say: '六千六百万年前，一颗直径大约十公里的小行星撞上了地球。撞击掀起的灰尘遮住了太阳，植物枯萎，食物链从最底部开始崩塌。包括所有非鸟恐龙在内，大约四分之三的物种消失了。恐龙的时代结束了。不过今天窗外的鸟，就是恐龙留下的后代。',
-      },
-    };
-    /* @voice-data-end */
-
-
-    /* ================= 场景 ================= */
-    const scene = new THREE.Scene();
-    const camera = S.createCamera(48, 0.1, 500);
-    camera.position.set(9, 4.8, 14);
-
-    const { renderer, composer, renderPass } = S.createRenderer({
-      exposure: 1.05, bloomStrength: 0.3, bloomRadius: 0.6, bloomThreshold: 0.85,
-    });
-    renderPass.scene = scene;
-    renderPass.camera = camera;
-
-    const labelRenderer = new CSS2DRenderer();
-    labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    labelRenderer.domElement.style.position = 'absolute';
-    labelRenderer.domElement.style.top = '0';
-    labelRenderer.domElement.style.pointerEvents = 'none';
-    document.body.appendChild(labelRenderer.domElement);
-
-    const controls = S.createControls(camera, renderer.domElement, new THREE.Vector3(0, 2, 0));
-    controls.maxPolarAngle = Math.PI * 0.52;
-    controls.minDistance = 3;
-    controls.maxDistance = 40;
-
-    // 灯光
-    const hemi = new THREE.HemisphereLight(0xcfe4ff, 0x6a8a5a, 0.9);
-    scene.add(hemi);
-    const sunLight = new THREE.DirectionalLight(0xfff2d9, 1.8);
-    sunLight.position.set(10, 16, 8);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.set(2048, 2048);
-    Object.assign(sunLight.shadow.camera, { left: -20, right: 20, top: 20, bottom: -20 });
-    sunLight.shadow.bias = -0.0005;
-    scene.add(sunLight);
-
-    /* ================= 天空穹顶 ================= */
-    const skyMat = new THREE.ShaderMaterial({
-      side: THREE.BackSide, depthWrite: false,
-      uniforms: {
-        topColor: { value: new THREE.Color(ERAS[0].skyTop) },
-        bottomColor: { value: new THREE.Color(ERAS[0].skyBottom) },
-        sunDir: { value: new THREE.Vector3(0.5, 0.6, 0.4).normalize() },
-      },
-      vertexShader: `varying vec3 vDir; void main(){ vDir=normalize(position); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-      fragmentShader: `
-        varying vec3 vDir; uniform vec3 topColor, bottomColor, sunDir;
-        void main(){
-          float h = clamp(vDir.y, 0.0, 1.0);
-          vec3 col = mix(bottomColor, topColor, pow(h, 0.55));
-          col += vec3(1.0,0.9,0.7) * pow(max(dot(vDir,sunDir),0.0), 30.0) * 0.6;
-          gl_FragColor = vec4(col, 1.0);
-        }`,
-    });
-    scene.add(new THREE.Mesh(new THREE.SphereGeometry(200, 32, 20), skyMat));
-    scene.fog = new THREE.Fog(ERAS[0].fog, 30, 110);
-
-    /* ================= 地面（噪声起伏 + 顶点色） ================= */
-    const ground = new THREE.Group();
-    scene.add(ground);
-    function buildGround(groundColor) {
-      ground.clear();
-      const geo = new THREE.CircleGeometry(60, 64, 40, 40);
-      geo.rotateX(-Math.PI / 2);
-      const pos = geo.attributes.position;
-      const colors = new Float32Array(pos.count * 3);
-      const base = new THREE.Color(groundColor);
-      for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i), z = pos.getZ(i);
-        const n = S.fbm2(x * 0.15 + 3, z * 0.15 - 2, 4);
-        pos.setY(i, (n - 0.5) * 1.2);
-        const shade = 0.85 + n * 0.3;
-        colors[i * 3] = base.r * shade;
-        colors[i * 3 + 1] = base.g * shade;
-        colors[i * 3 + 2] = base.b * shade;
-      }
-      geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      geo.computeVertexNormals();
-      const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
-      mesh.receiveShadow = true;
-      ground.add(mesh);
-    }
-    buildGround(ERAS[0].ground);
-
-    /* ================= 恐龙模型（CC0 · Gobkit Free Dinosaur Pack） =================
-       真实骨骼蒙皮模型 + 烘焙动画（idle / walk / attack / dead）。
-       注意：模型朝 +Z；复制蒙皮实例必须用 SkeletonUtils.clone，普通 clone 会丢绑定。 */
-    const MODEL_DIR = 'models/';
-    const MODEL_FILES = {
-      Trex: 'Trex.glb',
-      Triceratops: 'Triceratops.glb',
-      Ankylosaurus: 'Ankylosaurus.glb',
-      Stegosaurus: 'Stegosaurus.glb',
-      Carnotaurus: 'Carnotaurus.glb',
-      Pterodactylus: 'Pterodactylus.glb',
-    };
-    const modelCache = {};
-    let modelsReady = false;
-    let modelsLoading = 0;
-
-    const gltfLoader = new GLTFLoader();
-    function loadModels(done) {
-      const keys = Object.keys(MODEL_FILES);
-      modelsLoading = keys.length;
-      keys.forEach((k) => {
-        gltfLoader.load(MODEL_DIR + MODEL_FILES[k], (g) => {
-          modelCache[k] = g;
-          if (--modelsLoading === 0) { modelsReady = true; done && done(); }
-        }, undefined, (e) => {
-          console.warn('模型加载失败：' + k, e);
-          if (--modelsLoading === 0) { modelsReady = true; done && done(); }
-        });
-      });
-    }
-
-    const creatures = [];
-
-    function spawnDino(name, opts) {
-      const info = SPECIES[name];
-      const src = modelCache[info.model];
-      if (!src) return null;
-
-      const root = SkeletonUtils.clone(src.scene);
-
-      // 归一化：这些模型共享骨架、顶点极小，用几何网格的世界包围盒测量才准确
-      function measureWorldBox(obj) {
-        const b = new THREE.Box3();
-        obj.updateWorldMatrix(true, true);
-        obj.traverse((o) => {
-          if (!o.isMesh) return;
-          if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
-          b.union(o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld));
-        });
-        return b;
-      }
-
-      root.position.set(0, 0, 0);
-      root.rotation.set(0, 0, 0);
-      root.scale.setScalar(1);
-      const raw = measureWorldBox(root);
-      const rawSize = raw.getSize(new THREE.Vector3());
-      const sc = info.height / Math.max(rawSize.y, 0.0001);
-      root.scale.setScalar(sc);
-      const scaled = measureWorldBox(root);
-      root.position.set(opts.x, -scaled.min.y, opts.z);
-      root.rotation.y = opts.rotY || 0;
-
-      root.traverse((o) => {
-        if (!o.isMesh) return;
-        o.castShadow = true;
-        o.receiveShadow = true;
-        o.frustumCulled = false; // 蒙皮包围球可能失准，避免整体被裁掉
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach((m) => {
-          if (!m) return;
-          m.metalness = 0;
-          m.roughness = 0.88;
-          if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
-        });
-      });
-
-      // 动画：按名字取 clip
-      const mixer = new THREE.AnimationMixer(root);
-      const actions = {};
-      ['idle', 'walk', 'attack', 'dead'].forEach((n) => {
-        const clip = THREE.AnimationClip.findByName(src.animations, n);
-        if (clip) actions[n] = mixer.clipAction(clip);
-      });
-      if (actions.idle) actions.idle.play();
-      if (actions.walk) actions.walk.play().setEffectiveWeight(0);
-
-      // 标签
-      const div = document.createElement('div');
-      div.className = 'sv-label';
-      div.textContent = name;
-      // 小恐龙只有十几像素高，点名字比点身体容易得多
-      div.style.pointerEvents = 'auto';
-      div.style.cursor = 'pointer';
-      div.addEventListener('click', (e) => { e.stopPropagation(); focusCreature(root); });
-      const label = new CSS2DObject(div);
-      label.position.set(0, info.height + 0.45, 0);
-      root.add(label);
-
-      root.userData = { name, ...info, kind: 'creature' };
-      creatureGroup.add(root);
-      clickable.push(root);
-
-      const item = {
-        root, mixer, actions, name, info,
-        flying: !!opts.flying,
-        flyingY: opts.flyingY || 0,
-        walkRadius: opts.walkRadius || 0,
-        walkSpeed: opts.walkSpeed || 0.2,
-        phase: opts.phase != null ? opts.phase : Math.random() * Math.PI * 2,
-        center: new THREE.Vector3(opts.x, opts.flyingY || 0, opts.z),
-        moving: !!opts.walkRadius,
-      };
-      creatures.push(item);
-      return item;
-    }
-
-    // 一次性播放（attack / dead），结束后回到 idle
-    function playOnce(item, actionName, stay) {
-      const act = item.actions[actionName];
-      const idle = item.actions.idle;
-      if (!act) return;
-      act.reset();
-      act.setLoop(THREE.LoopOnce, 1);
-      act.clampWhenFinished = true;
-      act.setEffectiveWeight(1).fadeIn(0.15).play();
-      if (idle) idle.fadeOut(0.15);
-      clearTimeout(item._resetT);
-      item._resetT = setTimeout(() => {
-        if (stay) return;
-        act.fadeOut(0.3);
-        if (idle) idle.reset().fadeIn(0.3).play();
-      }, Math.max((act.getClip().duration - 0.2) * 1000, 400));
-    }
-
-    /* ================= 植物 ================= */
-    const matOf = (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.85, metalness: 0.02 });
-    function shadowify(g) { g.traverse((o) => { if (o.isMesh) { o.castShadow = true; } }); }
-    function makeTree(kind, s) {
-      const g = new THREE.Group();
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18 * s, 0.28 * s, 1.4 * s, 8), matOf(0x7a5230));
-      trunk.position.y = 0.7 * s;
-      g.add(trunk);
-      if (kind === 'conifer') {
-        for (let i = 0; i < 3; i++) {
-          const r = (0.9 - i * 0.22) * s;
-          const cone = new THREE.Mesh(new THREE.ConeGeometry(r, 0.9 * s, 10), matOf(0x2f6b30));
-          cone.position.y = (1.5 + i * 0.55) * s;
-          g.add(cone);
-        }
-      } else {
-        const crown = new THREE.Mesh(new THREE.SphereGeometry(0.8 * s, 12, 10), matOf(0x4a8a3a));
-        crown.position.y = 1.9 * s;
-        g.add(crown);
-      }
-      shadowify(g);
-      return g;
-    }
-    function makeFern(s) {
-      const g = new THREE.Group();
-      for (let i = 0; i < 5; i++) {
-        const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.09 * s, 0.7 * s, 6), matOf(0x5c9a4a));
-        const a = (i / 5) * Math.PI * 2;
-        leaf.position.set(Math.cos(a) * 0.18 * s, 0.3 * s, Math.sin(a) * 0.18 * s);
-        leaf.rotation.set(Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5);
-        g.add(leaf);
-      }
-      shadowify(g);
-      return g;
-    }
-
-    /* ================= 生物管理 ================= */
-    const creatureGroup = new THREE.Group();
-    scene.add(creatureGroup);
-    const plantGroup = new THREE.Group();
-    scene.add(plantGroup);
-    let clickable = [];
-
-    // scatter：minR 之外随机分布；avoidCam=true 时排除镜头近前方扇区
-    function scatter(group, builder, count, radius, minR, avoidCam) {
-      minR = minR || 4;
-      for (let i = 0; i < count; i++) {
-        const a = Math.random() * Math.PI * 2;
-        const r = minR + Math.random() * (radius - minR);
-        const x = Math.cos(a) * r, z = Math.sin(a) * r;
-        // 避开相机与恐龙之间（z 轴正方向为镜头侧）
-        if (avoidCam && z > 3) continue;
-        const obj = builder(0.7 + Math.random() * 0.7);
-        obj.position.set(x, 0, z);
-        obj.rotation.y = Math.random() * Math.PI * 2;
-        group.add(obj);
-      }
-    }
-
-    function buildCreatures(eraIdx) {
-      // CSS2DRenderer 的 DOM 标签不会随 object 移除而消失，需手动清理
-      creatureGroup.traverse((o) => { if (o.element && o.element.remove) o.element.remove(); });
-      creatureGroup.clear();
-      plantGroup.clear();
-      clickable = [];
-      creatures.length = 0;
-      if (!modelsReady) return;
-
-      if (eraIdx === 0) {
-        // 三叠纪：早期翼龙在头顶盘旋 + 地面腔骨龙（模型的骨架是兽脚类，按腔骨龙尺寸缩小）
-        spawnDino('真双型齿翼龙', { x: -3, z: -3, height: 0.75, rotY: 0, flying: true, flyingY: 5.6, walkRadius: 3.0, walkSpeed: 0.35 });
-        spawnDino('真双型齿翼龙', { x: 3, z: -5, height: 0.65, rotY: 0, flying: true, flyingY: 6.8, walkRadius: 3.6, walkSpeed: -0.28, phase: 2 });
-        spawnDino('腔骨龙', { x: -0.8, z: 0.8, rotY: Math.PI * 0.2, height: 1.15, walkRadius: 1.4, walkSpeed: 0.16 });
-        spawnDino('腔骨龙', { x: 1.9, z: 1.6, rotY: Math.PI * 1.1, height: 0.9, walkRadius: 1.1, walkSpeed: -0.22, phase: 1.2 });
-        scatter(plantGroup, (s) => makeFern(s), 30, 15);
-        // 三叠纪的“树”只有早期针叶树和木贼，没有阔叶林
-        scatter(plantGroup, (s) => makeTree('conifer', s * 0.55), 6, 15, 11, true);
-      } else if (eraIdx === 1) {
-        // 侏罗纪：剑龙一家 + 天上盘旋的翼手龙
-        spawnDino('剑龙', { x: -1.6, z: 0.2, rotY: Math.PI * 0.22, walkRadius: 1.6, walkSpeed: 0.14 });
-        spawnDino('剑龙', { x: 2.8, z: -2.2, rotY: Math.PI * 0.45, height: 1.9, walkRadius: 0, phase: 1 });
-        spawnDino('剑龙', { x: 0.4, z: -3.4, rotY: Math.PI * 0.8, height: 1.3, walkRadius: 1.3, walkSpeed: 0.2, phase: 2.4 });
-        spawnDino('翼龙', { x: -4, z: -4, rotY: 0, flying: true, flyingY: 6.4, walkRadius: 3.4, walkSpeed: 0.3, phase: 0.8 });
-        scatter(plantGroup, (s) => makeTree('conifer', s), 8, 13, 9, true);
-        scatter(plantGroup, (s) => makeFern(s), 18, 12);
-      } else {
-        // 白垩纪：霸王龙 / 三角龙 / 甲龙 / 食肉牛龙
-        spawnDino('霸王龙', { x: -2.8, z: 0.8, rotY: Math.PI * 0.18, walkRadius: 1.5, walkSpeed: 0.12 });
-        spawnDino('三角龙', { x: 1.6, z: -1.4, rotY: Math.PI * 0.12, walkRadius: 0 });
-        spawnDino('三角龙', { x: 3.4, z: 0.9, rotY: Math.PI * 0.62, height: 1.9, walkRadius: 0, phase: 1.4 });
-        spawnDino('甲龙', { x: 0.2, z: 2.4, rotY: Math.PI * 0.32, walkRadius: 0 });
-        spawnDino('食肉牛龙', { x: 4.4, z: -3.2, rotY: Math.PI * 0.9, walkRadius: 1.2, walkSpeed: 0.24, phase: 0.6 });
-        scatter(plantGroup, (s) => makeTree('leaf', s), 6, 13, 9, true);
-        scatter(plantGroup, (s) => makeFern(s), 18, 12);
-      }
-    }
-
-    /* ================= 年代切换 ================= */
-    let eraIdx = 0;
-    let isAsteroid = false;
-    const eraName = document.getElementById('eraName');
-    const eraYears = document.getElementById('eraYears');
-    const eraTagline = document.getElementById('eraTagline');
-    const barFill = document.getElementById('barFill');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const veil = document.getElementById('veil');
-    const voice = S.createVoice({ audioBase: '../audio/dinosaur/' });
-    S.bindVoiceButton(document.getElementById('voiceBtn'), voice);
-    const card = S.createCard(document.getElementById('card') || document.body);
-    const picker = S.makePicker(camera, renderer.domElement);
-    const fly = S.makeFly(camera, controls);
-
-    function showEra(idx, announce) {
-      eraIdx = idx;
-      const era = ERAS[idx];
-      eraName.textContent = era.name;
-      eraYears.textContent = era.years;
-      eraTagline.textContent = era.tagline;
-      barFill.style.width = ((idx + 1) / ERAS.length * 100) + '%';
-      prevBtn.disabled = idx === 0;
-      nextBtn.disabled = idx === ERAS.length - 1;
-
-      skyMat.uniforms.topColor.value.setHex(era.skyTop);
-      skyMat.uniforms.bottomColor.value.setHex(era.skyBottom);
-      scene.fog.color.setHex(era.fog);
-      buildGround(era.ground);
-      buildCreatures(idx);
-      document.getElementById('asteroidBtn').style.display = idx === 2 ? 'flex' : 'none';
-      if (announce) announceEra(idx);
-    }
-
-    // 讲一遍这一纪：卡片 + 语音（语音包优先，没有就走浏览器语音）
-    function announceEra(idx) {
-      const era = ERAS[idx];
-      card.show({
-        name: era.name, type: era.years, color: era.accent,
-        stats: era.stats, desc: era.desc, facts: era.facts,
-      });
-      voice.speak(era.say, era.id);
-    }
-
-    function switchEra(idx) {
-      veil.classList.add('is-on');
-      setTimeout(() => {
-        showEra(idx, true);
-        camera.position.set(9, 4.8, 14);
-        controls.target.set(0, 1.8, 0);
-        veil.classList.remove('is-on');
-        S.toast('欢迎来到' + ERAS[idx].name + ' · ' + ERAS[idx].years);
-      }, 480);
-    }
-    prevBtn.addEventListener('click', () => { if (eraIdx > 0) switchEra(eraIdx - 1); });
-    nextBtn.addEventListener('click', () => { if (eraIdx < ERAS.length - 1) switchEra(eraIdx + 1); });
-    document.getElementById('replayBtn').addEventListener('click', () => announceEra(eraIdx));
-
-    /* ================= 小行星事件 ================= */
-    const asteroidBtn = document.getElementById('asteroidBtn');
-    asteroidBtn.addEventListener('click', () => {
-      if (eraIdx !== 2 || isAsteroid) return;
-      isAsteroid = true;
-      S.toast('☄️ 小行星撞击！恐龙的时代结束了…', 3600);
-      voice.speak(LINES.impact.say, LINES.impact.id);
-      // 火球
-      const meteor = new THREE.Mesh(
-        new THREE.SphereGeometry(0.6, 20, 20),
-        new THREE.MeshBasicMaterial({ color: 0xffaa33 })
-      );
-      const glow = new THREE.Sprite(new THREE.SpriteMaterial({
-        map: S.glowTexture('rgba(255,220,140,1)', 'rgba(255,120,40,0.6)'),
-        transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-      }));
-      glow.scale.set(6, 6, 1);
-      meteor.add(glow);
-      scene.add(meteor);
-      const start = new THREE.Vector3(18, 40, -20);
-      const end = new THREE.Vector3(0, 0.5, 0);
-      meteor.position.copy(start);
-      const t0 = performance.now();
-      function flyMeteor() {
-        const k = Math.min((performance.now() - t0) / 1400, 1);
-        meteor.position.lerpVectors(start, end, k);
-        if (k < 1) requestAnimationFrame(flyMeteor);
-        else {
-          scene.remove(meteor);
-          // 撞击闪光
-          const flash = new THREE.PointLight(0xffcc66, 30, 60);
-          flash.position.copy(end).add(new THREE.Vector3(0, 2, 0));
-          scene.add(flash);
-          setTimeout(() => {
-            // 天空变暗（撞击尘埃）
-            skyMat.uniforms.topColor.value.setHex(0x2a2438);
-            skyMat.uniforms.bottomColor.value.setHex(0x5a4a3a);
-            scene.fog.color.setHex(0x4a3a30);
-            hemi.intensity = 0.3;
-            sunLight.intensity = 0.5;
-            asteroidBtn.textContent = '🌑 灭绝时刻';
-            // 恐龙应声倒下
-            creatures.forEach((c, i) => {
-              c.moving = false;
-              setTimeout(() => playOnce(c, 'dead', true), i * 220);
-            });
-          }, 500);
-        }
-      }
-      flyMeteor();
-    });
-
-    /* ================= 拾取 ================= */
-    // 选中一只恐龙：弹卡片 + 讲解 + 镜头飞过去（点身体或点名字都走这里）
-    function focusCreature(obj) {
-      // 点击子网格时向上找到带 creature 标记的祖先
-      let o = obj;
-      while (o && !(o.userData && o.userData.kind === 'creature')) o = o.parent;
-      if (!o) return;
-      const d = o.userData;
-      const item = creatures.find((c) => c.root === o);
-      if (item) playOnce(item, 'attack');   // 被点到的恐龙做一次攻击动作
-      card.show({ name: d.name, type: d.type, color: d.color, stats: d.stats, desc: d.desc, facts: d.facts });
-      voice.speak(d.say || (d.name + '。' + (d.desc || []).join('')), d.id);
-      const t = new THREE.Vector3();
-      o.getWorldPosition(t);
-      t.y += (d.height || 2) * 0.45;
-      const dist = (d.height || 2) * 2.6;
-      const dir = camera.position.clone().sub(t).normalize();
-      fly.flyTo(t.clone().add(dir.multiplyScalar(dist)), t, 1.1);
-    }
-
-    picker.onClick(() => clickable, focusCreature);
-    picker.onHover(() => clickable, (obj) => {
-      let o = obj;
-      while (o && !(o.userData && o.userData.kind === 'creature')) o = o.parent;
-      renderer.domElement.style.cursor = o ? 'pointer' : 'grab';
-    });
-
-    /* ================= 自动漫游 ================= */
-    const autoTourBtn = document.getElementById('autoTour');
-    let touring = false, tourTimer = 0;
-    autoTourBtn.addEventListener('click', () => {
-      touring = !touring;
-      autoTourBtn.classList.toggle('is-active', touring);
-      autoTourBtn.textContent = touring ? '⏹ 停止漫游' : '🚀 时间漫游';
-      if (touring) tourTimer = 3;
-    });
-
-    /* ================= 播放控制 ================= */
-    let isPlaying = true;
-    const clock = new THREE.Clock();
-    const playBtn = document.getElementById('playBtn');
-    playBtn.addEventListener('click', () => {
-      isPlaying = !isPlaying;
-      playBtn.innerHTML = isPlaying ? '<span class="sv-btn__icon">⏸</span><span>暂停</span>' : '<span class="sv-btn__icon">▶</span><span>播放</span>';
-      if (!isPlaying) clock.getDelta();
-    });
-
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      fly.flyTo(new THREE.Vector3(9, 4.8, 14), new THREE.Vector3(0, 1.8, 0), 1.2);
-    });
-
-    /* ================= 动画 ================= */
-    function animate() {
-      const dt = isPlaying ? clock.getDelta() : 0;
-      if (isPlaying) {
-        // 骨骼动画 + 沿圆周行走（有 walkRadius 的恐龙会绕圈巡游）
-        creatures.forEach((c) => {
-          c.mixer.update(dt);
-          if (c.moving) {
-            c.phase += dt * c.walkSpeed;
-            const r = c.walkRadius;
-            c.root.position.x = c.center.x + Math.cos(c.phase) * r;
-            c.root.position.z = c.center.z + Math.sin(c.phase) * r;
-            if (c.flying) {
-              c.root.position.y = c.center.y + Math.sin(c.phase * 0.7) * 0.5;
-              // 飞行姿态：轻微侧倾
-              c.root.rotation.z = Math.cos(c.phase) * 0.18;
-            }
-            // 朝向切线方向（模型朝 +Z）
-            const dirSign = c.walkSpeed >= 0 ? 1 : -1;
-            const dx = -Math.sin(c.phase) * dirSign;
-            const dz = Math.cos(c.phase) * dirSign;
-            c.root.rotation.y = Math.atan2(dx, dz);
-            // 行走时混合 walk 动作
-            if (c.actions.walk) c.actions.walk.setEffectiveWeight(0.85);
-            if (c.actions.idle) c.actions.idle.setEffectiveWeight(0.15);
-          }
-        });
-        if (touring) {
-          tourTimer += dt;
-          // 每一纪停留 26 秒，刚好够把这一纪的讲解听完（约 30 秒，允许被下一纪打断）
-          if (tourTimer > 26) {
-            tourTimer = 0;
-            switchEra((eraIdx + 1) % ERAS.length);
-          }
-        }
-      }
-      fly.update(dt);
-      controls.update();
-      labelRenderer.render(scene, camera);
-      if (composer) composer.render();
-      else renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-
-    // 先加载模型，再渲染当前年代
-    loadModels(() => {
-      showEra(0, true);
-      document.getElementById('loader').classList.add('is-done');
-    });
-    animate();
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      composer.setSize(window.innerWidth, window.innerHeight);
-      labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    });
-  </script>
+const S = SciVis.init(THREE, { OrbitControls, EffectComposer, RenderPass, UnrealBloomPass });
+/* @voice-data-begin */
+const ERAS = [
+  {
+    "id": "tri",
+    "name": "三叠纪",
+    "latin": "TRIASSIC",
+    "start": 251.9,
+    "end": 201.4,
+    "years": "约 2.52 亿—2.01 亿年前",
+    "tagline": "恐龙登场，盘古大陆仍相连",
+    "climate": "内陆多季节性干旱",
+    "plants": "针叶树、苏铁与蕨类",
+    "fact": "恐龙约在 2.3 亿年前出现，并非一开始就是陆地霸主。",
+    "say": "欢迎来到三叠纪。那时的大陆大多连在一起，叫作盘古大陆。恐龙大约在两亿三千万年前出现，其中一些身体细长、个头不大。河边长着蕨类、苏铁和针叶树，还没有今天这样的花园和草坪。注意，三叠纪刚开始时，恐龙还没有登场呢。"
+  },
+  {
+    "id": "jur",
+    "name": "侏罗纪",
+    "latin": "JURASSIC",
+    "start": 201.4,
+    "end": 143.1,
+    "years": "约 2.01 亿—1.43 亿年前",
+    "tagline": "大陆分开，巨型恐龙繁盛",
+    "climate": "总体温暖，地区差异大",
+    "plants": "针叶树、银杏与蕨类",
+    "fact": "剑龙生活在这一纪；霸王龙要再过数千万年才出现。",
+    "say": "现在是侏罗纪。盘古大陆逐渐分裂，不同地方的气候和森林也不一样。巨大的蜥脚类恐龙繁盛，剑龙用低低的头寻找植物。始祖鸟也生活在这一纪，它保留了牙齿和长尾巴，还长着羽毛。请记住，剑龙和霸王龙生活的年代相隔很远，它们不会在野外见面。"
+  },
+  {
+    "id": "cre",
+    "name": "白垩纪",
+    "latin": "CRETACEOUS",
+    "start": 143.1,
+    "end": 66,
+    "years": "约 1.43 亿—6600 万年前",
+    "tagline": "开花植物扩展，鸟类延续至今",
+    "climate": "温暖世界，海平面较高",
+    "plants": "开花植物、针叶树与蕨类",
+    "fact": "非鸟恐龙在 6600 万年前灭绝；鸟类这一支存活了下来。",
+    "say": "欢迎来到白垩纪。大陆继续分开，开花植物越来越丰富。霸王龙、三角龙和甲龙生活在这一纪的末期，而食肉牛龙的化石发现于南美洲，不能把它们都当作同一个森林里的邻居。六千六百万年前，小行星撞击改变了地球环境，非鸟恐龙灭绝了。不过鸟类活了下来。今天窗外的小鸟，也是活着的恐龙。"
+  }
+];
+const SPECIES = [
+  {
+    "id": "trex",
+    "name": "霸王龙",
+    "latin": "Tyrannosaurus rex",
+    "era": "cre",
+    "age": "6800—6600 万年前",
+    "length": 12,
+    "mass": "约 5—8 吨",
+    "diet": "肉食",
+    "region": "北美洲",
+    "color": 8093778,
+    "feature": "短前肢，长尾巴，强壮的双腿",
+    "body": "头骨、牙齿和后肢化石帮助我们重建它的身体。长尾巴平衡前半身，身体并不是直立的“大蜥蜴”。",
+    "hotspots": [
+      [
+        "head",
+        "头骨与牙齿",
+        "牙齿粗壮、边缘有锯齿，能切开肉，也能承受咬骨头时的力量。"
+      ],
+      [
+        "arms",
+        "短短的前肢",
+        "每只手有两根主要手指。前肢很短，但确切用途仍有争论。"
+      ],
+      [
+        "tail",
+        "平衡用的长尾",
+        "尾巴与前方的头和躯干形成平衡，通常抬离地面。"
+      ]
+    ],
+    "say": "这是霸王龙，生活在六千八百万到六千六百万年前的北美洲。常见体长约十二米，到臀部大约三点五到四米高。看它强壮的双腿、短短的前肢和抬起的长尾巴。牙齿化石和骨头上的咬痕说明，它能吃肉，也能咬骨头。它到底能跑多快，科学家仍在研究。这个模型的皮肤颜色是推测，不是从化石里直接看到的颜色。",
+    "hip": "约 3.5—4 m",
+    "source": "tyrannosaurus",
+    "audioSeconds": 31.44
+  },
+  {
+    "id": "triceratops",
+    "name": "三角龙",
+    "latin": "Triceratops",
+    "era": "cre",
+    "age": "6800—6600 万年前",
+    "length": 9,
+    "mass": "约 6—10 吨",
+    "diet": "植食",
+    "region": "北美洲",
+    "color": 9271648,
+    "feature": "三只角与宽大的骨质颈盾",
+    "body": "前方的喙切取植物，成排的牙齿继续切碎食物。它与霸王龙生活的时间和地区有重叠。",
+    "hotspots": [
+      [
+        "head",
+        "三只角",
+        "两根长额角和一根较短的鼻角，是认出三角龙的重要线索。"
+      ],
+      [
+        "defence",
+        "颈后的大骨盾",
+        "颈盾可能参与防御、展示和同类识别；用途不一定只有一种。"
+      ],
+      [
+        "food",
+        "像喙一样的嘴",
+        "它是植食动物。吃植物并不意味着遇到危险时没有防卫能力。"
+      ]
+    ],
+    "say": "三角龙有两根长额角、一根鼻角，还有宽大的骨质颈盾。它身长大约九米，是植食恐龙。像喙一样的嘴能夹取植物，后面的牙齿继续把食物切碎。三角龙和霸王龙的化石在北美洲的同一时期地层里被发现，所以它们有可能遇见。颈盾和角的用途可能不止防御，也可能用于展示和同类识别。",
+    "source": "triceratops",
+    "audioSeconds": 29.81
+  },
+  {
+    "id": "ankylosaurus",
+    "name": "甲龙",
+    "latin": "Ankylosaurus",
+    "era": "cre",
+    "age": "6800—6600 万年前",
+    "length": 8,
+    "mass": "约 6—8 吨",
+    "diet": "植食",
+    "region": "北美洲",
+    "color": 8290404,
+    "feature": "皮内骨板与尾端骨锤",
+    "body": "骨板生长在皮肤中，不是贴在身体外面的金属盔甲。甲龙的完整骨架尚未发现，骨板的准确排列仍有不确定性。",
+    "hotspots": [
+      [
+        "head",
+        "低矮的头部",
+        "它寻找蕨类、灌木等低矮植物，不是在今天这样的草坪上吃草。"
+      ],
+      [
+        "defence",
+        "尾巴末端的骨锤",
+        "粗大的骨质尾锤可以向两侧摆动，可能帮助抵御掠食者。"
+      ],
+      [
+        "armour",
+        "皮肤中的骨板",
+        "这些骨质结构长在皮肤中。完整甲龙骨架尚未发现，精确排列仍有不确定性。"
+      ]
+    ],
+    "say": "甲龙的身体低低宽宽，背部覆盖着长在皮肤里的骨板。它身长大约八米，是吃植物的恐龙。看尾巴末端的大骨锤，它可能通过向两侧摆尾保护自己。科学家还没有发现完整的甲龙骨架，背部骨板到底怎样排列，也没有完全确定。模型中的排列是一种教学复原。",
+    "source": "ankylosaurus",
+    "audioSeconds": 25.8
+  },
+  {
+    "id": "carnotaurus",
+    "name": "食肉牛龙",
+    "latin": "Carnotaurus",
+    "era": "cre",
+    "age": "约 7000 万年前",
+    "length": 8,
+    "mass": "约 1.5—2 吨",
+    "diet": "肉食",
+    "region": "南美洲 · 阿根廷",
+    "color": 9792845,
+    "feature": "头顶双角，极短的前肢",
+    "body": "它与霸王龙属于不同的兽脚类支系。食肉牛龙的皮肤印痕保存了大小不同的鳞片信息。",
+    "hotspots": [
+      [
+        "head",
+        "像牛一样的双角",
+        "一对骨质短角长在眼睛上方，名字的意思与“吃肉的牛”有关。"
+      ],
+      [
+        "arms",
+        "更短的前肢",
+        "它的前肢比霸王龙还短；不要把小前肢当成所有肉食恐龙的共同特征。"
+      ],
+      [
+        "tail",
+        "强壮的尾部",
+        "尾巴连接着推动后肢的肌肉；具体奔跑速度仍需研究。"
+      ]
+    ],
+    "say": "食肉牛龙的化石发现于南美洲的阿根廷。它身长约八米，头顶有一对短角，前肢比霸王龙还短。保存下来的皮肤印痕让科学家看到了它的鳞片。请注意，虽然它和霸王龙都属于白垩纪的肉食恐龙，但它们生活在不同大陆，不能当作森林里的老邻居。",
+    "source": "carnotaurus",
+    "audioSeconds": 24.72
+  },
+  {
+    "id": "stegosaurus",
+    "name": "剑龙",
+    "latin": "Stegosaurus",
+    "era": "jur",
+    "age": "约 1.52 亿—1.45 亿年前",
+    "length": 9,
+    "mass": "约 3—5 吨",
+    "diet": "植食",
+    "region": "北美洲",
+    "color": 7897195,
+    "feature": "交错背板与四根长尾刺",
+    "body": "骨板交错竖立在背上，尾刺才是明显的防御结构。骨板也许用于展示、识别或调节体温，科学家仍在讨论。",
+    "hotspots": [
+      [
+        "head",
+        "小头和低低的嘴",
+        "前肢较短，头部靠近地面，适合取食低矮植物。"
+      ],
+      [
+        "defence",
+        "交错排列的背板",
+        "骨板嵌在皮肤里。它们的作用仍有不同解释，不能说已经有唯一答案。"
+      ],
+      [
+        "tail",
+        "四根长尾刺",
+        "尾巴末端有两对长刺。化石上的损伤和身体结构支持它们具有防御作用。"
+      ]
+    ],
+    "say": "剑龙生活在侏罗纪晚期，身长大约九米，是植食恐龙。请找找它背上交错排列的骨板，还有尾巴末端的四根尖刺。尾刺可以帮助防御，骨板的作用却还没有唯一答案，也许与展示、识别或者体温调节有关。它有牙齿，不是靠肚子里的石头磨碎所有食物。剑龙和霸王龙相隔数千万年，不会见面。",
+    "source": "Stegosaurus",
+    "audioSeconds": 29.69
+  },
+  {
+    "id": "pterodactylus",
+    "name": "翼手龙",
+    "latin": "Pterodactylus",
+    "era": "jur",
+    "age": "约 1.5 亿年前",
+    "length": 1,
+    "mass": "个体差异较大",
+    "diet": "小型动物",
+    "region": "欧洲 · 德国等地",
+    "color": 10062702,
+    "feature": "手指撑起翼膜，它不是恐龙",
+    "body": "翼手龙属于翼龙，是恐龙的近亲。它的翅膀主要由伸长的第四指支撑，不是鸟类的羽毛翅膀。",
+    "hotspots": [
+      [
+        "head",
+        "有牙齿的长嘴",
+        "可以用来捕食小型动物。翼龙家族的食谱并不都相同。"
+      ],
+      [
+        "wing",
+        "第四指与翼膜",
+        "伸长的第四根手指支撑着膜状的翅膀，这和鸟的翅膀不同。"
+      ],
+      [
+        "tail",
+        "较短的尾巴",
+        "与三叠纪的许多长尾翼龙相比，翼手龙的尾部明显较短。"
+      ]
+    ],
+    "say": "这一只是翼手龙，属于翼龙，不属于恐龙。我们用一米左右的翼展做参照，不同个体的大小会不同。看它的翅膀，是由很长的第四根手指撑起来的翼膜，不是羽毛。它生活在侏罗纪晚期，化石在欧洲被发现。翼龙家族早在三叠纪就已经飞上天空，比鸟类出现得更早。",
+    "flying": true,
+    "source": "pterosaur",
+    "audioSeconds": 25.97
+  },
+  {
+    "id": "coelophysis",
+    "name": "腔骨龙",
+    "latin": "Coelophysis",
+    "era": "tri",
+    "age": "约 2.1 亿年前",
+    "length": 3,
+    "mass": "约 20—30 kg",
+    "diet": "肉食",
+    "region": "北美洲等地",
+    "color": 10125405,
+    "feature": "细长身体，中空骨骼，长尾巴",
+    "body": "腔骨龙是早期小型兽脚类恐龙。化石中的中空骨骼与细长的四肢，让我们看到了它轻巧的身体结构。",
+    "hotspots": [
+      [
+        "head",
+        "细长的头和尖牙",
+        "小而尖的牙齿适合捕食小动物；它的头顶没有食肉牛龙的那对角。"
+      ],
+      [
+        "arms",
+        "可以抓握的前肢",
+        "早期兽脚类的前肢比例，与晚得多的霸王龙并不一样。"
+      ],
+      [
+        "tail",
+        "长长的平衡尾",
+        "尾巴占了身体长度的很大一部分，帮助平衡身体。"
+      ]
+    ],
+    "say": "这是腔骨龙，一种生活在三叠纪晚期的小型肉食恐龙。它体长约两到三米，身体细长，尾巴很长，骨骼中有空腔。请留意，它头上没有食肉牛龙那样的两只角。在北美洲，人们发现过大量腔骨龙化石。那时还有许多其他大型爬行动物，恐龙并不是唯一的主角。",
+    "source": "coelophysis",
+    "audioSeconds": 26.18
+  },
+  {
+    "id": "eudimorphodon",
+    "name": "真双型齿翼龙",
+    "latin": "Eudimorphodon",
+    "era": "tri",
+    "age": "约 2.1 亿年前",
+    "length": 1,
+    "mass": "小型翼龙",
+    "diet": "鱼等小动物",
+    "region": "欧洲 · 意大利",
+    "color": 9271389,
+    "feature": "早期长尾翼龙，两类牙齿",
+    "body": "它是已知早期翼龙之一，拥有长尾和形状不同的牙齿。翼龙属于会飞的爬行动物，与恐龙是近亲。",
+    "hotspots": [
+      [
+        "head",
+        "不同形状的牙齿",
+        "它的名字来自牙齿差异：前方和后方牙齿的形状并不相同。"
+      ],
+      [
+        "wing",
+        "膜状的翅膀",
+        "和其他翼龙一样，翅膀主要由一根特别长的手指支撑。"
+      ],
+      [
+        "tail",
+        "早期翼龙的长尾",
+        "长尾是它与页面中短尾翼手龙的重要区别。颜色与翼膜轮廓是复原示意。"
+      ]
+    ],
+    "say": "真双型齿翼龙，是三叠纪晚期的早期翼龙之一。它的化石发现于意大利，翼展大约一米。它有一条长尾巴，牙齿也有不同形状，这就是名字的线索。请把它和侏罗纪的翼手龙比一比：一个尾巴长，一个尾巴短。它们都是翼龙，是恐龙的近亲，却不是恐龙。",
+    "flying": true,
+    "source": "pterosaur",
+    "audioSeconds": 24.86
+  }
+];
+const LINES = {
+  "impact": {
+    "id": "impact",
+    "name": "6600 万年前发生了什么",
+    "say": "六千六百万年前，一颗大约十公里宽的小行星撞上地球。撞击扬起的尘埃和其他物质遮挡阳光，植物获取的光变少，依赖植物和其他动物的食物链也受到影响。这场大灭绝让大约四分之三的物种消失，包括所有非鸟恐龙。但是鸟类这一支活了下来。今天的小鸟，就是活着的恐龙。"
+  }
+};
+/* @voice-data-end */
+mountDinosaurExplorer({ S, ERAS, SPECIES, LINES });
+</script>
 </body>
 </html>
