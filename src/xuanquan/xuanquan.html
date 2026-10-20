@@ -1183,9 +1183,11 @@
       // 西墙
       g.add(wallRun(YARD.half * 2 + T, H, T, -YARD.half, H / 2, 0, Math.PI / 2));
       // 东墙：中间开门洞（宽 4、高 3.2）
-      const doorW = 4.0, segLen = YARD.half - doorW / 2;
-      g.add(wallRun(segLen * 2 + T, H, T, YARD.half, H / 2, -(doorW / 2 + segLen / 2), Math.PI / 2));
-      g.add(wallRun(segLen * 2 + T, H, T, YARD.half, H / 2, (doorW / 2 + segLen / 2), Math.PI / 2));
+      // 每段墙只覆盖半个院宽（减去半个门洞），别把门洞也砌上
+      const doorW = 4.0;
+      const segLen = YARD.half - doorW / 2 + T * 0.5;
+      g.add(wallRun(segLen, H, T, YARD.half, H / 2, -(doorW / 2 + segLen / 2 - T * 0.25), Math.PI / 2));
+      g.add(wallRun(segLen, H, T, YARD.half, H / 2, (doorW / 2 + segLen / 2 - T * 0.25), Math.PI / 2));
       // 门楣
       g.add(wallRun(doorW + 1.2, H - 3.2, T, YARD.half, 3.2 + (H - 3.2) / 2, 0, Math.PI / 2));
       // 门框木构
@@ -1193,6 +1195,64 @@
         g.add(box(0.26, 3.2, 0.3, MAT.wood, YARD.half + 0.82, 1.6, s * (doorW / 2)));
       });
       g.add(box(0.3, 0.28, doorW + 0.5, MAT.wood, YARD.half + 0.82, 3.24, 0));
+
+      // —— 门扇：两扇木门，左扇关着、右扇向内半开 ——
+      (function doorLeaves() {
+        const DH = 3.06, DW = 1.96, DT = 0.13;
+        const leafMat = std(0x5a3a22, { rough: 0.84 });
+        const leafDark = std(0x372214, { rough: 0.88 });
+        const bronze = std(0x9a8650, { metal: 0.65, rough: 0.38 });
+        const PIVOT_X = YARD.half + 0.28;
+
+        function leaf(pivotZ, dir, angle) {
+          const lg = new THREE.Group();
+          lg.position.set(PIVOT_X, 0, pivotZ);
+          lg.rotation.y = angle;
+
+          // 门板
+          lg.add(box(DT, DH, DW, leafMat, 0, DH / 2 + 0.18, dir * DW / 2));
+          // 横向穿带（木板拼缝）
+          for (let i = 0; i < 4; i++) {
+            lg.add(box(DT + 0.03, 0.07, DW * 0.96, leafDark, 0, 0.48 + i * 0.74, dir * DW / 2));
+          }
+          // 竖边框
+          [-1, 1].forEach((s2) => {
+            lg.add(box(DT + 0.04, DH, 0.11, leafDark, 0, DH / 2 + 0.18, dir * DW / 2 + s2 * (DW / 2 - 0.06)));
+          });
+          // 铜门钉 3×3
+          for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+              const nail = cyl(0.042, 0.042, 0.07, 8, bronze, DT / 2 + 0.03, 0.74 + r * 0.84, dir * DW / 2 + (c - 1) * 0.56);
+              nail.rotation.z = Math.PI / 2;
+              lg.add(nail);
+            }
+          }
+          // 铺首衔环
+          const plate = cyl(0.12, 0.12, 0.05, 12, bronze, DT / 2 + 0.03, 1.62, dir * (DW * 0.8));
+          plate.rotation.z = Math.PI / 2;
+          lg.add(plate);
+          const ring = new THREE.Mesh(new THREE.TorusGeometry(0.105, 0.019, 6, 14), bronze);
+          ring.position.set(DT / 2 + 0.08, 1.52, dir * (DW * 0.8));
+          ring.rotation.y = Math.PI / 2;
+          lg.add(ring);
+          // 上下门枢
+          lg.add(cyl(0.055, 0.055, 0.26, 6, leafDark, 0, 0.32, 0));
+          lg.add(cyl(0.055, 0.055, 0.26, 6, leafDark, 0, DH + 0.04, 0));
+
+          g.add(lg);
+          return lg;
+        }
+
+        leaf(-doorW / 2 + 0.02, 1, 0);                  // 左扇：关
+        leaf(doorW / 2 - 0.02, -1, Math.PI * 0.31);     // 右扇：向内半开 56°
+
+        // 门槛
+        g.add(box(0.36, 0.2, doorW + 0.34, leafDark, PIVOT_X, 0.11, 0));
+        // 门枕石
+        [-1, 1].forEach((s2) => {
+          g.add(box(0.52, 0.32, 0.42, MAT.stone, PIVOT_X, 0.16, s2 * (doorW / 2 + 0.18)));
+        });
+      })();
 
       // 院内地坪：比外面高一点，压一层夯土
       const floor = new THREE.Mesh(new THREE.PlaneGeometry(YARD.half * 2 - 0.6, YARD.half * 2 - 0.6), std(0xcaa97c, { rough: 0.98 }));
@@ -1470,7 +1530,7 @@
        ================================================================== */
     (function gateTower() {
       const g = new THREE.Group();
-      g.position.set(YARD.half + 1.9, 0, 0);
+      g.position.set(YARD.half + 3.1, 0, 0);
       // 四柱
       [[-2.6, -2.2], [2.6, -2.2], [-2.6, 2.2], [2.6, 2.2]].forEach(([dx, dz]) => {
         g.add(cyl(0.14, 0.16, 4.6, 8, MAT.wood, dx, 2.3, dz));
@@ -1769,7 +1829,7 @@
        汉旗：门楼上一面红旗
        ================================================================== */
     (function banner() {
-      const pole = cyl(0.1, 0.12, 7.2, 8, MAT.wood, 27.2, 3.6, 0);
+      const pole = cyl(0.1, 0.12, 7.2, 8, MAT.wood, 31.6, 3.6, 0);
       scene.add(pole);
       // 旗面：顶点带波浪
       const geo = new THREE.PlaneGeometry(1.9, 3.4, 12, 10);
@@ -1781,13 +1841,13 @@
       geo.computeVertexNormals();
       const flag = new THREE.Mesh(geo, MAT.cloth);
       window.__flag = flag;
-      flag.position.set(28.2, 5.3, 0);
+      flag.position.set(32.6, 5.3, 0);
       flag.rotation.y = -Math.PI / 2;
       flag.castShadow = true;
       scene.add(flag);
       // 旗杆顶饰
       const tip = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), std(0xb08c46, { metal: 0.5, rough: 0.4 }));
-      tip.position.set(27.2, 7.3, 0);
+      tip.position.set(31.6, 7.3, 0);
       scene.add(tip);
     })();
 
@@ -1963,7 +2023,7 @@
 
     const FOCUS = {
       wuyuan: { pos: P(46, 30, -58), target: P(0, 5, 2) },
-      zhi: { pos: P(50, 12, -26), target: P(25, 2.5, 2) },
+      zhi: { pos: P(41, 2.6, 2), target: P(25.2, 1.7, 0) },
       jiandu: { pos: P(28, 13, -40), target: P(0, 1.5, 0) },
       fangwu: { pos: P(22, 14, -52), target: P(-4, 3, -14) },
       majiu: { pos: P(10, 13, 70), target: P(0, 3, 37) },
