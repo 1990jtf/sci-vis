@@ -19,9 +19,9 @@
   },
   "earth": {
     "file": "v_earth.mp3",
-    "hash": "54d519b90f96",
+    "hash": "47e3fe681549",
     "voice": "zh-CN-XiaoxiaoNeural",
-    "bytes": 91728
+    "bytes": 109296
   },
   "mars": {
     "file": "v_mars.mp3",

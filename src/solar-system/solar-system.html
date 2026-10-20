@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>太阳系 · 行星漫游</title>
+  <title>太阳系观察站 · 行星漫游</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJnIiBjeD0iMzUlIiBjeT0iMzAlIiByPSI3NSUiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2M3ZDJmZSIvPjxzdG9wIG9mZnNldD0iLjU1IiBzdG9wLWNvbG9yPSIjNjM2NmYxIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMzEyZTgxIi8+PC9yYWRpYWxHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwYjEwMjAiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNyIgZmlsbD0idXJsKCNnKSIvPjxlbGxpcHNlIGN4PSIzMiIgY3k9IjMyIiByeD0iMjUiIHJ5PSI4IiBmaWxsPSJub25lIiBzdHJva2U9IiNhNWI0ZmMiIHN0cm9rZS13aWR0aD0iMi42IiBvcGFjaXR5PSIuOSIgdHJhbnNmb3JtPSJyb3RhdGUoLTIyIDMyIDMyKSIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjE3IiBmaWxsPSJub25lIiBzdHJva2U9IiNlMGU3ZmYiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iLjUiLz48L3N2Zz4=" />
   <link rel="stylesheet" href="../shared/theme.css" />
+  <link rel="stylesheet" href="./solar-explorer.css" />
 </head>
 <body>
   <!-- 加载层 -->
@@ -14,40 +15,45 @@
     <div class="sv-loader__text">正在构建太阳系…</div>
   </div>
 
-  <!-- 标题 -->
-  <div class="sv-brand sv-in">
-    <div class="sv-brand__eyebrow">Solar System</div>
-    <div class="sv-brand__title">太阳系 · 行星漫游</div>
-    <div class="sv-brand__sub">八大行星 · 月球与卫星 · 自转 / 公转 / 距离</div>
+  <header class="ss-header">
+    <a class="ss-back" href="../../index.html">← 科学探索</a>
+    <div class="ss-eyebrow">SPACE EXPLORER / 02</div>
+    <h1>太阳系观察站<span>从一颗星球，认识整个宇宙</span></h1>
+  </header>
+  <nav class="ss-modes" id="modeSeg" aria-label="观察模式">
+    <button data-mode="detail" class="is-on" aria-pressed="true">◉ 行星特写</button>
+    <button data-mode="orbits" aria-pressed="false">◎ 轨道全景</button>
+    <button data-mode="compare" aria-pressed="false">◌ 大小对比</button>
+  </nav>
+  <div class="ss-top-actions"><span id="textureStatus">行星地图 · 2K</span><button id="mobileInfoBtn" aria-expanded="false" aria-controls="planetDossier">星球档案</button><button class="sv-iconbtn" id="voiceBtn" aria-label="语音讲解开关" title="语音讲解开关">🔊</button></div>
+  <aside class="ss-nav ss-panel" aria-label="太阳系天体索引">
+    <div class="ss-section-title">选择目的地 <span>距太阳由近到远</span></div>
+    <div id="planetList" class="ss-planet-list"></div>
+    <div class="ss-nav-foot"><span>我们的太阳系</span><strong>1 <small>颗恒星</small> · 8 <small>颗行星</small></strong><p>岩石行星 × 4 / 巨行星 × 4</p></div>
+  </aside>
+  <main id="viewportFrame" class="ss-viewport" aria-label="可旋转的三维行星模型">
+    <div class="ss-stage-title"><span id="stageIndex">03 / 08 · 我们的家</span><h2 id="stageTitle">EARTH</h2><p id="stageSubtitle">蓝色海洋、白色云层，还有薄薄的大气。</p></div>
+    <div class="ss-stage-bottom"><span id="viewNote">地月距离与运动为教学示意</span><div class="ss-layer-buttons"><button id="axisBtn" aria-pressed="true">自转轴 · 开</button><button id="cloudBtn" aria-pressed="true">云层 · 开</button><button id="satelliteBtn" aria-pressed="true">卫星 · 开</button></div></div>
+  </main>
+  <aside id="planetDossier" class="ss-dossier ss-panel" aria-label="星球档案" aria-live="polite">
+    <div class="ss-dossier-top"><span id="dossierKind">岩石行星</span><button id="speakBtn" title="听星球讲解">▷ 听讲解</button></div>
+    <h2 id="dossierName">地球<small>EARTH</small></h2>
+    <div class="ss-stat-grid" id="statGrid"></div>
+    <div class="ss-feature"><span>观察发现</span><h3 id="featureTitle"></h3><p id="featureText"></p></div>
+    <div class="ss-distance" id="lightBlock"><span id="lightLabel">阳光到这里要走</span><strong id="lightTime"></strong><p id="distanceDetail"></p></div>
+    <div class="ss-moons"><div class="ss-section-title" id="moonHeading">身边的小伙伴</div><div id="moonList"></div></div>
+    <div class="ss-age" id="ageBlock"><label for="ageSlider">如果你在地球 <output id="earthAge">10</output> 岁…</label><input type="range" id="ageSlider" min="1" max="80" value="10" aria-label="地球上的年龄"/><p id="planetAge"></p></div>
+    <details class="ss-more"><summary>更多知识与数据来源</summary><div id="moreFacts"></div><p>直径采用赤道直径；自转周期与太阳日不同。巨行星的温度为大气参考值。数据：<a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/" target="_blank" rel="noopener">NASA 行星数据表</a>。纹理：<a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope / CC BY 4.0</a>，含调色和补绘，部分卫星表面为示意。</p></details>
+  </aside>
+  <section class="ss-comparison ss-panel" aria-label="八大行星数据速览">
+    <div class="ss-comparison-head"><h2>八大行星，一眼看懂</h2><div id="metricSeg" aria-label="速览指标"><button data-metric="diameter" class="is-on" aria-pressed="true">直径</button><button data-metric="year" aria-pressed="false">一年多长</button><button data-metric="distance" aria-pressed="false">距太阳</button></div><span id="metricNote">赤道直径 · km</span></div>
+    <div class="ss-comparison-grid" id="comparisonGrid"></div>
+  </section>
+  <div class="sv-dock" id="dock">
+    <button class="sv-btn" id="playBtn" aria-pressed="false">⏸ 暂停运动</button><span class="sv-dock__sep"></span>
+    <button class="sv-btn" id="tourBtn" aria-pressed="false">▷ 星球导览</button><button class="sv-btn" id="topBtn">↺ 重置视角</button><button class="sv-btn" id="speedBtn">演示速度 ×1</button>
   </div>
-
-  <!-- 语音按钮 -->
-  <button class="sv-iconbtn sv-iconbtn--top" id="voiceBtn" title="语音开关（神经语音）">🔊</button>
-
-  <!-- 图例 -->
-  <div class="sv-legend sv-panel sv-in">
-    <div class="sv-panel__title">天体类型</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#ffd166;color:#ffd166"></span>恒星 · 太阳</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#8fb6ff;color:#8fb6ff"></span>气态巨行星</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#c9a98a;color:#c9a98a"></span>岩石行星</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#cfd3dc;color:#cfd3dc"></span>天然卫星 · 月球等</div>
-    <div class="sv-legend__note">1 光年 = 9.46 万亿 km<br>光行时：光从太阳跑到该星球要多久</div>
-  </div>
-
-  <!-- 信息卡片 -->
-  <div class="sv-card" id="card"></div>
-
-  <!-- 底部控制坞 -->
-  <div class="sv-dock sv-in" id="dock">
-    <button class="sv-btn" id="playBtn"><span class="sv-btn__icon">⏸</span><span>暂停</span></button>
-    <span class="sv-dock__sep"></span>
-    <button class="sv-btn sv-btn--primary" id="tourBtn"><span class="sv-btn__icon">🚀</span><span>自动漫游</span></button>
-    <span class="sv-dock__sep"></span>
-    <button class="sv-btn sv-btn--ghost" id="topBtn">🌌 俯视全景</button>
-    <button class="sv-btn sv-btn--ghost" id="speedBtn">速度 ×1</button>
-  </div>
-
-  <div class="sv-hint">点击天体查看介绍（含月球与卫星）· 拖拽旋转 · 滚轮缩放 · 轨道速度已压缩，周期为真实值</div>
+  <div class="ss-hint">拖动旋转 · 滚轮 / 双指缩放 · 点行星或左侧目录切换</div>
 
   <script type="importmap">
   {
@@ -65,7 +71,7 @@
     import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
     import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
     import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
-    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+    import { mountSolarExplorer } from './solar-explorer.js';
     
 
 
@@ -667,10 +673,10 @@
         distKm: 1.496e8, distText: '1.50 亿 km',
         diameter: '1.27 万 km', rotation: '23 时 56 分', revolution: '365.25 天', moons: '1 颗（月球）',
         extra: [['平均温度', '约 15 ℃']],
-        desc: ['自转带来昼夜，公转带来四季', '目前唯一已知有生命的星球'],
+        desc: ['自转带来昼夜；地轴倾斜与公转共同带来四季', '目前唯一已知有生命的星球'],
         orbit: 9.4, size: 0.52, orbitSpeed: 1.0, spin: 1.0, tilt: 23.4,
         palette: ['#1b5fb0', '#2f8bd9', '#6bc1e8', '#8fd6a0', '#e0e0c8'],
-        say: '地球是我们的家。它自转一圈约二十三小时五十六分，于是有了白天和黑夜；绕太阳一圈三百六十五天，于是有了四季。它身边还有一颗卫星，就是月球。',
+        say: '地球是我们的家。它自转一圈约二十三小时五十六分，于是有了白天和黑夜；绕太阳一圈约三百六十五天。地轴倾斜着绕太阳运行，于是有了四季。它身边还有一颗卫星，就是月球。',
       },
       {
         id: 'mars', kind: 'planet', name: '火星', type: '行星 · 岩石行星', color: '#d9534f',
@@ -685,7 +691,7 @@
       {
         id: 'jupiter', kind: 'planet', name: '木星', type: '行星 · 气态巨行星', color: '#d8a67a',
         distKm: 7.785e8, distText: '7.79 亿 km',
-        diameter: '13.98 万 km', rotation: '9 时 56 分', revolution: '11.86 年', moons: '95 颗以上',
+        diameter: '13.98 万 km', rotation: '9 时 56 分', revolution: '11.86 年', moons: '多颗（持续发现中）',
         extra: [['云顶温度', '约 -145 ℃']],
         desc: ['太阳系最大的行星', '大红斑是刮了几百年的风暴'],
         orbit: 15.0, size: 1.3, orbitSpeed: 0.084, spin: 2.41, tilt: 3.1,
@@ -695,7 +701,7 @@
       {
         id: 'saturn', kind: 'planet', name: '土星', type: '行星 · 气态巨行星', color: '#e5c87c',
         distKm: 1.434e9, distText: '14.3 亿 km',
-        diameter: '11.65 万 km', rotation: '10 时 34 分', revolution: '29.46 年', moons: '146 颗以上',
+        diameter: '11.65 万 km', rotation: '10 时 34 分', revolution: '29.46 年', moons: '多颗（持续发现中）',
         extra: [['云顶温度', '约 -178 ℃']],
         desc: ['壮观的环由冰块和岩石组成', '平均密度比水还小'],
         orbit: 19.0, size: 1.1, orbitSpeed: 0.034, spin: 2.25, tilt: 26.7,
@@ -705,7 +711,7 @@
       {
         id: 'uranus', kind: 'planet', name: '天王星', type: '行星 · 冰巨行星', color: '#7fd8e5',
         distKm: 2.871e9, distText: '28.7 亿 km',
-        diameter: '5.07 万 km', rotation: '17 时 14 分（侧躺）', revolution: '84 年', moons: '28 颗',
+        diameter: '5.07 万 km', rotation: '17 时 14 分（侧躺）', revolution: '84 年', moons: '多颗（持续发现中）',
         extra: [['云顶温度', '约 -195 ℃']],
         desc: ['自转轴倾斜 98°，几乎躺着转', '绕太阳一圈要 84 年'],
         orbit: 23.0, size: 0.9, orbitSpeed: 0.012, spin: 1.39, tilt: 97.8,
@@ -715,7 +721,7 @@
       {
         id: 'neptune', kind: 'planet', name: '海王星', type: '行星 · 冰巨行星', color: '#4a6fd6',
         distKm: 4.495e9, distText: '45.0 亿 km',
-        diameter: '4.92 万 km', rotation: '16 时 06 分', revolution: '164.8 年', moons: '16 颗',
+        diameter: '4.92 万 km', rotation: '16 时 06 分', revolution: '164.8 年', moons: '多颗（持续发现中）',
         extra: [['云顶温度', '约 -200 ℃'], ['最大风速', '约 2000 km/h']],
         desc: ['离太阳最远的大行星', '太阳系风速最快的地方'],
         orbit: 26.8, size: 0.86, orbitSpeed: 0.006, spin: 1.49, tilt: 28.3,
@@ -847,405 +853,7 @@
     const BY_ID = {};
     BODIES.forEach((b) => { BY_ID[b.id] = b; });
 
-    /* ================= 渲染 ================= */
-    const scene = S.createScene(0x02040a);
-    const camera = S.createCamera(52, 0.1, 2000);
-    // 相机距离需大于最外圈轨道（海王星 26.8），否则外行星转到近侧时
-    // 会贴到镜头前被放大成"前景道具"、盖住底部控制坞
-    camera.position.set(0, 24, 46);
-
-    const { renderer, composer, renderPass } = S.createRenderer({ exposure: 1.15, bloomStrength: 0.75, bloomThreshold: 0.8 });
-    const labelRenderer = new CSS2DRenderer();
-    labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    labelRenderer.domElement.style.position = 'absolute';
-    labelRenderer.domElement.style.top = '0';
-    labelRenderer.domElement.style.pointerEvents = 'none';
-    document.body.appendChild(labelRenderer.domElement);
-
-    const controls = S.createControls(camera, renderer.domElement, new THREE.Vector3(0, 0, 0));
-    controls.minDistance = 1.2;
-    controls.maxDistance = 130;
-    controls.maxPolarAngle = Math.PI;
-
-    // 环境光（程序化 IBL，让 PBR 材质有真实反射）
-    renderPass.scene = scene;
-    renderPass.camera = camera;
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environment = envTex;
-    scene.add(new THREE.AmbientLight(0x334455, 0.35));
-
-    // 主光源（模拟太阳）
-    const sunLight = new THREE.PointLight(0xfff2d0, 3.0, 0, 0.5);
-    sunLight.position.set(0, 0, 0);
-    scene.add(sunLight);
-
-    // 星空
-    scene.add(S.createStarfield(1600, 500, 0xffffff, 0x9fb8ff));
-
-    /* ================= 太阳 ================= */
-    const sunDef = BY_ID.sun;
-    const SUN_R = 2.4;
-    const sun = new THREE.Mesh(
-      new THREE.SphereGeometry(SUN_R, 64, 64),
-      new THREE.MeshBasicMaterial({ color: 0xffb347 })
-    );
-    sun.userData = infoOf(sunDef);
-    scene.add(sun);
-
-    const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: S.glowTexture('rgba(255,220,140,1)', 'rgba(255,150,50,0.4)'),
-      transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-    }));
-    sunGlow.scale.set(16, 16, 1);
-    scene.add(sunGlow);
-
-    /* ================= 行星 ================= */
-    const clickable = [sun];
-    const labelByBody = new Map();
-    const orbitGroup = new THREE.Group();
-    scene.add(orbitGroup);
-
-    function makeLabel(text, cls) {
-      const div = document.createElement('div');
-      div.className = cls || 'sv-label';
-      div.textContent = text;
-      return new CSS2DObject(div);
-    }
-
-    const SPIN_GAIN = 1.5;      // 自转的视觉增益（比例与真实一致，只是整体加快）
-    const ORBIT_GAIN = 0.15;    // 公转的视觉增益
-
-    const planetNodes = [];     // { def, body, spinGroup, pivot }
-    const nodeById = {};
-
-    BODIES.filter((b) => b.kind === 'planet').forEach((p) => {
-      // 轨道环
-      const orbit = new THREE.Mesh(
-        new THREE.RingGeometry(p.orbit - 0.03, p.orbit + 0.03, 256),
-        new THREE.MeshBasicMaterial({ color: 0x33507a, side: THREE.DoubleSide, transparent: true, opacity: 0.4 })
-      );
-      orbit.rotation.x = -Math.PI / 2;
-      orbitGroup.add(orbit);
-
-      // 自转轴组（带倾角）
-      const spinGroup = new THREE.Group();
-      spinGroup.rotation.z = THREE.MathUtils.degToRad(p.tilt);
-
-      // 行星表面（程序化贴图）
-      const planetTex = S.planetTexture(p.palette, 256);
-      const body = new THREE.Mesh(
-        new THREE.SphereGeometry(p.size, 48, 48),
-        new THREE.MeshStandardMaterial({ map: planetTex, roughness: 0.7, metalness: 0.05 })
-      );
-      body.userData = infoOf(p);
-      spinGroup.add(body);
-
-      // 大气层（背光菲涅尔发光）
-      const atmo = new THREE.Mesh(
-        new THREE.SphereGeometry(p.size * 1.03, 48, 48),
-        new THREE.MeshBasicMaterial({
-          color: new THREE.Color(p.palette[2]), transparent: true, opacity: 0.22,
-          blending: THREE.AdditiveBlending, side: THREE.BackSide, depthWrite: false,
-        })
-      );
-      spinGroup.add(atmo);
-
-      // 土星环
-      if (p.id === 'saturn') {
-        const ringTex = S.planetTexture(['#8a7448', '#cbb887', '#e8dcc0', '#c9b078', '#9a8458'], 256);
-        const ring = new THREE.Mesh(
-          new THREE.RingGeometry(p.size * 1.35, p.size * 2.3, 128),
-          new THREE.MeshBasicMaterial({ map: ringTex, side: THREE.DoubleSide, transparent: true, opacity: 0.9 })
-        );
-        ring.rotation.x = -Math.PI / 2;
-        ring.rotation.z = 0.2;
-        spinGroup.add(ring);
-      }
-
-      // 标签
-      const label = makeLabel(p.name);
-      label.position.set(0, p.size + 0.7, 0);
-      spinGroup.add(label);
-      labelByBody.set(body, label);
-
-      // 公转枢轴
-      const pivot = new THREE.Group();
-      pivot.add(spinGroup);
-      orbitGroup.add(pivot);
-
-      const node = { def: p, body, spinGroup, pivot, angle: Math.random() * Math.PI * 2 };
-      planetNodes.push(node);
-      nodeById[p.id] = node;
-      clickable.push(body);
-    });
-
-    /* ================= 卫星（月球等） ================= */
-    const moonNodes = [];
-    BODIES.filter((b) => b.kind === 'moon').forEach((m) => {
-      const host = nodeById[m.parent];
-      if (!host) return;
-
-      // 卫星公转轨道环（挂在母行星的自转轴组下，跟着一起倾斜）
-      const ring = new THREE.Mesh(
-        new THREE.RingGeometry(m.orbitR - 0.006, m.orbitR + 0.006, 128),
-        new THREE.MeshBasicMaterial({ color: 0x5080b8, side: THREE.DoubleSide, transparent: true, opacity: 0.22 })
-      );
-      ring.rotation.x = -Math.PI / 2;
-      host.spinGroup.add(ring);
-
-      const tex = S.planetTexture(m.palette, 128);
-      const body = new THREE.Mesh(
-        new THREE.SphereGeometry(m.size, 32, 32),
-        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, metalness: 0.02 })
-      );
-      body.userData = infoOf(m);
-
-      const pivot = new THREE.Group();
-      pivot.add(body);
-      host.spinGroup.add(pivot);
-
-      // 月球带小号常驻标签，其他小卫星不显示（否则木星的标签会糊成一团）
-      let label = null;
-      if (m.label) {
-        label = makeLabel(m.name, 'sv-label sv-label--sm');
-        label.position.set(0, m.size + 0.34, 0);
-        body.add(label);
-        labelByBody.set(body, label);
-      }
-
-      moonNodes.push({ def: m, body, pivot, label, angle: Math.random() * Math.PI * 2 });
-      clickable.push(body);
-    });
-
-    const sunLabel = makeLabel('太阳');
-    sunLabel.position.set(0, SUN_R + 1.2, 0);
-    scene.add(sunLabel);
-    labelByBody.set(sun, sunLabel);
-
-    /* ================= 交互 ================= */
-    const voice = S.createVoice({ audioBase: '../audio/solar-system/' });
-    S.bindVoiceButton(document.getElementById('voiceBtn'), voice);
-
-    const card = S.createCard(document.getElementById('card') || document.body);
-    const picker = S.makePicker(camera, renderer.domElement);
-    const fly = S.makeFly(camera, controls);
-
-    // 悬停高亮
-    let hoveredBody = null;
-    function setHover(body) {
-      if (hoveredBody === body) return;
-      if (hoveredBody) {
-        const old = labelByBody.get(hoveredBody);
-        if (old) old.element.classList.remove('is-active');
-      }
-      hoveredBody = body;
-      if (body) {
-        const cur = labelByBody.get(body);
-        if (cur) cur.element.classList.add('is-active');
-      }
-      renderer.domElement.style.cursor = body ? 'pointer' : 'grab';
-    }
-
-    picker.onHover(clickable, (obj) => {
-      setHover(obj && obj.userData && obj.userData.name ? obj : null);
-    });
-
-    // 跟随选中的天体（月球、行星都在动，镜头跟着走才不会跑出画面）
-    let follow = null;
-    let selected = null;
-    const followPos = new THREE.Vector3();
-
-    function focusBody(obj) {
-      if (!obj || !obj.userData || !obj.userData.name) return;
-      const data = obj.userData;
-      selected = obj;
-      follow = null;
-      card.show(data);
-      voice.speak(S.narrate(data), data.voiceId);
-
-      // 平滑拉近
-      const target = new THREE.Vector3();
-      obj.getWorldPosition(target);
-      const r = (obj.geometry && obj.geometry.parameters && obj.geometry.parameters.radius) || 0.5;
-      const dist = Math.max(r * 5.5 + 1.6, 2.2);
-      const dir = camera.position.clone().sub(target).normalize();
-      fly.flyTo(target.clone().add(dir.multiplyScalar(dist)), target, 1.0, () => {
-        if (selected === obj) {
-          follow = { obj, last: new THREE.Vector3() };
-          obj.getWorldPosition(follow.last);
-        }
-      });
-    }
-
-    picker.onClick(clickable, (obj) => {
-      if (obj && obj.userData && obj.userData.name) focusBody(obj);
-    });
-
-    // 标签也可点：小卫星本体只有几个像素，点名字更省事
-    labelByBody.forEach((label, body) => {
-      const el = label.element;
-      el.style.pointerEvents = 'auto';
-      el.style.cursor = 'pointer';
-      el.addEventListener('click', (e) => { e.stopPropagation(); focusBody(body); });
-    });
-
-    /* ================= 控制 ================= */
-    let isPlaying = true;
-    let timeScale = 1;
-    const SPEEDS = [1, 4, 20, 60];
-
-    const playBtn = document.getElementById('playBtn');
-    playBtn.addEventListener('click', () => {
-      isPlaying = !isPlaying;
-      playBtn.innerHTML = isPlaying ? '<span class="sv-btn__icon">⏸</span><span>暂停</span>' : '<span class="sv-btn__icon">▶</span><span>播放</span>';
-      if (!isPlaying) clock.getDelta();
-    });
-
-    const speedBtn = document.getElementById('speedBtn');
-    speedBtn.addEventListener('click', () => {
-      const i = SPEEDS.indexOf(timeScale);
-      timeScale = SPEEDS[(i + 1) % SPEEDS.length];
-      speedBtn.textContent = '速度 ×' + timeScale;
-    });
-
-    const topBtn = document.getElementById('topBtn');
-    topBtn.addEventListener('click', () => {
-      follow = null;
-      selected = null;
-      fly.flyTo(new THREE.Vector3(0, 46, 0.01), new THREE.Vector3(0, 0, 0), 1.3);
-    });
-
-    /* ================= 自动漫游 ================= */
-    const tourBtn = document.getElementById('tourBtn');
-    let touring = false, tourIdx = 0, tourState = 'fly', tourT = 0;
-    // 月球排在它妈妈地球后面
-    const TOUR = ['sun', 'mercury', 'venus', 'earth', 'moon', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
-    const tourTarget = new THREE.Vector3();
-
-    function bodyById(id) {
-      if (id === 'sun') return sun;
-      const node = nodeById[id] || moonNodes.find((n) => n.def.id === id);
-      return node ? node.body : null;
-    }
-
-    tourBtn.addEventListener('click', () => {
-      touring = !touring;
-      if (touring) {
-        tourIdx = 0; tourState = 'fly'; tourT = 0;
-        follow = null;
-        tourBtn.innerHTML = '<span class="sv-btn__icon">⏹</span><span>停止漫游</span>';
-        tourBtn.classList.add('is-active');
-      } else {
-        tourBtn.innerHTML = '<span class="sv-btn__icon">🚀</span><span>自动漫游</span>';
-        tourBtn.classList.remove('is-active');
-        fly.cancel();
-      }
-    });
-
-    function tourStep(dt) {
-      const obj = bodyById(TOUR[tourIdx]);
-      if (!obj) { touring = false; return; }
-      obj.getWorldPosition(tourTarget);
-      const r = (obj.geometry && obj.geometry.parameters && obj.geometry.parameters.radius) || 0.5;
-      const dist = Math.max(r * 5.5 + 1.6, 2.2);
-      const camPos = tourTarget.clone().add(new THREE.Vector3(dist * 0.6, dist * 0.45, dist * 0.6));
-
-      if (tourState === 'fly') {
-        fly.flyTo(camPos, tourTarget, 1.2);
-        tourState = 'intro'; tourT = 0;
-      } else if (tourState === 'intro') {
-        tourT += dt;
-        if (tourT > 2.8) {
-          card.show(obj.userData);
-          voice.speak(S.narrate(obj.userData), obj.userData.voiceId);
-          tourState = 'wait'; tourT = 0;
-        }
-      } else if (tourState === 'wait') {
-        tourT += dt;
-        if (tourT > 6.0) {
-          tourIdx++;
-          if (tourIdx >= TOUR.length) {
-            touring = false;
-            tourBtn.innerHTML = '<span class="sv-btn__icon">🚀</span><span>自动漫游</span>';
-            tourBtn.classList.remove('is-active');
-            card.hide();
-            fly.flyTo(new THREE.Vector3(0, 24, 46), new THREE.Vector3(0, 0, 0), 1.4);
-          } else {
-            tourState = 'fly';
-          }
-        }
-      }
-    }
-
-    /* ================= 动画 ================= */
-    const clock = new THREE.Clock();
-    const SUN_SPIN = 0.039;   // 太阳自转（相对地球，25.4 天）
-
-    function animate() {
-      const dt = clock.getDelta();
-      const dts = isPlaying ? dt * timeScale : 0;
-
-      planetNodes.forEach((m) => {
-        m.angle += dts * m.def.orbitSpeed * ORBIT_GAIN;
-        m.pivot.position.set(
-          Math.cos(m.angle) * m.def.orbit,
-          0,
-          Math.sin(m.angle) * m.def.orbit
-        );
-        m.body.rotation.y += dts * m.def.spin * SPIN_GAIN;
-      });
-
-      moonNodes.forEach((m) => {
-        m.angle += dts * m.def.orbitSpeed * ORBIT_GAIN;
-        const R = m.def.orbitR;
-        m.pivot.position.set(Math.cos(m.angle) * R, 0, Math.sin(m.angle) * R);
-        // 潮汐锁定：自转角 = 公转角，所以总是同一面朝向母星
-        m.body.rotation.y = -m.angle;
-      });
-
-      // 月球标签始终显示（这是本次要解决的问题：月球不能"隐身"）
-
-      if (isPlaying) {
-        sun.rotation.y += dts * SUN_SPIN;
-        const pulse = 1 + Math.sin(performance.now() / 600) * 0.04;
-        sunGlow.scale.set(16 * pulse, 16 * pulse, 1);
-      }
-
-      if (touring && isPlaying) tourStep(dt);
-      fly.update(dt);
-
-      // 跟随：把镜头的位移同步给目标天体，让它停在画面中心
-      if (follow && !fly.isActive()) {
-        follow.obj.getWorldPosition(followPos);
-        const dx = followPos.x - follow.last.x;
-        const dy = followPos.y - follow.last.y;
-        const dz = followPos.z - follow.last.z;
-        if (dx * dx + dy * dy + dz * dz < 4) {
-          camera.position.x += dx; camera.position.y += dy; camera.position.z += dz;
-          controls.target.x += dx; controls.target.y += dy; controls.target.z += dz;
-        }
-        follow.last.copy(followPos);
-      }
-
-      controls.update();
-      labelRenderer.render(scene, camera);
-      if (composer) composer.render();
-      else renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-    animate();
-
-    /* ================= 加载完成 & 自适应 ================= */
-    setTimeout(() => document.getElementById('loader').classList.add('is-done'), 300);
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      if (composer) composer.setSize(window.innerWidth, window.innerHeight);
-      labelRenderer.setSize(window.innerWidth, window.innerHeight);
-    });
+    mountSolarExplorer({ S, BODIES, infoOf, fmtLightTime, fmtLy });
   </script>
 </body>
 </html>
