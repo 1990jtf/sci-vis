@@ -7,6 +7,30 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIwIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjZjNmMGU4Ii8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZDhkM2M2Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMyYzMzMzAiLz48cGF0aCBkPSJNMTAgNDZoNDR2LTVIMTB6IiBmaWxsPSIjNGE0YTRlIi8+PHBhdGggZD0iTTMyIDEwTDExIDI4aDQyeiIgZmlsbD0iIzRhNGE0ZSIvPjxyZWN0IHg9IjE2IiB5PSIyOCIgd2lkdGg9IjMyIiBoZWlnaHQ9IjE4IiBmaWxsPSJ1cmwoI2cpIi8+PHBhdGggZD0iTTI2IDI4YTYgNiAwIDAgMCAxMiAweiIgZmlsbD0iIzJjMzMzMCIvPjxyZWN0IHg9IjMwIiB5PSIxOCIgd2lkdGg9IjQiIGhlaWdodD0iMTEiIGZpbGw9IiM5YzRkM2QiLz48L3N2Zz4=" />
   <link rel="stylesheet" href="../shared/theme.css" />
   <style>
+    :root { --sv-panel: rgba(24, 35, 30, .86); --sv-text-dim: #c3ccbd; --sv-text-faint: #5c7066; }
+    .sv-brand__title { background: none; color: #273f33; font-family: 'Songti SC', 'Noto Serif SC', serif; font-weight: 600; text-shadow: 0 1px 8px #e8ece0; }
+    .sv-brand__sub { color: #506659; }
+    .sv-dock { width: max-content; max-width: calc(100vw - 24px); justify-content: center; }
+    .sv-dock.sv-in { animation: none; }
+    .gd-index, .sv-card, .sv-dock { backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 0 8px 24px #18251b26; }
+    .sv-brand { padding: 10px 14px; margin: -10px -14px; border-radius: 12px; background: #e1e7dcdf; }
+    .sv-brand__eyebrow { color: #65796b; }
+    .sv-card:not(.is-open) { visibility: hidden; transform: none; }
+    .sv-label:focus-visible { outline: 2px solid #cda875; outline-offset: 3px; }
+    .sv-hint { padding: 4px 10px; border-radius: 10px; background: #e3e8ddd9; }
+    .gd-index { max-height: calc(100vh - 240px); overflow-y: auto; scrollbar-width: thin; }
+    .sv-label { background: rgba(29, 42, 33, .72); box-shadow: 0 2px 7px #172e1926; font-size: 11px; border-color: #d6e3ca40; }
+    @media (max-width: 600px) {
+      .sv-brand { top: 18px; left: 18px; }
+      .sv-brand__title { font-size: 20px; letter-spacing: 1px; }
+      .sv-brand__sub { font-size: 10px; max-width: 260px; }
+      .sv-brand__eyebrow { font-size: 9px; }
+      .sv-iconbtn--top { top: 16px; right: 14px; }
+      .sv-dock { bottom: 16px; border-radius: 20px; }
+      .sv-dock .sv-btn { height: 32px; }
+      .sv-card { max-height: 32vh; bottom: 104px; }
+      .sv-hint { bottom: 109px !important; font-size: 10px; }
+    }
     /* 景点索引：竖排，前缀小方块对应场景里的构件 */
     .gd-index {
       position: absolute;
@@ -66,7 +90,7 @@
       }
       .sv-dock .sv-btn { font-size: 11px; padding: 6px 8px; }
       .sv-dock__sep { margin: 0 2px; }
-      .sv-card { max-height: 44vh; overflow-y: auto; }
+      .sv-card { max-height: 32vh; overflow-y: auto; }
     }
   </style>
 </head>
@@ -100,6 +124,7 @@
     <button class="sv-btn sv-btn--ghost" data-view="moon">洞口</button>
     <button class="sv-btn sv-btn--ghost" data-view="aerial">俯瞰</button>
     <span class="sv-dock__sep"></span>
+    <button class="sv-btn sv-btn--ghost is-on" id="labelBtn" aria-pressed="true">标注</button>
     <button class="sv-btn sv-btn--ghost" id="resetBtn"><span class="sv-btn__icon">🔄</span><span>重置</span></button>
   </div>
 
@@ -116,6 +141,7 @@
 
   <script type="module">
     import * as THREE from 'three';
+    import { createGarden } from './garden-models.js';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
     import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -988,1121 +1014,35 @@
     camera.position.set(27, 30, 32);
 
     const { renderer, composer, renderPass } = S.createRenderer({
-      exposure: 1.04, bloomStrength: 0.18, bloomRadius: 0.6, bloomThreshold: 0.9,
+      exposure: 0.91, bloom: false,
     });
-    renderPass.scene = scene;
-    renderPass.camera = camera;
+    if (renderPass) { renderPass.scene = scene; renderPass.camera = camera; }
 
     const labelRenderer = new CSS2DRenderer();
     labelRenderer.setSize(window.innerWidth, window.innerHeight);
     labelRenderer.domElement.style.position = 'absolute';
     labelRenderer.domElement.style.top = '0';
     labelRenderer.domElement.style.pointerEvents = 'none';
+    labelRenderer.domElement.style.overflow = 'hidden';
     document.body.appendChild(labelRenderer.domElement);
 
     const controls = S.createControls(camera, renderer.domElement, new THREE.Vector3(0, 1.2, 0));
-    controls.minDistance = 8;
-    controls.maxDistance = 96;
+    controls.minDistance = 1.8;
+    controls.maxDistance = 180;
     controls.maxPolarAngle = Math.PI * 0.49;
 
     const P = (x, y, z) => new THREE.Vector3(x, y, z);
-    const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
-    const lerp = (a, b, t) => a + (b - a) * t;
 
-    /* ==================================================================
-       材料：粉墙、黛瓦、栗木、青石
-       ================================================================== */
-    function std(color, opt) {
-      opt = opt || {};
-      return new THREE.MeshStandardMaterial({
-        color,
-        roughness: opt.rough != null ? opt.rough : 0.86,
-        metalness: opt.metal != null ? opt.metal : 0.0,
-        flatShading: !!opt.flat,
-        side: opt.side || THREE.FrontSide,
-        transparent: !!opt.transparent,
-        opacity: opt.opacity != null ? opt.opacity : 1,
-        emissive: opt.emissive != null ? opt.emissive : 0x000000,
-        emissiveIntensity: opt.emissiveIntensity != null ? opt.emissiveIntensity : 0,
-      });
-    }
-
-    const MAT = {
-      wall: std(0xe7e1d2, { rough: 0.94 }),      // 粉墙
-      wallWarm: std(0xd2cbb9, { rough: 0.95 }),
-      tile: std(0x2b3035, { rough: 0.78 }),      // 黛瓦
-      tileDark: std(0x20252a, { rough: 0.8 }),
-      wood: std(0x6a3527, { rough: 0.7 }),       // 栗木
-      woodDark: std(0x48241a, { rough: 0.74 }),
-      woodLight: std(0xa06a4c, { rough: 0.7 }),
-      stone: std(0x807a6c, { rough: 0.92, flat: true }),   // 青石
-      stoneDark: std(0x6f6a5e, { rough: 0.94, flat: true }),
-      ground: null,
-      water: null,
-      leafDark: std(0x2f4c34, { rough: 0.9, flat: true }),
-      leafMid: std(0x40633c, { rough: 0.9, flat: true }),
-      leafLight: std(0x577a45, { rough: 0.9, flat: true }),
-      bamboo: std(0x6d8a45, { rough: 0.85, flat: true }),
-      bambooStem: std(0x8a9a52, { rough: 0.8 }),
-      lotus: std(0x3f6339, { rough: 0.9, side: THREE.DoubleSide }),
-      flower: std(0xd99cb0, { rough: 0.78, emissive: 0x2a0e18, emissiveIntensity: 0.15 }),
-      trunk: std(0x5b4535, { rough: 0.95 }),
-    };
-
-    /* ==================================================================
-       程序化纹理：花街铺地、瓦垄
-       ================================================================== */
-    function pavingTexture() {
-      const c = document.createElement('canvas');
-      c.width = c.height = 512;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#b8b2a0';
-      ctx.fillRect(0, 0, 512, 512);
-      // 卵石
-      for (let i = 0; i < 1400; i++) {
-        const x = Math.random() * 512, y = Math.random() * 512;
-        const r = 2.4 + Math.random() * 6;
-        const g = 128 + Math.random() * 58;
-        ctx.beginPath();
-        ctx.ellipse(x, y, r, r * (0.7 + Math.random() * 0.5), Math.random() * 3.14, 0, 6.283);
-        ctx.fillStyle = 'rgb(' + Math.round(g) + ',' + Math.round(g - 5) + ',' + Math.round(g - 20) + ')';
-        ctx.fill();
-      }
-      // 苔藓斑
-      for (let i = 0; i < 90; i++) {
-        const x = Math.random() * 512, y = Math.random() * 512;
-        const r = 8 + Math.random() * 26;
-        const grd = ctx.createRadialGradient(x, y, 0, x, y, r);
-        grd.addColorStop(0, 'rgba(96,112,74,0.30)');
-        grd.addColorStop(1, 'rgba(96,112,74,0)');
-        ctx.fillStyle = grd;
-        ctx.beginPath(); ctx.arc(x, y, r, 0, 6.283); ctx.fill();
-      }
-      const t = new THREE.CanvasTexture(c);
-      t.colorSpace = THREE.SRGBColorSpace;
-      t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      t.repeat.set(1, 1);
-      t.anisotropy = 4;
-      return t;
-    }
-
-    function tileTexture() {
-      const c = document.createElement('canvas');
-      c.width = 64; c.height = 128;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#2f3439';
-      ctx.fillRect(0, 0, 64, 128);
-      // 竖向瓦垄
-      for (let x = 0; x < 64; x += 8) {
-        ctx.fillStyle = '#23282c';
-        ctx.fillRect(x, 0, 3, 128);
-        ctx.fillStyle = '#3a4045';
-        ctx.fillRect(x + 4, 0, 2, 128);
-      }
-      // 横向瓦口
-      for (let y = 0; y < 128; y += 16) {
-        ctx.fillStyle = 'rgba(20,24,28,0.35)';
-        ctx.fillRect(0, y, 64, 2);
-      }
-      const t = new THREE.CanvasTexture(c);
-      t.colorSpace = THREE.SRGBColorSpace;
-      t.wrapS = t.wrapT = THREE.RepeatWrapping;
-      t.repeat.set(6, 2);
-      t.anisotropy = 4;
-      return t;
-    }
-
-    const pavementTex = pavingTexture();
-    MAT.ground = new THREE.MeshStandardMaterial({ map: pavementTex, roughness: 0.95, metalness: 0 });
-
-    const tileTex = tileTexture();
-    const matTileTex = new THREE.MeshStandardMaterial({ map: tileTex, color: 0xffffff, roughness: 0.8 });
-
-    /* ==================================================================
-       基础几何工具
-       ================================================================== */
-    function add(mesh, x, y, z) {
-      if (x != null) mesh.position.set(x, y, z);
-      scene.add(mesh);
-      return mesh;
-    }
-    function box(w, h, d, mat, x, y, z, ry) {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-      if (x != null) m.position.set(x, y, z);
-      if (ry) m.rotation.y = ry;
-      m.castShadow = true;
-      m.receiveShadow = true;
-      return m;
-    }
-    function cyl(rt, rb, h, seg, mat, x, y, z) {
-      const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
-      if (x != null) m.position.set(x, y, z);
-      m.castShadow = true;
-      m.receiveShadow = true;
-      return m;
-    }
-    // 不规则石块：噪声球，可非均匀缩放
-    function rockGeo(rx, ry, rz, opt) {
-      opt = opt || {};
-      const g = new THREE.SphereGeometry(1, opt.seg || 16, opt.seg2 || 12);
-      const pos = g.attributes.position;
-      const v = new THREE.Vector3();
-      const seed = opt.seed || 0;
-      const noise = opt.noise != null ? opt.noise : 0.18;
-      for (let i = 0; i < pos.count; i++) {
-        v.fromBufferAttribute(pos, i);
-        const n = S.fbm2(v.x * 2.4 + seed, v.y * 2.4 + v.z * 1.7 + seed, 3);
-        const fine = S.fbm2(v.x * 7.5 + seed * 2, v.y * 7.5 + v.z * 3.4, 2);
-        const k = 1 + (n - 0.5) * 2 * noise + (fine - 0.5) * 0.12;
-        pos.setXYZ(i, v.x * rx * k, v.y * ry * k, v.z * rz * k);
-      }
-      g.computeVertexNormals();
-      return g;
-    }
-    // 沿曲线的变半径管（树干、枝条、柳条）
-    function sweep(pts, radFn, opt) {
-      opt = opt || {};
-      const tub = opt.tubular || 48;
-      const rad = opt.radial || 7;
-      const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5);
-      const frames = curve.computeFrenetFrames(tub, false);
-      const pos = [], uv = [], idx = [];
-      const c = new THREE.Vector3();
-      for (let i = 0; i <= tub; i++) {
-        const t = i / tub;
-        curve.getPointAt(t, c);
-        const N = frames.normals[i], B = frames.binormals[i];
-        const r = typeof radFn === 'function' ? radFn(t) : radFn;
-        for (let j = 0; j <= rad; j++) {
-          const a = (j / rad) * Math.PI * 2;
-          const ca = Math.cos(a) * r, sa = Math.sin(a) * r;
-          pos.push(c.x + N.x * ca + B.x * sa, c.y + N.y * ca + B.y * sa, c.z + N.z * ca + B.z * sa);
-          uv.push(t, j / rad);
-        }
-      }
-      for (let i = 0; i < tub; i++) {
-        for (let j = 0; j < rad; j++) {
-          const a = i * (rad + 1) + j, b = a + 1, d = a + rad + 1, e = d + 1;
-          idx.push(a, d, b, b, d, e);
-        }
-      }
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-      geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-      geo.setIndex(idx);
-      geo.computeVertexNormals();
-      const m = new THREE.Mesh(geo, opt.mat || MAT.stone);
-      m.castShadow = true;
-      return m;
-    }
-
-    /* ==================================================================
-       天空与光照：江南的阴天，天光比日光更重要
-       ================================================================== */
-    const skyMat = new THREE.ShaderMaterial({
-      side: THREE.BackSide, depthWrite: false,
-      uniforms: {
-        uTop: { value: new THREE.Color(0x9fb3bb) },
-        uMid: { value: new THREE.Color(0xcfd8d4) },
-        uBottom: { value: new THREE.Color(0xe6e6dc) },
-      },
-      vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
-      fragmentShader: `
-        varying vec3 vDir; uniform vec3 uTop, uMid, uBottom;
-        void main(){
-          float h = clamp(vDir.y, 0.0, 1.0);
-          vec3 col = mix(uBottom, uMid, smoothstep(0.0, 0.22, h));
-          col = mix(col, uTop, smoothstep(0.18, 0.85, h));
-          gl_FragColor = vec4(col, 1.0);
-        }`,
-    });
-    scene.add(new THREE.Mesh(new THREE.SphereGeometry(260, 32, 20), skyMat));
-
-    scene.add(new THREE.HemisphereLight(0xdfeaf0, 0x4a4a3c, 1.15));
-    const sunLight = new THREE.DirectionalLight(0xfff0d8, 2.35);
-    sunLight.position.set(30, 32, 24);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.set(2048, 2048);
-    sunLight.shadow.camera.left = -26;
-    sunLight.shadow.camera.right = 26;
-    sunLight.shadow.camera.top = 26;
-    sunLight.shadow.camera.bottom = -26;
-    sunLight.shadow.camera.near = 1;
-    sunLight.shadow.camera.far = 140;
-    sunLight.shadow.bias = -0.0005;
-    scene.add(sunLight);
-    const fillLight = new THREE.DirectionalLight(0xb8cfe0, 0.75);
-    fillLight.position.set(-30, 18, -22);
-    scene.add(fillLight);
-
-    /* ==================================================================
-       场地：花街铺地 + 围墙
-       ================================================================== */
-    const YARD = { x: 21, z: 16 };
-
-    // 池岸折线（场地挖洞与水面共用）
-    const POND = [
-      [-9.4, -1.2], [-8.2, -4.8], [-4.2, -6.6], [0.6, -6.4], [5.6, -4.6],
-      [9.2, -1.0], [9.8, 2.4], [7.8, 5.6], [3.4, 7.2], [-1.4, 6.9],
-      [-5.8, 5.2], [-8.6, 2.2],
-    ];
-
-    // 地面必须给池塘挖出洞来，否则水面整片被地面盖住
-    function groundShapeOf(w, d) {
-      const sh = new THREE.Shape();
-      sh.moveTo(-w / 2, -d / 2);
-      sh.lineTo(w / 2, -d / 2);
-      sh.lineTo(w / 2, d / 2);
-      sh.lineTo(-w / 2, d / 2);
-      sh.closePath();
-      // 把池塘从地面里挖掉
-      const hole = new THREE.Path();
-      POND.forEach(([x, z], i) => (i ? hole.lineTo(x, -z) : hole.moveTo(x, -z)));
-      hole.closePath();
-      sh.holes.push(hole);
-      return sh;
-    }
-    const groundShape = groundShapeOf(43.4, 33.4);
-    const groundGeo = new THREE.ShapeGeometry(groundShape, 8);
-    groundGeo.rotateX(-Math.PI / 2);
-    // UV 换成世界坐标，纹理按 7 米一格平铺
-    (function fixUV(g) {
-      const pos = g.attributes.position;
-      const uv = new Float32Array(pos.count * 2);
-      for (let i = 0; i < pos.count; i++) {
-        uv[i * 2] = pos.getX(i) / 7;
-        uv[i * 2 + 1] = pos.getZ(i) / 7;
-      }
-      g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-    })(groundGeo);
-    const ground = new THREE.Mesh(groundGeo, MAT.ground);
-    ground.position.y = 0;
-    ground.receiveShadow = true;
-    scene.add(ground);
-
-    // 院外草地：压在园地之下，只在墙外露出来
-    const outsideMat = std(0x69764f, { rough: 0.99 });
-    const outerGeo = new THREE.ShapeGeometry(groundShapeOf(240, 220), 6);
-    outerGeo.rotateX(-Math.PI / 2);
-    const outside = new THREE.Mesh(outerGeo, outsideMat);
-    outside.position.y = -0.012;
-    outside.receiveShadow = true;
-    scene.add(outside);
-
-    /* ---- 草坪：园子不能整片都是铺地 ---- */
-    function lawn(x, z, w, d, rot, color) {
-      const sh = new THREE.Shape();
-      const n = 26;
-      for (let i = 0; i <= n; i++) {
-        const a = (i / n) * Math.PI * 2;
-        const wob = 0.86 + S.fbm2(Math.cos(a) * 1.9 + x * 0.2, Math.sin(a) * 1.9 + z * 0.2, 4) * 0.42;
-        const px = Math.cos(a) * (w / 2) * wob;
-        const pz = Math.sin(a) * (d / 2) * wob;
-        if (i === 0) sh.moveTo(px, pz); else sh.lineTo(px, pz);
-      }
-      sh.closePath();
-      const geo = new THREE.ShapeGeometry(sh, 12);
-      geo.rotateX(-Math.PI / 2);
-      const m = new THREE.Mesh(geo, std(color || 0x6d7f4c, { rough: 0.99 }));
-      m.position.set(x, 0.012, z);
-      m.rotation.y = rot || 0;
-      m.receiveShadow = true;
-      scene.add(m);
-      return m;
-    }
-    lawn(-15.6, -3.2, 9.4, 14.5, 0.3, 0x6d7f4c);
-    lawn(16.0, 5.5, 8.6, 14.5, -0.2, 0x71844f);
-    lawn(-3.0, 11.4, 21, 8.0, 0.1, 0x6a7c49);
-    lawn(2.5, -12.9, 17, 5.6, 0, 0x6f824e);
-
-    /* ---- 带洞的墙：月洞门、漏窗都用它 ---- */
-    function wallWithHoles(w, h, t, holes) {
-      const shape = new THREE.Shape();
-      shape.moveTo(-w / 2, 0);
-      shape.lineTo(w / 2, 0);
-      shape.lineTo(w / 2, h);
-      shape.lineTo(-w / 2, h);
-      shape.closePath();
-      (holes || []).forEach((hl) => shape.holes.push(hl));
-      const geo = new THREE.ExtrudeGeometry(shape, {
-        depth: t, bevelEnabled: false, curveSegments: 36,
-      });
-      geo.translate(0, 0, -t / 2);
-      geo.computeVertexNormals();
-      const m = new THREE.Mesh(geo, MAT.wall);
-      m.castShadow = true;
-      m.receiveShadow = true;
-      return m;
-    }
-    function circleHole(cx, cy, r) {
-      const p = new THREE.Path();
-      p.absarc(cx, cy, r, 0, Math.PI * 2, true);
-      return p;
-    }
-    // 海棠纹漏窗：四瓣 + 花心
-    function latticeHoles(cx, cy, r) {
-      const out = [];
-      const petals = [[0, 0.60], [0, -0.60], [0.60, 0], [-0.60, 0]];
-      petals.forEach(([dx, dy]) => {
-        const p = new THREE.Path();
-        p.absarc(cx + dx * r, cy + dy * r, r * 0.30, 0, Math.PI * 2, true);
-        out.push(p);
-      });
-      const c0 = new THREE.Path();
-      c0.absarc(cx, cy, r * 0.17, 0, Math.PI * 2, true);
-      out.push(c0);
-      // 四角小孔
-      [[0.42, 0.42], [-0.42, 0.42], [0.42, -0.42], [-0.42, -0.42]].forEach(([dx, dy]) => {
-        const p = new THREE.Path();
-        p.absarc(cx + dx * r, cy + dy * r, r * 0.12, 0, Math.PI * 2, true);
-        out.push(p);
-      });
-      return out;
-    }
-
-    /* ---- 北墙（整面，不开洞） ---- */
-    (function northWall() {
-      const g = new THREE.Group();
-      const w = box(YARD.x * 2 + 0.7, 2.95, 0.32, MAT.wall, 0, 1.475, -YARD.z);
-      g.add(w);
-      // 压顶瓦檐
-      const cap = box(YARD.x * 2 + 1.0, 0.15, 0.8, matTileTex, 0, 3.02, -YARD.z);
-      g.add(cap);
-      // 墙裙（青砖）
-      const skirt = box(YARD.x * 2 + 0.72, 0.5, 0.42, MAT.stoneDark, 0, 0.25, -YARD.z);
-      g.add(skirt);
-      scene.add(g);
-    })();
-
-    /* ---- 南墙：中间开月洞门 ---- */
-    (function southWall() {
-      const w = wallWithHoles(YARD.x * 2 + 0.7, 3.3, 0.36, [circleHole(0, 1.5, 1.45)]);
-      w.position.set(0, 0, YARD.z);
-      scene.add(w);
-      const cap = box(YARD.x * 2 + 1.0, 0.16, 0.86, matTileTex, 0, 3.38, YARD.z);
-      scene.add(cap);
-      const skirt = box(YARD.x * 2 + 0.72, 0.5, 0.42, MAT.stoneDark, 0, 0.25, YARD.z);
-      scene.add(skirt);
-      // 门洞线脚：一圈薄环，让圆更"满"
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(1.47, 0.055, 8, 64),
-        std(0xd7d0bf, { rough: 0.9 })
-      );
-      ring.position.set(0, 1.5, YARD.z + 0.19);
-      scene.add(ring);
-      const ring2 = ring.clone();
-      ring2.position.z = YARD.z - 0.19;
-      scene.add(ring2);
-    })();
-
-    /* ---- 东西墙：各开两扇漏窗 ---- */
-    function sideWall(xPos, holes) {
-      const w = wallWithHoles(YARD.z * 2 + 0.7, 3.3, 0.36, holes);
-      w.position.set(xPos, 0, 0);
-      w.rotation.y = Math.PI / 2;
-      scene.add(w);
-      const cap = box(YARD.z * 2 + 1.0, 0.16, 0.86, matTileTex, xPos, 3.38, 0);
-      cap.rotation.y = Math.PI / 2;
-      scene.add(cap);
-      const skirt = box(YARD.z * 2 + 0.72, 0.5, 0.42, MAT.stoneDark, xPos, 0.25, 0);
-      skirt.rotation.y = Math.PI / 2;
-      scene.add(skirt);
-    }
-    sideWall(-YARD.x, latticeHoles(0, 1.75, 1.05).concat(latticeHoles(9.5, 1.75, 1.05)));
-    sideWall(YARD.x, []);
-
-    /* ==================================================================
-       理水：不规则池岸、池底、水面
-       ================================================================== */
-    const WATER_Y = -0.16;
-
-    function pondShape(scale) {
-      const pts = POND.map(([x, z]) => P(x * (scale || 1), 0, z * (scale || 1)));
-      const curve = new THREE.CatmullRomCurve3(pts, true, 'catmullrom', 0.5);
-      const arr = curve.getSpacedPoints(120);
-      const shape = new THREE.Shape();
-      arr.forEach((v, i) => (i ? shape.lineTo(v.x, -v.z) : shape.moveTo(v.x, -v.z)));
-      shape.closePath();
-      return { shape, curve };
-    }
-    const pond = pondShape(1);
-    const pondInner = pondShape(0.985);
-
-    // 池底
-    const bedGeo = new THREE.ShapeGeometry(pondInner.shape, 24);
-    bedGeo.rotateX(-Math.PI / 2);
-    const bed = new THREE.Mesh(bedGeo, std(0x2b3a34, { rough: 0.98 }));
-    bed.position.y = -1.25;
-    bed.receiveShadow = true;
-    scene.add(bed);
-
-    // 水面
-    const waterGeo = new THREE.ShapeGeometry(pond.shape, 28);
-    waterGeo.rotateX(-Math.PI / 2);
-    // 给水面一点 UV：ShapeGeometry 的 uv 直接取世界 xz
-    const waterMat = new THREE.ShaderMaterial({
-      transparent: true, depthWrite: false, side: THREE.DoubleSide,
-      uniforms: {
-        uTime: { value: 0 },
-        uDeep: { value: new THREE.Color(0x18342f) },
-        uLight: { value: new THREE.Color(0x496a5f) },
-        uSky: { value: new THREE.Color(0xc9d6ce) },
-      },
-      vertexShader: `
-        varying vec3 vWorld;
-        void main(){
-          vec4 wp = modelMatrix * vec4(position, 1.0);
-          vWorld = wp.xyz;
-          gl_Position = projectionMatrix * viewMatrix * wp;
-        }`,
-      fragmentShader: `
-        varying vec3 vWorld;
-        uniform float uTime;
-        uniform vec3 uDeep, uLight, uSky;
-        void main(){
-          vec3 V = normalize(cameraPosition - vWorld);
-          // 细密涟漪：极轻微的法线扰动，制造"波光"
-          float r1 = sin(vWorld.x * 2.1 + uTime * 0.9) * cos(vWorld.z * 1.7 - uTime * 0.7);
-          float r2 = sin((vWorld.x + vWorld.z) * 3.4 - uTime * 1.3);
-          float ripple = r1 * 0.5 + r2 * 0.24;
-          float fres = pow(1.0 - clamp(V.y, 0.0, 1.0), 2.6);
-          vec3 col = mix(uDeep, uLight, 0.34 + ripple * 0.16);
-          col = mix(col, uSky, fres * 0.48);
-          // 点点波光
-          float glint = smoothstep(0.86, 1.0, ripple * 0.5 + 0.5);
-          col += vec3(0.55, 0.6, 0.56) * glint * 0.28;
-          gl_FragColor = vec4(col, 0.94);
-        }`,
-    });
-    const water = new THREE.Mesh(waterGeo, waterMat);
-    water.position.y = WATER_Y;
-    water.userData = { ...SPOTS.find((s) => s.id === 'chi'), kind: 'spot', key: 'chi' };
-    scene.add(water);
-
-    /* ---- 驳岸：沿池岸犬牙交错地摆石头 ---- */
-    (function revetment() {
-      const arr = pond.curve.getSpacedPoints(96);
-      const g = new THREE.Group();
-      arr.forEach((v, i) => {
-        if (i % 2 !== 0) return;
-        const rr = 0.3 + Math.random() * 0.3;
-        const m = new THREE.Mesh(rockGeo(rr * 1.25, rr * 0.75, rr, { seed: i * 2.7, noise: 0.26, seg: 10, seg2: 8 }), MAT.stone);
-        m.position.set(v.x + (Math.random() - 0.5) * 0.3, -0.12 + Math.random() * 0.12, v.z + (Math.random() - 0.5) * 0.3);
-        m.rotation.y = Math.random() * 6.28;
-        m.castShadow = true;
-        m.receiveShadow = true;
-        g.add(m);
-      });
-      scene.add(g);
-    })();
-
-    /* ==================================================================
-       建筑：六角亭
-       ================================================================== */
-    function hexRoof(R, h, lip) {
-      // 中心 + 6 檐角（翘起）+ 6 檐中（下垂），形成飞檐曲线
-      const pos = [0, h, 0];
-      const idx = [];
-      for (let i = 0; i < 6; i++) {
-        const a0 = (i / 6) * Math.PI * 2 + Math.PI / 6;
-        const a1 = ((i + 0.5) / 6) * Math.PI * 2 + Math.PI / 6;
-        pos.push(Math.cos(a0) * R, lip, Math.sin(a0) * R);
-        pos.push(Math.cos(a1) * R * 0.955, 0, Math.sin(a1) * R * 0.955);
-      }
-      for (let i = 0; i < 6; i++) {
-        const c1 = 1 + i * 2, mid = 2 + i * 2, c2 = 1 + ((i + 1) % 6) * 2;
-        idx.push(0, c1, mid, 0, mid, c2);
-      }
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-      geo.setIndex(idx);
-      geo.computeVertexNormals();
-      return geo;
-    }
-
-    function buildPavilion(x, z) {
-      const g = new THREE.Group();
-      g.position.set(x, 0, z);
-      const R = 2.7;       // 柱心六边形半径
-      const H = 3.4;       // 檐口高度
-
-      // 台基
-      const base = cyl(3.05, 3.2, 0.42, 6, MAT.stone, 0, 0.21, 0);
-      base.rotation.y = Math.PI / 6;
-      g.add(base);
-      const step = box(1.5, 0.16, 0.5, MAT.stone, 0, 0.08, 3.0);
-      g.add(step);
-
-      // 六柱
-      for (let i = 0; i < 6; i++) {
-        const a = (i / 6) * Math.PI * 2 + Math.PI / 6;
-        const cx = Math.cos(a) * R, cz = Math.sin(a) * R;
-        const col = cyl(0.13, 0.15, H, 10, MAT.wood, cx, 0.42 + H / 2, cz);
-        g.add(col);
-        // 柱础
-        const bs = cyl(0.2, 0.22, 0.14, 10, MAT.stone, cx, 0.49, cz);
-        g.add(bs);
-        // 坐凳栏杆（柱间矮栏）
-        const a2 = ((i + 1) / 6) * Math.PI * 2 + Math.PI / 6;
-        const nx = Math.cos(a2) * R, nz = Math.sin(a2) * R;
-        if (i !== 2) {   // 留一面做入口
-          const mx = (cx + nx) / 2, mz = (cz + nz) / 2;
-          const len = Math.hypot(nx - cx, nz - cz);
-          const ang = Math.atan2(nz - cz, nx - cx);
-          const rail = box(len * 0.92, 0.1, 0.16, MAT.wood, mx, 0.95, mz, -ang);
-          g.add(rail);
-          const rail2 = box(len * 0.92, 0.08, 0.1, MAT.wood, mx, 0.62, mz, -ang);
-          g.add(rail2);
-        }
-      }
-
-      // 檐枋：一圈六边形梁
-      const beam = cyl(2.62, 2.62, 0.2, 6, MAT.woodDark, 0, 0.42 + H - 0.1, 0);
-      beam.rotation.y = Math.PI / 6;
-      g.add(beam);
-
-      // 屋顶
-      const roof = new THREE.Mesh(hexRoof(3.5, 2.15, 0.5), matTileTex);
-      roof.position.y = 0.42 + H + 0.1;
-      roof.castShadow = true;
-      roof.userData = { ...SPOTS.find((s) => s.id === 'ting'), kind: 'spot', key: 'ting' };
-      g.add(roof);
-      // 檐口薄板，遮住屋顶下沿的锯齿
-      const eave = cyl(3.56, 3.5, 0.06, 6, MAT.tileDark, 0, 0.42 + H + 0.1, 0);
-      eave.rotation.y = Math.PI / 6;
-      g.add(eave);
-
-      // 宝顶
-      const knob = cyl(0.09, 0.3, 0.36, 10, MAT.tileDark, 0, 0.42 + H + 2.15 + 0.16, 0);
-      g.add(knob);
-      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.26, 14, 10), MAT.tileDark);
-      ball.position.y = 0.42 + H + 2.15 + 0.44;
-      ball.castShadow = true;
-      g.add(ball);
-
-      // 匾额
-      const pl = box(1.25, 0.34, 0.07, std(0x33261d, { rough: 0.6 }), 0, 0.42 + H - 0.34, R - 0.06);
-      g.add(pl);
-      const plEdge = box(1.36, 0.42, 0.04, std(0xb08b46, { rough: 0.45, metal: 0.35 }), 0, 0.42 + H - 0.34, R - 0.1);
-      g.add(plEdge);
-
-      // 亭中石桌石凳
-      const table = cyl(0.62, 0.58, 0.12, 16, MAT.stone, 0, 1.02, 0);
-      g.add(table);
-      g.add(cyl(0.16, 0.2, 0.6, 10, MAT.stone, 0, 0.72, 0));
-      [[0.95, 0], [-0.48, 0.82], [-0.48, -0.82]].forEach(([dx, dz]) => {
-        g.add(cyl(0.24, 0.26, 0.34, 12, MAT.stone, dx, 0.17, dz));
-      });
-
-      scene.add(g);
-      return g;
-    }
-    const pavilion = buildPavilion(11.6, -7.6);
-
-    /* ==================================================================
-       建筑：厅堂（远香堂）——硬山顶，四面长窗
-       ================================================================== */
-    function gableRoof(w, d, hLow, hHigh, mat) {
-      const g = new THREE.Group();
-      const half = d / 2;
-      const rise = hHigh - hLow;
-      const slopeLen = Math.hypot(half, rise);
-      const ang = Math.atan2(rise, half);
-      // 两坡
-      [1, -1].forEach((s) => {
-        const slab = box(w, 0.16, slopeLen, mat, 0, (hLow + hHigh) / 2, s * half / 2);
-        slab.rotation.x = -s * ang;
-        g.add(slab);
-      });
-      // 屋脊
-      g.add(box(w + 0.24, 0.24, 0.4, MAT.tileDark, 0, hHigh + 0.06, 0));
-      // 两端山墙（三角）
-      [1, -1].forEach((s) => {
-        const shape = new THREE.Shape();
-        shape.moveTo(-half, 0);
-        shape.lineTo(half, 0);
-        shape.lineTo(0, rise);
-        shape.closePath();
-        const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.18, bevelEnabled: false });
-        geo.translate(0, 0, -0.09);
-        const m = new THREE.Mesh(geo, MAT.wall);
-        m.rotation.y = s * Math.PI / 2;
-        m.position.set(s * (w / 2 + 0.09), hLow, 0);
-        m.castShadow = true;
-        g.add(m);
-      });
-      return g;
-    }
-
-    function buildHall(x, z) {
-      const g = new THREE.Group();
-      g.position.set(x, 0, z);
-      const W = 9.8, D = 5.6, H = 4.0;
-
-      // 台基
-      g.add(box(W + 0.9, 0.55, D + 0.9, MAT.stone, 0, 0.275, 0));
-      g.add(box(W + 1.6, 0.16, 1.0, MAT.stone, 0, 0.08, D / 2 + 1.0));
-
-      // 柱（四角 + 前后各两根）
-      const colXs = [-W / 2 + 0.35, -W / 6, W / 6, W / 2 - 0.35];
-      colXs.forEach((cx) => {
-        [D / 2 - 0.3, -D / 2 + 0.3].forEach((cz) => {
-          g.add(cyl(0.15, 0.17, H, 10, MAT.wood, cx, 0.55 + H / 2, cz));
-        });
-      });
-
-      // 三面白墙（后墙 + 两山墙），正面敞开做长窗
-      g.add(box(W, H, 0.24, MAT.wall, 0, 0.55 + H / 2, -D / 2 + 0.18));
-      [-1, 1].forEach((s) => {
-        g.add(box(0.24, H, D, MAT.wall, s * (W / 2 - 0.12), 0.55 + H / 2, 0));
-      });
-
-      // 正面落地长窗：木框 + 细格
-      const frame = box(W - 0.5, H - 0.3, 0.1, MAT.woodDark, 0, 0.55 + H / 2, D / 2 - 0.16);
-      g.add(frame);
-      const glass = box(W - 1.2, H - 0.9, 0.04, std(0xcdbfa0, { rough: 0.4, transparent: true, opacity: 0.32 }), 0, 0.55 + H / 2, D / 2 - 0.1);
-      g.add(glass);
-      for (let i = 0; i < 9; i++) {
-        const px = -W / 2 + 0.7 + i * ((W - 1.4) / 8);
-        g.add(box(0.05, H - 0.85, 0.06, MAT.wood, px, 0.55 + H / 2, D / 2 - 0.12));
-      }
-      for (let i = 0; i < 4; i++) {
-        const py = 0.75 + i * ((H - 0.9) / 3);
-        g.add(box(W - 1.3, 0.045, 0.06, MAT.wood, 0, py, D / 2 - 0.12));
-      }
-
-      // 屋顶
-      const roof = gableRoof(W + 1.3, D + 1.3, 0.55 + H, 0.55 + H + 1.55, matTileTex);
-      roof.position.z = 0;
-      g.add(roof);
-
-      // 匾额
-      const plaque = box(1.7, 0.44, 0.08, std(0x3a2c22, { rough: 0.6 }), 0, 0.55 + H + 0.02, D / 2 + 0.02);
-      g.add(plaque);
-      const plaqueEdge = box(1.82, 0.54, 0.05, std(0xa8863f, { rough: 0.45, metal: 0.4 }), 0, 0.55 + H + 0.02, D / 2 - 0.01);
-      g.add(plaqueEdge);
-
-      scene.add(g);
-      return g;
-    }
-    const hall = buildHall(-11.2, -9.6);
-    hall.rotation.y = 0;
-
-    /* ==================================================================
-       建筑：水榭（芙蓉榭）——平台挑出水面
-       ================================================================== */
-    function buildXie(x, z) {
-      const g = new THREE.Group();
-      g.position.set(x, 0, z);
-      const W = 6.4, D = 5.0, H = 3.3;
-
-      // 台基：一半在岸，一半挑水
-      g.add(box(W + 0.8, 0.5, D + 0.8, MAT.stone, 0, 0.25, 0));
-      // 临水侧的栏杆
-      g.add(box(W + 0.6, 0.09, 0.12, MAT.wood, 0, 1.02, D / 2 + 0.32));
-      for (let i = 0; i < 8; i++) {
-        g.add(box(0.09, 0.5, 0.09, MAT.wood, -W / 2 + i * (W / 7), 0.76, D / 2 + 0.32));
-      }
-
-      // 四柱
-      [[-W / 2 + 0.3, D / 2 - 0.3], [W / 2 - 0.3, D / 2 - 0.3], [-W / 2 + 0.3, -D / 2 + 0.3], [W / 2 - 0.3, -D / 2 + 0.3]]
-        .forEach(([cx, cz]) => {
-          g.add(cyl(0.13, 0.15, H, 10, MAT.wood, cx, 0.5 + H / 2, cz));
-        });
-
-      // 后墙（北）与两侧短墙
-      g.add(box(W, H, 0.22, MAT.wall, 0, 0.5 + H / 2, -D / 2 + 0.11));
-      [-1, 1].forEach((s) => {
-        g.add(box(0.22, H, D * 0.6, MAT.wall, s * (W / 2 - 0.11), 0.5 + H / 2, -D * 0.2));
-      });
-
-      // 屋顶
-      const roof = gableRoof(W + 1.1, D + 1.1, 0.5 + H, 0.5 + H + 0.92, matTileTex);
-      g.add(roof);
-
-      // 匾额
-      g.add(box(1.3, 0.34, 0.07, std(0x3a2c22, { rough: 0.6 }), 0, 0.5 + H - 0.02, D / 2 + 0.01));
-
-      scene.add(g);
-      return g;
-    }
-    const xie = buildXie(8.8, 8.4);
-
-    /* ==================================================================
-       建筑：舫（香洲）——旱船，前端尖
-       ================================================================== */
-    function buildBoat(x, z, rot) {
-      const g = new THREE.Group();
-      g.position.set(x, 0, z);
-      g.rotation.y = rot || 0;
-
-      // 船体：前尖后方
-      const s = new THREE.Shape();
-      s.moveTo(0, 3.9);
-      s.quadraticCurveTo(1.25, 2.4, 1.35, -0.4);
-      s.lineTo(1.35, -3.2);
-      s.quadraticCurveTo(1.2, -3.7, 0, -3.7);
-      s.quadraticCurveTo(-1.2, -3.7, -1.35, -3.2);
-      s.lineTo(-1.35, -0.4);
-      s.quadraticCurveTo(-1.25, 2.4, 0, 3.9);
-      const hullGeo = new THREE.ExtrudeGeometry(s, { depth: 0.85, bevelEnabled: false, curveSegments: 18 });
-      hullGeo.rotateX(-Math.PI / 2);
-      const hull = new THREE.Mesh(hullGeo, std(0x8a7d68, { rough: 0.92 }));
-      hull.position.y = 0.06;
-      hull.castShadow = true;
-      hull.receiveShadow = true;
-      g.add(hull);
-      // 甲板
-      const deck = new THREE.Mesh(new THREE.ShapeGeometry(s, 20), MAT.woodLight);
-      deck.rotation.x = -Math.PI / 2;
-      deck.position.y = 0.93;
-      g.add(deck);
-
-      // 中舱：四柱小亭
-      [[-1.1, 1.6], [1.1, 1.6], [-1.1, -0.6], [1.1, -0.6]].forEach(([cx, cz]) => {
-        g.add(cyl(0.1, 0.11, 2.05, 8, MAT.wood, cx, 1.96, cz));
-      });
-      g.add(box(2.9, 2.1, 2.5, std(0xcdbfa2, { rough: 0.5, transparent: true, opacity: 0.18 }), 0, 1.98, 0.5));
-      const cabinRoof = gableRoof(3.4, 3.0, 2.96, 3.56, matTileTex);
-      cabinRoof.position.set(0, 0, 0.5);
-      g.add(cabinRoof);
-
-      // 尾楼：两层
-      g.add(box(2.7, 2.0, 1.9, MAT.wall, 0, 1.94, -2.6));
-      const tailRoof = gableRoof(3.1, 2.3, 2.96, 3.4, matTileTex);
-      tailRoof.position.set(0, 0, -2.6);
-      g.add(tailRoof);
-      // 栏杆
-      g.add(box(2.9, 0.08, 0.1, MAT.wood, 0, 1.64, -1.62));
-
-      // 船头石阶
-      g.add(box(1.7, 0.16, 0.6, MAT.stone, 0, 0.92, 3.5));
-
-      scene.add(g);
-      return g;
-    }
-    const boat = buildBoat(-12.6, 4.2, Math.PI / 2);
-
-    /* ==================================================================
-       建筑：游廊——L 形，单坡顶，柱间坐凳
-       ================================================================== */
-    function buildCorridor(points) {
-      const g = new THREE.Group();
-      const H = 2.85;
-      for (let seg = 0; seg < points.length - 1; seg++) {
-        const a = points[seg], b = points[seg + 1];
-        const dx = b[0] - a[0], dz = b[1] - a[1];
-        const len = Math.hypot(dx, dz);
-        const ang = Math.atan2(dz, dx);
-        const n = Math.max(2, Math.round(len / 2.3));
-        const midX = (a[0] + b[0]) / 2, midZ = (a[1] + b[1]) / 2;
-
-        // 内外两排柱子，屋顶才有支撑
-        const nx = Math.sin(-ang), nz = Math.cos(-ang);
-        for (let i = 0; i <= n; i++) {
-          const t = i / n;
-          const px = a[0] + dx * t, pz = a[1] + dz * t;
-          g.add(cyl(0.1, 0.12, H, 8, MAT.wood, px, H / 2, pz));
-          g.add(cyl(0.09, 0.1, H * 0.92, 8, MAT.wood, px + nx * 1.25, H * 0.46, pz + nz * 1.25));
-        }
-        // 柱顶檐枋
-        const beam = box(len + 0.3, 0.16, 1.55, MAT.woodDark, midX, H + 0.02, midZ, -ang);
-        g.add(beam);
-        // 屋顶：单坡，靠墙一侧高
-        const roof = box(len + 0.4, 0.12, 1.6, matTileTex, midX, H + 0.22, midZ, -ang);
-        roof.rotation.z = 0.12;
-        g.add(roof);
-        // 檐口
-        const eave = box(len + 0.4, 0.08, 0.12, MAT.tileDark, midX, H + 0.05, midZ, -ang);
-        eave.position.x += Math.sin(-ang) * 0.7;
-        eave.position.z += Math.cos(-ang) * 0.7;
-        g.add(eave);
-        // 坐凳栏杆（外侧）
-        const bench = box(len + 0.2, 0.1, 0.16, MAT.wood, midX, 0.86, midZ, -ang);
-        bench.position.x += Math.sin(-ang) * 0.55;
-        bench.position.z += Math.cos(-ang) * 0.55;
-        g.add(bench);
-      }
-      scene.add(g);
-      return g;
-    }
-    const corridor = buildCorridor([[-6.4, -9.8], [1.5, -13.2], [8.4, -10.2]]);
-
-    /* ==================================================================
-       叠山：太湖石假山（瘦皱漏透）
-       ================================================================== */
-    function buildRockery(cx, cz) {
-      const g = new THREE.Group();
-      g.position.set(cx, 0, cz);
-      // [dx, dz, 高, 半径, 纵深, 旋转]
-      const blocks = [
-        [0, 0, 2.3, 1.5, 1.25, 0.2],
-        [-1.5, 0.7, 1.55, 1.05, 0.9, 1.1],
-        [1.45, 0.5, 1.8, 1.0, 0.85, 2.4],
-        [0.35, -0.9, 1.2, 0.95, 0.8, 0.7],
-        [-0.7, -0.6, 2.85, 0.85, 0.7, 1.9],
-        [0.9, 1.4, 0.85, 0.8, 0.7, 0.4],
-      ];
-      blocks.forEach(([dx, dz, h, rx, rz, rot], i) => {
-        const m = new THREE.Mesh(
-          rockGeo(rx, h, rz, { seed: 11.3 + i * 5.1, noise: 0.30, seg: 18, seg2: 13 }),
-          i % 3 === 0 ? MAT.stoneDark : MAT.stone
-        );
-        m.position.set(dx, h * 0.72, dz);
-        m.rotation.y = rot;
-        m.castShadow = true;
-        m.receiveShadow = true;
-        g.add(m);
-      });
-      // 山脚碎石
-      for (let i = 0; i < 9; i++) {
-        const a = Math.random() * 6.283;
-        const r = 1.6 + Math.random() * 1.1;
-        const s = 0.3 + Math.random() * 0.34;
-        const m = new THREE.Mesh(rockGeo(s * 1.3, s * 0.8, s, { seed: 40 + i, noise: 0.28, seg: 9, seg2: 7 }), MAT.stone);
-        m.position.set(Math.cos(a) * r, s * 0.5, Math.sin(a) * r * 0.8);
-        m.rotation.y = a;
-        m.castShadow = true;
-        g.add(m);
-      }
-      scene.add(g);
-      return g;
-    }
-    const rockery = buildRockery(-5.6, -8.2);
-
-    /* ==================================================================
-       曲桥：低平贴水，折线三折
-       ================================================================== */
-    function buildBridge(pts) {
-      const g = new THREE.Group();
-      const Y = 0.16;
-      for (let i = 0; i < pts.length - 1; i++) {
-        const a = pts[i], b = pts[i + 1];
-        const dx = b[0] - a[0], dz = b[1] - a[1];
-        const len = Math.hypot(dx, dz);
-        const ang = Math.atan2(dz, dx);
-        const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
-        const deck = box(len + 0.3, 0.14, 1.5, MAT.stone, mx, Y, mz, -ang);
-        g.add(deck);
-        // 低栏（两根矮柱 + 横杆）
-        [-1, 1].forEach((s) => {
-          const off = 0.66 * s;
-          const px = mx + Math.sin(-ang) * off, pz = mz + Math.cos(-ang) * off;
-          const rail = box(len, 0.07, 0.09, MAT.stoneDark, px, Y + 0.34, pz, -ang);
-          g.add(rail);
-          for (let k = 0; k <= 2; k++) {
-            const tt = k / 2;
-            const bx = a[0] + dx * tt + Math.sin(-ang) * off;
-            const bz = a[1] + dz * tt + Math.cos(-ang) * off;
-            g.add(box(0.09, 0.36, 0.09, MAT.stoneDark, bx, Y + 0.18, bz));
-          }
-        });
-        // 桥墩
-        const pier = cyl(0.16, 0.18, 1.4, 8, MAT.stoneDark, mx, Y - 0.7, mz);
-        g.add(pier);
-      }
-      scene.add(g);
-      return g;
-    }
-    const bridge = buildBridge([[-8.8, 0.6], [-4.6, 1.9], [-0.6, 0.9], [3.4, 2.4], [6.2, 3.9]]);
-
-    /* ==================================================================
-       植物：松、竹、柳、荷、芭蕉
-       ================================================================== */
-    function makePine(x, z, s) {
-      const g = new THREE.Group();
-      g.position.set(x, 0, z);
-      g.scale.setScalar(s || 1);
-      // 虬曲主干
-      const trunkPts = [P(0, 0, 0), P(0.22, 1.1, 0.1), P(-0.12, 2.1, -0.15), P(0.28, 3.0, 0.12), P(0.05, 3.7, 0)];
-      g.add(sweep(trunkPts, (t) => lerp(0.27, 0.09, t), { tubular: 26, radial: 7, mat: MAT.trunk }));
-      // 侧枝
-      g.add(sweep([P(0.18, 2.0, 0), P(-0.9, 2.5, 0.3), P(-1.6, 2.75, 0.2)], (t) => lerp(0.12, 0.05, t), { tubular: 16, radial: 6, mat: MAT.trunk }));
-      g.add(sweep([P(0.1, 2.7, 0), P(0.95, 3.05, -0.2), P(1.55, 3.2, -0.35)], (t) => lerp(0.1, 0.04, t), { tubular: 16, radial: 6, mat: MAT.trunk }));
-      // 树冠：扁平的松针团
-      const pads = [
-        [0.0, 3.9, 0.0, 1.15, 0.34],
-        [-1.5, 2.95, 0.15, 0.86, 0.26],
-        [1.5, 3.35, -0.3, 0.78, 0.24],
-        [0.35, 3.35, 0.72, 0.7, 0.22],
-      ];
-      pads.forEach(([px, py, pz, r, h], i) => {
-        const m = new THREE.Mesh(rockGeo(r, h, r * 0.92, { seed: 70 + i * 3.3, noise: 0.24, seg: 12, seg2: 9 }), i % 2 ? MAT.leafDark : MAT.leafMid);
-        m.position.set(px, py, pz);
-        m.castShadow = true;
-        g.add(m);
-      });
-      g.userData = { ...PLANTS.find((p) => p.id === 'song'), kind: 'plant', key: 'song' };
-      scene.add(g);
-      return g;
-    }
-
-    function makeBamboo(x, z, count, spread) {
-      const g = new THREE.Group();
-      g.position.set(x, 0, z);
-      const leafGeo = new THREE.ConeGeometry(0.07, 0.62, 4);
-      for (let i = 0; i < count; i++) {
-        const a = Math.random() * 6.283;
-        const r = Math.random() * (spread || 1.6);
-        const px = Math.cos(a) * r, pz = Math.sin(a) * r * 0.8;
-        const h = 4.2 + Math.random() * 2.6;
-        const lean = (Math.random() - 0.5) * 0.22;
-        const stem = cyl(0.038, 0.055, h, 6, MAT.bambooStem, px, h / 2, pz);
-        stem.rotation.z = lean;
-        g.add(stem);
-        // 竹节
-        for (let k = 1; k < 5; k++) {
-          const ny = (h / 5) * k;
-          const ring = cyl(0.058, 0.058, 0.03, 6, MAT.leafDark, px + lean * (ny - h / 2) * 0.0, ny, pz);
-          g.add(ring);
-        }
-        // 叶：顶部几片
-        for (let k = 0; k < 5; k++) {
-          const leaf = new THREE.Mesh(leafGeo, k % 2 ? MAT.bamboo : MAT.leafMid);
-          leaf.position.set(px + (Math.random() - 0.5) * 0.7, h - 0.1 + Math.random() * 0.5, pz + (Math.random() - 0.5) * 0.7);
-          leaf.rotation.set(Math.PI * 0.5 + (Math.random() - 0.5) * 0.5, Math.random() * 6.28, (Math.random() - 0.5) * 0.8);
-          leaf.castShadow = true;
-          g.add(leaf);
-        }
-      }
-      g.userData = { ...PLANTS.find((p) => p.id === 'zhu'), kind: 'plant', key: 'zhu' };
-      scene.add(g);
-      return g;
-    }
-
-    function makeWillow(x, z, s) {
-      const g = new THREE.Group();
-      g.position.set(x, 0, z);
-      g.scale.setScalar(s || 1);
-      const trunkPts = [P(0, 0, 0), P(0.18, 1.3, 0.12), P(-0.1, 2.4, -0.1), P(0.2, 3.2, 0.05)];
-      g.add(sweep(trunkPts, (t) => lerp(0.24, 0.1, t), { tubular: 22, radial: 7, mat: MAT.trunk }));
-      // 下垂枝条
-      const twigGeo = new THREE.ConeGeometry(0.055, 1.5, 4);
-      for (let i = 0; i < 16; i++) {
-        const a = Math.random() * 6.283;
-        const r = 0.5 + Math.random() * 1.5;
-        const topY = 2.9 + Math.random() * 0.7;
-        const px = Math.cos(a) * r, pz = Math.sin(a) * r;
-        const pts = [
-          P(0.1, topY, 0),
-          P(px * 0.5, topY + 0.15, pz * 0.5),
-          P(px, topY - 0.5, pz),
-          P(px * 1.06, topY - 1.7, pz * 1.06),
-        ];
-        g.add(sweep(pts, (t) => lerp(0.05, 0.018, t), { tubular: 12, radial: 4, mat: MAT.leafMid }));
-        // 叶串
-        for (let k = 0; k < 3; k++) {
-          const lf = new THREE.Mesh(twigGeo, MAT.leafLight);
-          lf.position.set(px * (1.0 + k * 0.05), topY - 0.9 - k * 0.5, pz * (1.0 + k * 0.05));
-          lf.rotation.z = (Math.random() - 0.5) * 0.3;
-          g.add(lf);
-        }
-      }
-      g.userData = { ...PLANTS.find((p) => p.id === 'liu'), kind: 'plant', key: 'liu' };
-      scene.add(g);
-      return g;
-    }
-
-    function makeLotus() {
-      const g = new THREE.Group();
-      const padGeo = new THREE.CircleGeometry(1, 12);
-      const positions = [
-        [4.2, 3.1], [5.4, 4.2], [3.2, 4.6], [6.2, 2.4], [-6.2, 0.2],
-        [-5.0, -0.8], [-6.8, 1.6], [1.2, 5.4], [2.4, 3.8], [-1.8, 4.6],
-        [7.2, 4.4], [5.6, 1.2], [-3.4, 2.6], [-7.2, -2.2], [0.2, 2.2],
-      ];
-      positions.forEach(([px, pz], i) => {
-        const s = 0.34 + Math.random() * 0.3;
-        const pad = new THREE.Mesh(padGeo, MAT.lotus);
-        pad.rotation.x = -Math.PI / 2;
-        pad.rotation.z = Math.random() * 6.28;
-        pad.position.set(px, WATER_Y + 0.03, pz);
-        pad.scale.set(s, s, s);
-        g.add(pad);
-        // 少量花
-        if (i % 5 === 2) {
-          const stem = cyl(0.025, 0.03, 0.55, 5, MAT.leafDark, px, WATER_Y + 0.3, pz);
-          g.add(stem);
-          const fl = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), MAT.flower);
-          fl.scale.set(1, 1.25, 1);
-          fl.position.set(px, WATER_Y + 0.66, pz);
-          g.add(fl);
-        }
-      });
-      g.userData = { ...PLANTS.find((p) => p.id === 'he'), kind: 'plant', key: 'he' };
-      scene.add(g);
-      return g;
-    }
-
-    function makeBanana(x, z, s) {
-      const g = new THREE.Group();
-      g.position.set(x, 0, z);
-      g.scale.setScalar(s || 1);
-      g.add(cyl(0.11, 0.16, 1.1, 8, MAT.leafDark, 0, 0.55, 0));
-      // 大叶片：弯曲的椭圆
-      for (let i = 0; i < 6; i++) {
-        const a = (i / 6) * Math.PI * 2 + 0.4;
-        const shape = new THREE.Shape();
-        shape.moveTo(0, 0);
-        shape.quadraticCurveTo(0.55, 0.55, 0.42, 1.55);
-        shape.quadraticCurveTo(0.2, 1.72, 0, 1.62);
-        shape.quadraticCurveTo(-0.2, 1.72, -0.42, 1.55);
-        shape.quadraticCurveTo(-0.55, 0.55, 0, 0);
-        const geo = new THREE.ShapeGeometry(shape, 14);
-        const m = new THREE.Mesh(geo, MAT.leafLight);
-        m.material.side = THREE.DoubleSide;
-        m.position.set(0, 1.0, 0);
-        m.rotation.y = a;
-        m.rotation.x = -0.55 - Math.random() * 0.25;
-        m.castShadow = true;
-        g.add(m);
-      }
-      scene.add(g);
-      return g;
-    }
-
-    const pine = makePine(-8.6, -8.8, 1.15);
-    const bamboo = makeBamboo(-16.2, -1.0, 26, 1.9);
-    const bamboo2 = makeBamboo(15.5, 2.2, 14, 1.2);
-    const willow = makeWillow(11.2, 2.6, 1.0);
-    const willow2 = makeWillow(-6.0, 8.4, 0.9);
-    const lotus = makeLotus();
-    const banana = makeBanana(-7.4, -6.8, 1.1);
-    const banana2 = makeBanana(-14.4, -7.4, 0.95);
-    const pine2 = makePine(15.8, -12.4, 0.85);
-    const pine3 = makePine(-17.2, 10.2, 0.9);
-    const bamboo3 = makeBamboo(-18.2, 6.0, 16, 1.3);
-    const willow3 = makeWillow(-4.0, -1.2, 0.82);
-
-    /* ==================================================================
-       借景：园外的远塔（半隐在雾里）
-       ================================================================== */
-    (function distantPagoda() {
-      const g = new THREE.Group();
-      g.position.set(13, 0, -58);
-      const matFar = std(0x8f9a96, { rough: 0.95 });
-      let y = 0;
-      for (let i = 0; i < 6; i++) {
-        const w = 4.6 - i * 0.42;
-        const body = box(w, 2.0, w, matFar, 0, y + 1.0, 0);
-        g.add(body);
-        // 檐
-        const eave = box(w + 1.5, 0.22, w + 1.5, std(0x6e7874, { rough: 0.9 }), 0, y + 2.05, 0);
-        g.add(eave);
-        const eave2 = box(w + 1.0, 0.14, w + 1.0, std(0x6e7874, { rough: 0.9 }), 0, y + 2.24, 0);
-        g.add(eave2);
-        y += 2.3;
-      }
-      g.add(cyl(0.1, 0.28, 1.6, 8, std(0x6e7874, { rough: 0.9 }), 0, y + 0.8, 0));
-      g.userData = { ...IDEAS.find((i) => i.id === 'jiejing'), kind: 'idea', key: 'jiejing' };
-      scene.add(g);
-    })();
+    renderer.domElement.setAttribute('role', 'img');
+    renderer.domElement.setAttribute('aria-label', '可交互的江南园林三维场景');
+    const garden = createGarden(scene, renderer, S, { SPOTS, PLANTS, IDEAS });
 
     /* ==================================================================
        3D 标签
        ================================================================== */
     const labelObjs = [];
     let labelTick = 0;
+    let labelsVisible = true;
     const labelV = new THREE.Vector3();
 
     function addLabel(text, pos, opt) {
@@ -2110,6 +1050,17 @@
       const obj = S.makeLabel(CSS2DObject, text, pos, 'sv-label' + (opt.minor ? ' is-minor' : ''));
       obj.userData.inner = obj.element;
       obj.userData.key = opt.key || null;
+      if (opt.key) {
+        obj.element.style.pointerEvents = 'auto';
+        obj.element.style.cursor = 'pointer';
+        obj.element.setAttribute('role', 'button');
+        obj.element.setAttribute('tabindex', '0');
+        obj.element.setAttribute('aria-label', '查看' + text);
+        obj.element.addEventListener('click', event => { event.stopPropagation(); focusKey(opt.key); });
+        obj.element.addEventListener('keydown', event => {
+          if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); focusKey(opt.key); }
+        });
+      }
       scene.add(obj);
       labelObjs.push(obj);
       return obj;
@@ -2120,14 +1071,14 @@
     addLabel('芙蓉榭', P(8.8, 5.7, 8.4), { key: 'xie' });
     addLabel('香洲（舫）', P(-12.6, 5.4, 4.2), { key: 'fang' });
     addLabel('游廊', P(1.5, 4.8, -13.2), { key: 'lang' });
-    addLabel('太湖石假山', P(-5.6, 6.4, -8.2), { key: 'shan' });
+    addLabel('太湖石假山', P(-3.5, 6.4, -6.7), { key: 'shan' });
     addLabel('水池', P(2.2, 1.1, -2.2), { key: 'chi' });
     addLabel('曲桥', P(-1.6, 1.5, 1.9), { key: 'qiao', minor: true });
     addLabel('月洞门', P(0, 4.7, 16), { key: 'men' });
     addLabel('漏窗', P(-21, 4.3, 9.5), { key: 'chuang', minor: true });
-    addLabel('松', P(-8.6, 8.6, -8.8), { key: 'song', minor: true });
+    addLabel('松', P(-14.8, 6.7, -3.8), { key: 'song', minor: true });
     addLabel('竹', P(-16.2, 6.8, -1.0), { key: 'zhu', minor: true });
-    addLabel('柳', P(11.2, 5.7, 2.6), { key: 'liu', minor: true });
+    addLabel('柳', P(10.6, 6, 1.5), { key: 'liu', minor: true });
     addLabel('荷', P(4.8, 1.2, 4.0), { key: 'he', minor: true });
     addLabel('借景 · 园外远塔', P(13, 14.5, -58), { key: 'jiejing', minor: true });
 
@@ -2160,45 +1111,56 @@
     }
 
     const FOCUS = {
-      ting: { pos: P(17.5, 8.5, -1.5), target: P(11.6, 4.2, -7.6) },
-      tang: { pos: P(-1.5, 7.5, -2.5), target: P(-11.2, 4.2, -9.6) },
-      xie: { pos: P(14.5, 6.5, 15.5), target: P(8.8, 3.2, 8.4) },
+      ting: { pos: P(21, 8.2, 3), target: P(11.6, 3.1, -7.6) },
+      tang: { pos: P(-.5, 6.2, 1), target: P(-11.2, 2.9, -9.6) },
+      xie: { pos: P(1.5, 5.3, .7), target: P(8.8, 2.2, 8.4) },
       fang: { pos: P(-5.0, 6.5, 9.5), target: P(-12.6, 3.0, 4.2) },
       lang: { pos: P(2.0, 6.5, -4.5), target: P(1.5, 3.2, -13.2) },
-      shan: { pos: P(3.0, 6.5, 1.5), target: P(-3.4, 3.0, -4.4) },
-      chi: { pos: P(16, 10, 13), target: P(0.5, 0, 0.5) },
+      shan: { pos: P(4, 4.5, 2.5), target: P(-3.5, 2.5, -6.7) },
+      chi: { pos: P(2, 9, 19), target: P(0, .5, -.7) },
       qiao: { pos: P(3.0, 5.0, 9.0), target: P(-0.5, 1.0, 1.6) },
       men: { pos: P(0, 3.0, 27), target: P(0, 2.2, 15) },
-      chuang: { pos: P(-31, 3.6, 9.5), target: P(-21, 2.4, 9.5) },
-      song: { pos: P(2.5, 7.5, -1.5), target: P(-2.6, 4.4, -4.9) },
+      chuang: { pos: P(-30, 2.8, 9.5), target: P(-21, 1.8, 9.5) },
+      song: { pos: P(-7.5, 4.8, 3), target: P(-14.8, 2.5, -3.8) },
       zhu: { pos: P(-10, 6.5, 2.5), target: P(-16.2, 3.2, -1.0) },
       liu: { pos: P(17, 6.5, 6.5), target: P(11.2, 3.0, 2.6) },
       he: { pos: P(9.5, 4.0, 8.5), target: P(4.8, 0.2, 4.0) },
       jiejing: { pos: P(9, 7, -13), target: P(9, 11, -40) },
     };
 
+    let focusedKey = null;
     function focusKey(key) {
+      focusedKey = key;
       const def = defByKey(key);
       if (!def) return;
       showInfo(def);
       markSpot(key);
       const f = FOCUS[key];
-      if (f) fly.flyTo(f.pos, f.target, 1.15);
+      if (f) {
+        renderer.domElement.setAttribute('aria-busy', 'true');
+        const pos = f.pos.clone().sub(f.target).multiplyScalar(Math.max(1, .85 / camera.aspect)).add(f.target);
+        fly.flyTo(pos, f.target, 1.15, () => renderer.domElement.setAttribute('aria-busy', 'false'));
+      }
     }
 
+    const labelBtn = document.getElementById('labelBtn');
+    labelBtn.addEventListener('click', () => {
+      labelsVisible = !labelsVisible;
+      labelBtn.classList.toggle('is-on', labelsVisible);
+      labelBtn.setAttribute('aria-pressed', String(labelsVisible));
+      labelObjs.forEach(o => { o.visible = labelsVisible; });
+    });
+
     /* ---- 拾取 ---- */
-    function pickTargets() {
-      return scene.children.filter((o) => o.userData && o.userData.kind);
-    }
     function resolveOwner(obj) {
       let o = obj;
       while (o && !(o.userData && o.userData.kind)) o = o.parent;
       return o ? o.userData : null;
     }
-    picker.onHover(() => scene.children, (obj) => {
+    picker.onHover(() => garden.pickTargets, (obj) => {
       renderer.domElement.style.cursor = resolveOwner(obj) ? 'pointer' : 'grab';
     });
-    picker.onClick(() => scene.children, (obj) => {
+    picker.onClick(() => garden.pickTargets, (obj) => {
       const owner = resolveOwner(obj);
       if (!owner) return;
       if (owner.key) focusKey(owner.key);
@@ -2206,7 +1168,7 @@
 
     /* ---- 景点索引 ---- */
     const spotList = document.getElementById('spotList');
-    ['ting', 'tang', 'xie', 'fang', 'lang', 'shan', 'chi', 'qiao'].forEach((key) => {
+    ['ting', 'tang', 'xie', 'fang', 'lang', 'shan', 'chi', 'qiao', 'men', 'chuang', 'song', 'zhu', 'liu', 'he'].forEach((key) => {
       const def = defByKey(key);
       if (!def) return;
       const b = document.createElement('button');
@@ -2221,18 +1183,24 @@
        视角
        ================================================================== */
     const VIEWS = {
-      overview: { pos: P(27, 30, 32), target: P(0, 1.2, 0) },
-      pavilion: { pos: P(9.9, 2.5, -3.9), target: P(-2.0, 0.7, 3.5) },
-      xie: { pos: P(9.0, 2.2, 8.6), target: P(-5.0, 1.0, -1.5) },
-      moon: { pos: P(0, 2.05, 23), target: P(0, 1.55, 5) },
+      overview: { pos: P(32, 28, 38), target: P(0, 1.2, 0) },
+      pavilion: { pos: P(11.6, 2.15, -6.2), target: P(-2.0, 1.0, 3.5) },
+      xie: { pos: P(7.7, 2.0, 6.8), target: P(-3.0, 1.0, -4.0) },
+      moon: { pos: P(0, 1.65, 22), target: P(0, 1.42, 5) },
       aerial: { pos: P(4, 52, 22), target: P(0, 0, 0) },
     };
     let currentView = 'overview';
 
     function setView(name) {
+      focusedKey = null;
       currentView = name;
       const v = VIEWS[name] || VIEWS.overview;
-      fly.flyTo(v.pos, v.target, 1.25);
+      const pos = v.pos.clone();
+      if (name === 'overview' || name === 'aerial') {
+        pos.sub(v.target).multiplyScalar(Math.max(1, 1.24 / camera.aspect)).add(v.target);
+      }
+      renderer.domElement.setAttribute('aria-busy', 'true');
+      fly.flyTo(pos, v.target, 1.25, () => renderer.domElement.setAttribute('aria-busy', 'false'));
       document.querySelectorAll('[data-view]').forEach((b) => {
         b.classList.toggle('is-on', b.dataset.view === name);
       });
@@ -2265,14 +1233,17 @@
        标签避让
        ================================================================== */
     function layoutLabels() {
-      if ((labelTick++ % 2) !== 0) return;
+      if (!labelsVisible || (labelTick++ % 2) !== 0) return;
       const items = [];
       labelObjs.forEach((o) => {
         const el = o.userData.inner;
         if (!el || parseFloat(el.style.opacity || '1') < 0.3) return;
         o.getWorldPosition(labelV);
         labelV.project(camera);
-        if (labelV.z > 1) return;
+        const minorInOverview = camera.aspect < 1 && !focusedKey && (currentView === 'overview' || currentView === 'aerial') && !['ting', 'tang', 'xie', 'shan', 'men'].includes(o.userData.key);
+        const offscreen = minorInOverview || labelV.z > 1 || Math.abs(labelV.x) > .94 || Math.abs(labelV.y) > .82;
+        el.style.visibility = offscreen ? 'hidden' : '';
+        if (offscreen) return;
         const x = (labelV.x * 0.5 + 0.5) * window.innerWidth;
         const y = (-labelV.y * 0.5 + 0.5) * window.innerHeight;
         const w = el.offsetWidth || 56;
@@ -2289,7 +1260,7 @@
           if (!hit) { placed.push(box); break; }
           shift += it.h + 3;
         }
-        it.el.style.transform = shift ? 'translateY(' + shift + 'px)' : '';
+        it.el.style.translate = shift ? '0 ' + shift + 'px' : '';
       });
     }
 
@@ -2297,27 +1268,17 @@
        动画
        ================================================================== */
     let elapsed = 0;
-    const willowGroups = [willow, willow2];
-    const bambooGroups = [bamboo, bamboo2];
 
     function animate() {
       const dt = Math.min(clock.getDelta(), 0.05);
       if (isPlaying) {
         elapsed += dt;
-        waterMat.uniforms.uTime.value = elapsed;
-        // 柳条与竹丛随风轻摆
-        willowGroups.forEach((g, i) => {
-          if (!g) return;
-          g.rotation.z = Math.sin(elapsed * 0.7 + i) * 0.012;
-          g.rotation.x = Math.cos(elapsed * 0.55 + i) * 0.008;
-        });
-        bambooGroups.forEach((g, i) => {
-          if (!g) return;
-          g.rotation.z = Math.sin(elapsed * 0.9 + i * 2) * 0.008;
-        });
+        garden.update(elapsed);
       }
       fly.update(dt);
       controls.update();
+      scene.fog.near = Math.max(65, camera.position.distanceTo(controls.target) + 24);
+      scene.fog.far = scene.fog.near + 100;
       layoutLabels();
       labelRenderer.render(scene, camera);
       if (composer) composer.render();
@@ -2336,8 +1297,9 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      composer.setSize(window.innerWidth, window.innerHeight);
+      if (composer) composer.setSize(window.innerWidth, window.innerHeight);
       labelRenderer.setSize(window.innerWidth, window.innerHeight);
+      if (!focusedKey && (currentView === 'overview' || currentView === 'aerial')) setView(currentView);
     });
   </script>
 </body>
