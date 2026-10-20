@@ -5,8 +5,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = '/tmp/atlas';
-const OUT = process.argv[2] || '/tmp/atlas/out';
+const ROOT = process.env.ATLAS_SOURCE || '/tmp/atlas';
+const OUT = process.argv[2] || path.join(__dirname, '../src/circulation/models');
 const atlas = JSON.parse(fs.readFileSync(path.join(ROOT, 'atlas.json'), 'utf8'));
 fs.mkdirSync(OUT, { recursive: true });
 
@@ -165,6 +165,18 @@ const conceptParts = (fma) => {
 const sysParts = (sys, minTri) =>
   atlas.parts.filter((p) => p.system === sys && p.indexCount / 3 >= (minTri || 0));
 
+// A concept includes its vessels and cavities, not just its outer surface.
+// Some organ segments are also classified as "venous" in the source metadata.
+const pulmonaryArteries = new Set(conceptParts('FMA66326').map((p) => p.id));
+const pulmonaryVeins = new Set(conceptParts('FMA66643').map((p) => p.id));
+const liverSurface = conceptParts('FMA7197').filter((p) => /hepatovenous segment|caudate lobe of liver/i.test(p.name));
+const organSurfaces = new Set(liverSurface.map((p) => p.id));
+const vesselParts = (sys, pulmonary) => sysParts(sys).filter((p) => {
+  if (organSurfaces.has(p.id)) return false;
+  const ids = sys === 'arterial' ? pulmonaryArteries : pulmonaryVeins;
+  return ids.has(p.id) === pulmonary;
+});
+
 // 先用皮肤算出整体高度，统一缩放到 H
 const skinParts = [byId.get('FJ2810')];
 let ymin = Infinity, ymax = -Infinity, xmin = Infinity, xmax = -Infinity;
@@ -181,16 +193,23 @@ const GROUPS = [
   { key: 'skin', color: [0.86, 0.68, 0.60].map(s2l), opacity: 0.30, rough: 0.55,
     parts: skinParts },
   { key: 'bone', color: [0.90, 0.86, 0.78].map(s2l), opacity: 0.62, rough: 0.5,
-    parts: sysParts('skeletal', 800) },
+    parts: sysParts('skeletal') },
   { key: 'artery', color: [0.82, 0.16, 0.24].map(s2l), opacity: 0.95, rough: 0.45, emissive: [0.36, 0.04, 0.06],
-    parts: sysParts('arterial', 1200) },
+    parts: vesselParts('arterial', false) },
   { key: 'vein', color: [0.16, 0.36, 0.78].map(s2l), opacity: 0.95, rough: 0.45, emissive: [0.04, 0.10, 0.28],
-    parts: sysParts('venous', 1200) },
+    parts: vesselParts('venous', false) },
+  { key: 'pulmonaryArtery', color: [0.18, 0.38, 0.68].map(s2l), rough: 0.43,
+    parts: vesselParts('arterial', true) },
+  { key: 'pulmonaryVein', color: [0.76, 0.19, 0.22].map(s2l), rough: 0.43,
+    parts: vesselParts('venous', true) },
 
-  { key: 'heart', color: [0.72, 0.16, 0.20].map(s2l), opacity: 1, rough: 0.42, emissive: [0.24, 0.03, 0.04], parts: conceptParts('FMA7088') },
+  { key: 'heart', color: [0.72, 0.16, 0.20].map(s2l), opacity: 1, rough: 0.42,
+    parts: ['FJ2428', 'FJ2438', 'FJ2439'].map((id) => byId.get(id)) },
   { key: 'lungs', color: [0.86, 0.58, 0.60].map(s2l), opacity: 1, rough: 0.5, emissive: [0.18, 0.07, 0.08],
-    parts: [...conceptParts('FMA7309'), ...conceptParts('FMA7310')] },
-  { key: 'liver', color: [0.48, 0.16, 0.13].map(s2l), opacity: 1, rough: 0.46, emissive: [0.14, 0.03, 0.02], parts: conceptParts('FMA7197') },
+    parts: [...conceptParts('FMA7309'), ...conceptParts('FMA7310')].filter((p) => p.system === 'respiratory') },
+  { key: 'liver', color: [0.48, 0.16, 0.13].map(s2l), opacity: 1, rough: 0.46, parts: liverSurface },
+  { key: 'brain', color: [0.76, 0.61, 0.57].map(s2l), rough: 0.65,
+    parts: conceptParts('FMA50801').filter((p) => p.system === 'nervous' && !/white matter|aqueduct/i.test(p.name)) },
   { key: 'stomach', color: [0.74, 0.42, 0.34].map(s2l), opacity: 1, rough: 0.46, parts: conceptParts('FMA7148') },
   { key: 'smallIntestine', color: [0.78, 0.42, 0.30].map(s2l), opacity: 1, rough: 0.46, parts: conceptParts('FMA7200') },
   { key: 'largeIntestine', color: [0.66, 0.48, 0.28].map(s2l), opacity: 1, rough: 0.48, parts: conceptParts('FMA7201') },
@@ -201,7 +220,7 @@ const GROUPS = [
   { key: 'trachea', color: [0.80, 0.72, 0.66].map(s2l), opacity: 1, rough: 0.5, parts: conceptParts('FMA7394') },
 ];
 
-const CORE = ['skin', 'artery', 'vein', 'heart', 'lungs', 'liver', 'stomach', 'smallIntestine',
+const CORE = ['skin', 'artery', 'vein', 'pulmonaryArtery', 'pulmonaryVein', 'heart', 'lungs', 'brain', 'liver', 'stomach', 'smallIntestine',
   'largeIntestine', 'kidney', 'spleen', 'pancreas', 'bladder', 'trachea'];
 
 function emit(name, keys) {

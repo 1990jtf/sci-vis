@@ -6,98 +6,7 @@
   <title>人体 · 血液循环</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJnIiBjeD0iMzUlIiBjeT0iMzAlIiByPSI3NSUiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2M3ZDJmZSIvPjxzdG9wIG9mZnNldD0iLjU1IiBzdG9wLWNvbG9yPSIjNjM2NmYxIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMzEyZTgxIi8+PC9yYWRpYWxHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwYjEwMjAiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNyIgZmlsbD0idXJsKCNnKSIvPjxlbGxpcHNlIGN4PSIzMiIgY3k9IjMyIiByeD0iMjUiIHJ5PSI4IiBmaWxsPSJub25lIiBzdHJva2U9IiNhNWI0ZmMiIHN0cm9rZS13aWR0aD0iMi42IiBvcGFjaXR5PSIuOSIgdHJhbnNmb3JtPSJyb3RhdGUoLTIyIDMyIDMyKSIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjE3IiBmaWxsPSJub25lIiBzdHJva2U9IiNlMGU3ZmYiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iLjUiLz48L3N2Zz4=" />
   <link rel="stylesheet" href="../shared/theme.css" />
-  <style>
-    /* ---- 器官索引 ---- */
-    .cx-index {
-      left: 24px; top: 116px; width: 176px;
-      padding: 12px 12px 10px;
-      max-height: calc(100vh - 330px);
-      overflow-y: auto; overscroll-behavior: contain;
-    }
-    .cx-index__title {
-      font-size: 10.5px; letter-spacing: 2px; text-transform: uppercase;
-      color: var(--sv-text-faint); margin-bottom: 9px;
-    }
-    .cx-index__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-    .cx-item {
-      display: flex; align-items: center; gap: 6px;
-      padding: 6px 6px; border-radius: 8px; cursor: pointer;
-      font-size: 11.5px; color: var(--sv-text-dim); white-space: nowrap;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid transparent;
-      transition: background .16s, color .16s, border-color .16s;
-    }
-    .cx-item:hover { background: rgba(255, 255, 255, 0.09); color: var(--sv-text); }
-    .cx-item.is-on {
-      background: rgba(255, 92, 112, 0.18);
-      border-color: rgba(255, 130, 148, 0.45); color: #fff;
-    }
-    .cx-item__dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
-
-    /* ---- 分段按钮 ---- */
-    .cx-seg { display: flex; gap: 4px; margin-top: 10px; }
-    .cx-seg button {
-      flex: 1; padding: 6px 0; font-size: 11px; line-height: 1;
-      font-family: inherit; border-radius: 8px; cursor: pointer;
-      border: 1px solid var(--sv-stroke);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--sv-text-dim);
-      transition: background .16s, color .16s, border-color .16s;
-    }
-    .cx-seg button:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
-    .cx-seg button.is-on {
-      background: rgba(120, 150, 255, 0.24);
-      border-color: rgba(140, 170, 255, 0.5);
-      color: #fff;
-    }
-    .cx-note {
-      margin-top: 10px; padding-top: 9px;
-      border-top: 1px solid rgba(255, 255, 255, 0.07);
-      font-size: 10.5px; line-height: 1.55; color: var(--sv-text-faint);
-    }
-
-    /* ---- 解剖图层：可以逐层剥离 ---- */
-    .cx-layers { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-    .cx-layers button {
-      flex: 1 1 30%; padding: 6px 0; font-size: 11px; line-height: 1;
-      font-family: inherit; border-radius: 8px; cursor: pointer;
-      border: 1px solid var(--sv-stroke);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--sv-text-dim);
-      transition: background .16s, color .16s, border-color .16s, opacity .16s;
-    }
-    .cx-layers button:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
-    .cx-layers button.is-on {
-      background: rgba(214, 138, 120, 0.22);
-      border-color: rgba(232, 162, 144, 0.5);
-      color: #fff;
-    }
-    .cx-layers button.is-off { opacity: 0.42; }
-    .cx-credit { margin-top: 8px; font-size: 9.5px; line-height: 1.5; color: rgba(255,255,255,0.32); max-width: 214px; word-break: break-word; }
-    .cx-credit a { color: rgba(160,190,255,0.6); text-decoration: none; }
-    .cx-credit a:hover { color: rgba(190,215,255,0.9); }
-
-    .sv-legend { min-width: 234px; }
-    .cx-label-wrap { pointer-events: none; }
-    .cx-label-wrap .sv-label { pointer-events: auto; transition: transform 0.18s ease; }
-    .sv-label { pointer-events: auto; cursor: pointer; }
-    .sv-label.is-minor { font-size: 10px; opacity: 0.62; }
-
-    @media (max-width: 980px) {
-      .cx-index { display: none; }
-    }
-    /* 窄屏：控制坞改为贴边横向铺开，避免左右被裁 */
-    @media (max-width: 900px) {
-      .sv-dock {
-        left: 8px; right: 8px; transform: none;
-        justify-content: center; flex-wrap: wrap;
-        border-radius: 18px; padding: 6px; gap: 4px;
-      }
-      .sv-btn { font-size: 11px; height: 32px; padding: 0 10px; }
-      .sv-dock__sep { margin: 0; }
-      .sv-legend { display: none; }
-    }
-  </style>
+  <link rel="stylesheet" href="./anatomy.css" />
 </head>
 <body>
   <div class="sv-loader" id="loader">
@@ -105,57 +14,86 @@
     <div class="sv-loader__text">正在加载人体模型…</div>
   </div>
 
-  <div class="sv-brand sv-in">
-    <div class="sv-brand__eyebrow">Blood Circulation</div>
-    <div class="sv-brand__title">人体 · 血液循环</div>
-    <div class="sv-brand__sub">透视人体 · 追踪每一滴血的旅程</div>
+  <header class="sv-brand sv-in">
+    <a class="cx-back" href="../../index.html">← 科学探索</a>
+    <div class="sv-brand__eyebrow">THE HUMAN BODY / 01</div>
+    <h1 class="sv-brand__title">身体里的生命之河<span>人体 · 血液循环</span></h1>
+    <div class="sv-brand__sub">转一转，看一看。和一滴血一起，探索你的身体。</div>
+  </header>
+
+  <div class="cx-top-actions">
+    <span class="cx-model-status" id="modelStatus">3D 解剖模型</span>
+    <button id="mobileControlsBtn" aria-expanded="false" aria-controls="modelControls">图层与视角</button>
+    <button class="sv-iconbtn" id="voiceBtn" title="语音开关" aria-label="语音讲解开关">🔊</button>
   </div>
 
-  <button class="sv-iconbtn sv-iconbtn--top" id="voiceBtn" title="语音开关">🔊</button>
+  <nav class="cx-presets" id="presetSeg" aria-label="观察模式">
+    <button data-preset="anatomy" class="is-on" aria-pressed="true"><span>01</span> 器官解剖</button>
+    <button data-preset="vascular" aria-pressed="false"><span>02</span> 血管网络</button>
+    <button data-preset="skeleton" aria-pressed="false"><span>03</span> 骨骼支架</button>
+  </nav>
 
-  <div class="sv-panel cx-index sv-in" id="organIndex">
-    <div class="cx-index__title">器官索引</div>
+  <aside class="sv-panel cx-index sv-in" id="organIndex">
+    <div class="cx-index__title">认识身体 <span>点一点，靠近看</span></div>
     <div class="cx-index__grid" id="organList"></div>
-  </div>
+  </aside>
 
-  <div class="sv-legend sv-panel sv-in">
-    <div class="sv-panel__title">解剖图层</div>
-    <div class="cx-layers" id="layerSeg">
-      <button data-layer="skin" class="is-on">皮肤</button>
-      <button data-layer="bone" class="is-on">骨骼</button>
-      <button data-layer="organ" class="is-on">内脏</button>
-      <button data-layer="vessel" class="is-on">血管</button>
+  <aside class="sv-legend sv-panel sv-in" id="modelControls" aria-label="模型控制">
+    <div class="sv-panel__title">像翻书一样，逐层探索</div>
+    <div class="cx-layers" id="layerSeg" aria-label="解剖图层">
+      <button data-layer="skin" class="is-on" aria-pressed="true">人体轮廓</button>
+      <button data-layer="bone" aria-pressed="false">骨骼</button>
+      <button data-layer="organ" class="is-on" aria-pressed="true">器官</button>
+      <button data-layer="vessel" class="is-on" aria-pressed="true">血管</button>
     </div>
-
-    <div class="sv-panel__title" style="margin-top:14px">循环通路</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#ff4d5e;color:#ff4d5e"></span>动脉 · 含氧血离开心脏</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#3b82f6;color:#3b82f6"></span>静脉 · 缺氧血回到心脏</div>
-    <div class="sv-legend__row"><span class="sv-legend__dot" style="background:#a855f7;color:#a855f7"></span>肺循环 · 心脏与肺之间</div>
-
-    <div class="cx-seg" id="cycleSeg">
-      <button data-cycle="all" class="is-on">全部</button>
-      <button data-cycle="systemic">体循环</button>
-      <button data-cycle="pulmonary">肺循环</button>
+    <label class="cx-slider-label" for="opacitySlider">外层透明度 <output id="opacityVal">85%</output></label>
+    <input class="cx-slider" id="opacitySlider" type="range" min="0" max="100" value="85" />
+    <div class="cx-divider"></div>
+    <div class="sv-panel__title">血液走哪条路？</div>
+    <div class="cx-seg" id="cycleSeg" aria-label="循环通路">
+      <button data-cycle="all" class="is-on" aria-pressed="true">完整循环</button>
+      <button data-cycle="systemic" aria-pressed="false">去全身</button>
+      <button data-cycle="pulmonary" aria-pressed="false">去肺部</button>
     </div>
-    <div class="cx-seg" id="viewSeg">
-      <button data-view="chest">胸腔</button>
-      <button data-view="belly">腹腔</button>
-      <button data-view="head">头部</button>
+    <div class="cx-color-key"><span><i style="background:#d95751"></i>氧气多</span><span><i style="background:#5284bd"></i>氧气少</span></div>
+    <p class="cx-note">红、蓝是帮助观察的示意色。<br>我们的血液一直都是红色的哦。</p>
+    <div class="cx-divider"></div>
+    <div class="sv-panel__title">靠近一点</div>
+    <div class="cx-seg" id="viewSeg" aria-label="观察部位">
+      <button data-view="full">全身</button>
+      <button data-view="torso" class="is-on">上身</button>
+      <button data-view="chest">心肺</button>
+      <button data-view="belly">腹部</button>
     </div>
-    <div class="cx-note">心脏 → 动脉 → 毛细血管 → 静脉 → 心脏，一圈约 1 分钟。点器官或左侧索引查看细节。</div>
-    <div class="cx-credit">解剖模型：<a href="https://lifesciencedb.jp/bp3d/" target="_blank" rel="noopener">BodyParts3D</a>（Database Center for Life Science，CC BY 4.0）· 经 <a href="https://github.com/ashemag/human-atlas" target="_blank" rel="noopener">human-atlas</a> 打包简化</div>
-  </div>
+    <div class="cx-tools">
+      <button id="labelsBtn" aria-pressed="true">名称标注 · 开</button>
+      <button id="rotateBtn" aria-pressed="false">自动旋转 · 关</button>
+    </div>
+    <details class="cx-credit"><summary>关于这个模型</summary>成人参考解剖模型：<a href="https://lifesciencedb.jp/bp3d/" target="_blank" rel="noopener">BodyParts3D</a> © DBCLS，CC BY 4.0。经 <a href="https://github.com/ashemag/human-atlas" target="_blank" rel="noopener">human-atlas</a> 简化，本项目重新分组、调整材质并补充肺部外形。血流路线与速度为教学示意。</details>
+  </aside>
 
+  <div class="cx-orientation" aria-hidden="true"><span id="orientationText">前面</span><i></i><small>拖动模型 · 360° 观察</small></div>
   <div class="sv-card" id="card"></div>
 
-  <div class="sv-dock sv-in">
-    <button class="sv-btn" id="playBtn"><span class="sv-btn__icon">⏸</span><span>暂停</span></button>
-    <span class="sv-dock__sep"></span>
-    <button class="sv-btn sv-btn--ghost" id="resetBtn">🔄 全身视角</button>
-    <button class="sv-btn sv-btn--ghost" id="xrayBtn">🩻 透视 <b class="sv-num" id="xrayVal">30</b>%</button>
-  </div>
+  <section class="cx-journey" aria-label="一滴血的旅行">
+    <div class="cx-journey__intro"><span class="cx-live-dot"></span><strong>一滴血的旅行</strong><span>跟着光点，看血液怎样送氧气</span><button id="journeyBtn" aria-pressed="false">开始旅行 →</button></div>
+    <div class="cx-steps" id="journeySteps" aria-label="血液循环步骤">
+      <button data-step="0"><b>1</b> 右心出发</button><i>→</i>
+      <button data-step="1"><b>2</b> 肺里吸氧</button><i>→</i>
+      <button data-step="2"><b>3</b> 左心加油</button><i>→</i>
+      <button data-step="3"><b>4</b> 全身送氧</button><i>→</i>
+      <button data-step="4"><b>5</b> 返回心脏</button>
+    </div>
+    <p id="journeyCaption" aria-live="polite">心脏像一台小水泵，让血液在身体里不停旅行。</p>
+  </section>
 
-  <div class="sv-hint">点击器官或左侧索引查看介绍 · 拖拽旋转 · 滚轮缩放</div>
+  <div class="sv-dock sv-in">
+    <button class="sv-btn" id="playBtn"><span class="sv-btn__icon">⏸</span><span>暂停血流</span></button>
+    <span class="sv-dock__sep"></span>
+    <button class="sv-btn sv-btn--ghost" id="resetBtn">↺ 重置视角</button>
+    <button class="sv-btn sv-btn--ghost" id="xrayBtn">透视 <b class="sv-num" id="xrayVal">85</b>%</button>
+  </div>
+  <div class="sv-hint">拖拽旋转 · 滚轮 / 双指缩放 · 点击器官听讲解</div>
 
   <script type="importmap">
   {
@@ -174,6 +112,9 @@
     import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
     import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+    import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+    import { tissueMaterial, lungEnvelope, atlasFlowRoutes } from './anatomy-model.js';
         
     // ===== SciVis Kit（由 tools/inline-kit.js 自动内联，勿手改） =====
     const SciVis = (function () {
@@ -810,14 +751,14 @@
         say: '上腔静脉和下腔静脉，是两条把血送回心脏的大静脉。上腔静脉收集头、颈和上肢的血，下腔静脉收集腹部和下肢的血，它们最后都汇进右心房。静脉的管壁比动脉薄，腿上的静脉里还有小瓣膜，像单向门一样防止血液倒流。',
       },
       pulmArtery: {
-        id: 'pulmonary-artery', name: '肺动脉', type: '肺循环 · 唯一送缺氧血的动脉', kind: 'artery', group: 'pulmonary', color: 0xa855f7,
+        id: 'pulmonary-artery', name: '肺动脉', type: '肺循环 · 唯一送缺氧血的动脉', kind: 'artery', group: 'pulmonary', color: 0x5284bd,
         stats: [['起点', '右心室'], ['终点', '左右两肺'], ['特点', '动脉里流的是缺氧血']],
         desc: ['它是全身唯一一条送缺氧血的动脉', '在这里，动脉和静脉的颜色正好反过来'],
         facts: ['肺动脉里的血是暗红色，因为它还没有去肺里换氧', '这也是为什么医生说“动脉血”不等于“含氧血”'],
         say: '肺动脉很特别，它是全身唯一一条送缺氧血的动脉。它从右心室出发，分成左右两支进入两肺。在这里，动脉和静脉的颜色正好反过来：动脉里流的是暗红的缺氧血，静脉里流的是鲜红的含氧血。',
       },
       pulmVein: {
-        id: 'pulmonary-vein', name: '肺静脉', type: '肺循环 · 送含氧血回心', kind: 'vein', group: 'pulmonary', color: 0xe879f9,
+        id: 'pulmonary-vein', name: '肺静脉', type: '肺循环 · 送含氧血回心', kind: 'vein', group: 'pulmonary', color: 0xd95751,
         stats: [['起点', '两肺'], ['终点', '左心房'], ['数量', '通常 4 条'], ['特点', '静脉里流的是含氧血']],
         desc: ['在肺里换完氧的血，经肺静脉回到左心房', '左心房一收缩，血就被送进左心室'],
         facts: ['肺静脉通常有四条，左右各两条', '它是少数“静脉里流着鲜红血”的血管'],
@@ -862,7 +803,7 @@
         say: '体循环也叫大循环。含氧血从左心室出发，进入主动脉，一路分支到全身。在最细的毛细血管里，氧气和营养交给细胞，二氧化碳和废物被收走。缺氧血再汇入小静脉、大静脉，经上腔静脉和下腔静脉回到右心房。安静时走完一圈大约一分钟。',
       },
       pulmonary: {
-        id: 'pulmonary', name: '肺循环', type: '小循环 · 心脏 ↔ 肺', color: 0xa855f7,
+        id: 'pulmonary', name: '肺循环', type: '小循环 · 心脏 ↔ 肺', color: 0x5284bd,
         stats: [['路线', '右心室 → 肺动脉 → 肺 → 肺静脉 → 左心房'], ['耗时', '几秒'], ['任务', '排出二氧化碳、补充氧气']],
         desc: ['血从右心室出发，到肺里换一口气就回来', '这是全身唯一“动脉送缺氧血”的循环'],
         facts: ['肺循环路程短，几秒钟就能走完', '换气面积有 70 平方米，比皮肤还大'],
@@ -879,13 +820,23 @@
     const H = 4.6;                 // 人体在世界里的高度
     const CM = H / 170;            // 1 厘米对应的世界单位
 
-    const scene = S.createScene(0x05070f, new THREE.Fog(0x05070f, 22, 50));
+    const scene = S.createScene();
     const camera = S.createCamera(46, 0.1, 200);
     camera.position.set(0.45, H * 0.52, 9.4);
 
     const { renderer, composer, renderPass } = S.createRenderer({
-      exposure: 1.05, bloomStrength: 0.42, bloomRadius: 0.5, bloomThreshold: 0.78,
+      exposure: 1.05, bloomStrength: 0.07, bloomRadius: 0.3, bloomThreshold: 1.2, shadow: false,
     });
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 900 ? 1.5 : 2);
+    renderer.setPixelRatio(pixelRatio);
+    composer.setPixelRatio(pixelRatio);
+
+    composer.addPass(new OutputPass());
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const room = new RoomEnvironment();
+    scene.environment = pmrem.fromScene(room, .04).texture;
+    room.dispose();
+    pmrem.dispose();
 
     const labelRenderer = new CSS2DRenderer();
     labelRenderer.setSize(window.innerWidth, window.innerHeight);
@@ -901,38 +852,18 @@
     renderPass.camera = camera;
 
     /* 剖切面：像解剖软件那样把身体前半剖开，露出里面的器官。
-       只作用在皮肤和骨骼上，内脏和血管保持完整。 */
-    renderer.localClippingEnabled = true;
-    const slicePlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0.015);
-    let clipOn = true;
+       外层透明度由 applyXray 统一控制。 */
 
-    scene.add(new THREE.AmbientLight(0x6b7a99, 1.15));
-    const keyLight = new THREE.DirectionalLight(0xfff4ea, 2.15);   // 主光：暖白，略偏左上
-    keyLight.position.set(3.4, 7.2, 5.2);
+    scene.add(new THREE.HemisphereLight(0xdde7ea, 0x514a44, .8));
+    const keyLight = new THREE.DirectionalLight(0xffead9, 2.1);
+    keyLight.position.set(-3.5, 7, 5);
     scene.add(keyLight);
-    const fillLight = new THREE.DirectionalLight(0xffd7c2, 0.75);  // 侧补：让肌肉有层次
-    fillLight.position.set(-5.2, 2.4, 3.6);
+    const fillLight = new THREE.DirectionalLight(0xd6e8f0, .65);
+    fillLight.position.set(4, 3, 4);
     scene.add(fillLight);
-    const rimLight = new THREE.DirectionalLight(0x6f9dff, 1.15);   // 轮廓：冷蓝，勾出人体边缘
-    rimLight.position.set(-4.5, 3.2, -6.0);
+    const rimLight = new THREE.DirectionalLight(0xc5e1e5, 1.1);
+    rimLight.position.set(1.8, 5, -3);
     scene.add(rimLight);
-    const warmLight = new THREE.PointLight(0xff8a6a, 0.62, 12);    // 体内暖光
-    warmLight.position.set(0, H * 0.66, 1.4);
-    scene.add(warmLight);
-    const underLight = new THREE.PointLight(0xff6a5a, 0.35, 9);    // 底部反光，模拟血肉透光
-    underLight.position.set(0, H * 0.18, -1.2);
-    scene.add(underLight);
-
-    const floorGlow = new THREE.Mesh(
-      new THREE.CircleGeometry(3.4, 48),
-      new THREE.MeshBasicMaterial({
-        map: S.glowTexture('rgba(60,90,180,0.32)', 'rgba(40,60,120,0.1)'),
-        transparent: true, depthWrite: false,
-      })
-    );
-    floorGlow.rotation.x = -Math.PI / 2;
-    floorGlow.position.y = -0.02;
-    scene.add(floorGlow);
 
     /* ==================================================================
        布局地标（模型加载后由骨骼校准）
@@ -968,21 +899,12 @@
     /* ==================================================================
        器官几何
        ================================================================== */
-    function organMat(hex, opt) {
-      opt = opt || {};
-      return new THREE.MeshPhysicalMaterial({
-        color: hex,
-        roughness: opt.rough != null ? opt.rough : 0.44,
-        metalness: 0.02,
-        clearcoat: 0.55,
-        clearcoatRoughness: 0.32,
-        emissive: hex,
-        emissiveIntensity: Math.max(0.45, Math.min(1.05, (opt.emissive != null ? opt.emissive : 0.14) * 3)),
-        transparent: true,
-        opacity: opt.opacity != null ? opt.opacity : 0.97,
-        depthWrite: opt.depthWrite !== false,
-        side: THREE.DoubleSide,
-      });
+    function organMat(hex, opt = {}) {
+      const mat = tissueMaterial(hex, { roughness: opt.rough || .56 });
+      mat.opacity = opt.opacity == null ? 1 : opt.opacity;
+      mat.transparent = mat.opacity < 1;
+      mat.depthWrite = opt.depthWrite !== false && mat.opacity > .9;
+      return mat;
     }
 
     // 不规则椭球：给器官一点“肉感”，避免完美球体
@@ -1613,10 +1535,6 @@
       const hipY = L.hipY;
 
       if (useAtlas) {
-        // BodyParts3D 里大脑是 59 个独立网格（141k 三角），体积太大，仍用程序化大脑
-        const brainG = buildBrain();
-        brainG.scale.setScalar(0.72);
-        addOrgan('brain', brainG, new THREE.Vector3(0, L.headY + CM * 5.2, CM * 0.4), new THREE.Vector3(CM * 11, CM * 5.4, 0));
         buildVessels();
         buildParticles();
         return;
@@ -1682,7 +1600,21 @@
       return p.clone().add(new THREE.Vector3(side || 0, up || 0, 0));
     }
 
+    function buildAtlasFlow() {
+      atlasFlowRoutes().forEach((route) => {
+        const key = route.key === 'pulmonaryArtery' ? 'pulmArtery' : route.key === 'pulmonaryVein' ? 'pulmVein' : route.key;
+        const def = VESSELS[key];
+        const curve = new THREE.CatmullRomCurve3(route.points.map((p) => P(...p)), false, 'centripetal');
+        const mat = vesselMaterial(def.color);
+        const mesh = new THREE.Mesh(new THREE.TubeGeometry(curve, 64, CM * .22, 6, false), mat);
+        mesh.userData = { ...def, kind: 'vessel' };
+        vesselGroup.add(mesh);
+        vesselObjs.push({ mesh, mat, def, key, group: route.group, curve, samples: curve.getSpacedPoints(100), active: true });
+      });
+    }
+
     function buildVessels() {
+      if (ATLAS.ok) { buildAtlasFlow(); return; }
       const heartC = organObjects.heart.position.clone();
       const chestY = L.chestY, hipY = L.hipY;
       const clavY = L.neckY - CM * 1.6;
@@ -1907,13 +1839,14 @@
       });
       const count = Math.min(total, PCOUNT_RESERVE);
 
-      const geo = new THREE.SphereGeometry(CM * 0.3, 6, 6);
+      const geo = new THREE.SphereGeometry(CM * .24, 8, 6);
       const mat = new THREE.MeshBasicMaterial({
         transparent: true, opacity: 0.72,
         blending: THREE.AdditiveBlending, depthWrite: false,
       });
       particleMesh = new THREE.InstancedMesh(geo, mat, count);
       particleMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      particleMesh.frustumCulled = false;
       scene.add(particleMesh);
 
       const col = new THREE.Color();
@@ -1928,7 +1861,7 @@
             t: k / n,
             speed: (v.group === 'pulmonary' ? 0.1 : 0.085) + Math.random() * 0.05,
           });
-          col.copy(base).offsetHSL(0, 0, (Math.random() - 0.5) * 0.12);
+          col.copy(base).lerp(new THREE.Color(0xffffff), .55);
           particleMesh.setColorAt(idx, col);
         }
       });
@@ -1950,7 +1883,7 @@
         const i0 = Math.floor(f);
         const i1 = i0 >= n ? 0 : i0 + 1;
         dummy.position.lerpVectors(arr[i0], arr[i1], f - i0);
-        const k = v.active ? 1 : 0;
+        const k = v.active ? THREE.MathUtils.clamp(camera.position.distanceTo(controls.target) * .27, .6, 3) : 0;
         dummy.scale.setScalar(k);
         dummy.updateMatrix();
         particleMesh.setMatrixAt(i, dummy.matrix);
@@ -1965,7 +1898,7 @@
        ================================================================== */
     const bodyMats = [];
     const LAYERS = { skin: null, muscle: null, bone: null };
-    let xray = 0.3;
+    let xray = 0.85;
 
     /* ---- 材质 ---- */
 
@@ -2051,13 +1984,19 @@
 
     function applyXray() {
       bodyMats.forEach((m) => {
-        if (m.uniforms && m.uniforms.uOpacity) {
-          m.uniforms.uOpacity.value = 1.0 - xray * 0.2;      // 透视值越大，皮肤越薄
-        } else {
-          m.opacity = 0.1 + xray * 0.62;
-        }
+        if (m.uniforms?.uOpacity) m.uniforms.uOpacity.value = 1 - xray;
+        else { m.opacity = 1 - xray; m.transparent = xray > 0; m.depthWrite = xray < .1; }
       });
-      if (xrayVal) xrayVal.textContent = Math.round(xray * 100);
+      if (ATLAS.skin) ATLAS.skin.traverse((o) => {
+        if (!o.isMesh) return;
+        o.material.opacity = (1 - xray) * (currentPreset === 'vascular' ? .38 : 1);
+        o.material.transparent = true;
+        o.material.depthWrite = o.material.opacity > .9;
+      });
+      const percent = Math.round(xray * 100);
+      document.getElementById('xrayVal').textContent = percent;
+      document.getElementById('opacityVal').textContent = percent + '%';
+      document.getElementById('opacitySlider').value = percent;
     }
 
     /* ---- 骨骼：肋骨、胸骨、锁骨、脊柱、骨盆、颅骨、四肢长骨 ---- */
@@ -2395,513 +2334,537 @@
 
     /* ==================================================================
        真实解剖模型：BodyParts3D 4.0（CC BY 4.0）
-       —— 与 Complete Anatomy 同源的数据集：2,234 个网格、15 个解剖系统。
+       独立的开放解剖数据集；不使用 Complete Anatomy 的专有模型。
        这里预先按系统合并成两个 GLB：
          core.glb  皮肤 + 动脉 + 静脉 + 内脏（14 个命名结构）
-         bone.glb  全身骨骼（141 件主要骨，去掉籽骨等碎件）
+         bone.glb  全身骨骼（保留手、前臂、足部等较小结构）
        出处：BodyParts3D, Database Center for Life Science, CC BY 4.0
              经 ashemag/human-atlas 打包与简化
        ================================================================== */
-    const ATLAS = { skin: null, vesselRoot: null, bone: null, ok: false };
+    const ATLAS = { skin: null, vesselRoot: null, bone: null, airway: null, ok: false };
+    const atlasVessels = [];
+    let currentPreset = 'anatomy';
+    let activeOrgan = null;
+    let labelsOn = true;
 
-    function tuneAtlasMat(mat, opt) {
-      opt = opt || {};
-      mat.side = THREE.DoubleSide;
-      mat.metalness = opt.metal != null ? opt.metal : 0.0;
-      mat.roughness = opt.rough != null ? opt.rough : (mat.roughness != null ? mat.roughness : 0.6);
-      if (opt.color) mat.color.setHex(opt.color);
-      if (mat.emissive) {
-        if (opt.emissive) mat.emissive.setHex(opt.emissive);
-        mat.emissiveIntensity = opt.emissiveIntensity != null ? opt.emissiveIntensity : 1.2;
+    function setOpacity(material, opacity) {
+      const transparent = opacity < .99;
+      if (material.transparent !== transparent) {
+        material.transparent = transparent;
+        material.needsUpdate = true;
       }
-      if (opt.opacity != null) {
-        mat.transparent = opt.opacity < 1;
-        mat.opacity = opt.opacity;
-        mat.depthWrite = opt.opacity >= 0.92;
-      }
-      mat.needsUpdate = true;
-      return mat;
+      material.opacity = opacity;
+      material.depthWrite = opacity >= .9;
     }
 
-    /* 器官概念在 BodyParts3D 里常把伴行血管也包含进来（肝静脉、心腔…），
-       逐个网格上材质会花成紫色。这里统一按器官主色重建一份材质。 */
-    function unifyOrganMaterial(node, hex) {
-      const col = new THREE.Color(hex);
-      const mat = new THREE.MeshStandardMaterial({
-        color: col,
-        roughness: 0.44,
-        metalness: 0.0,
-        emissive: col.clone().multiplyScalar(0.3),
-        emissiveIntensity: 1.15,
-        side: THREE.DoubleSide,
-      });
-      node.traverse((o) => { if (o.isMesh) o.material = mat; });
-      return mat;
-    }
-
-    // 把 GLB 里的某个结构登记成可点击器官（沿用现有卡片/标签/聚光逻辑）
     function registerAtlasOrgan(key, node) {
       const def = ORGANS[key];
-      if (!def || !node) return null;
-      unifyOrganMaterial(node, def.color);
-      node.userData = Object.assign({}, def, { kind: 'organ', key: key, baseScale: 1 });
+      if (!def || !node) return;
+      // GLB positions are baked in world space. Recenter geometry before animating
+      // so the heart beats in its chest, instead of orbiting the model's feet.
+      const bounds = new THREE.Box3().setFromObject(node);
+      const center = bounds.getCenter(new THREE.Vector3());
       node.traverse((o) => {
         if (!o.isMesh) return;
+        o.geometry.translate(-center.x, -center.y, -center.z);
+        const palette = { heart: 0xa1403a, lungs: 0xba8882, brain: 0xb79d8e, liver: 0x713c30, stomach: 0xb47b68, smallIntestine: 0xc3957e, largeIntestine: 0xaa8a6c, kidney: 0x7c4941, spleen: 0x69424b, pancreas: 0xb9a078, bladder: 0xbbb092 };
+        o.material = tissueMaterial(palette[key] || def.color, { roughness: key === 'brain' ? .72 : .57, texture: key === 'lungs' ? .07 : .035 });
+        o.material.userData.baseOpacity = 1;
+        o.material.userData.baseEmissive = 0;
         o.userData.key = key;
-        if (o.material) {
-          o.material.userData.baseOpacity = o.material.opacity;
-          o.material.userData.baseEmissive = o.material.emissiveIntensity;
-        }
       });
+      node.position.copy(center);
+      node.userData = { ...def, kind: 'organ', key, baseScale: 1 };
       organObjects[key] = node;
       pickTargets.push(node);
-      const b = new THREE.Box3().setFromObject(node);
-      const c = b.getCenter(new THREE.Vector3());
-      const off = new THREE.Vector3(c.x + (c.x > 0.02 ? 0.26 : -0.26), b.max.y + 0.10, c.z);
-      const minor = ['spleen', 'pancreas', 'bladder', 'kidney'].indexOf(key) >= 0;
-      addLabel(def.name, def.color, off, key, minor);
-      return node;
-    }
-
-    function applyClip() {
-      const planes = clipOn ? [slicePlane] : [];
-      [ATLAS.skin].forEach((root) => {
-        if (!root) return;
-        root.traverse((o) => {
-          if (!o.isMesh || !o.material) return;
-          o.material.clippingPlanes = planes;
-          o.material.needsUpdate = true;
-        });
-      });
+      const side = ['heart', 'stomach', 'largeIntestine', 'spleen', 'kidney'].includes(key) ? 1 : -1;
+      const offset = P(center.x + side * .34, center.y + .08, bounds.max.z + .025);
+      addLabel(def.name, def.color, offset, key, ['spleen', 'pancreas', 'bladder', 'kidney'].includes(key));
     }
 
     async function loadAtlas() {
+      let core, bone;
       try {
         const loader = new GLTFLoader();
-        const [core, bone] = await Promise.all([
-          loader.loadAsync('./models/core.glb'),
-          loader.loadAsync('./models/bone.glb'),
+        const loaded = await Promise.allSettled([
+          loader.loadAsync('./models/core.glb'), loader.loadAsync('./models/bone.glb'),
         ]);
-
-        /* ---- 骨骼 ---- */
-        const boneGroup = bone.scene;
-        boneGroup.name = 'atlas-bone';
-        boneGroup.traverse((o) => {
-          if (!o.isMesh) return;
-          tuneAtlasMat(o.material, { color: 0xf0e6cf, emissive: 0x6a5844, emissiveIntensity: 0.9, opacity: 0.4, rough: 0.5 });
-        });
-        boneGroup.renderOrder = 2;
-        scene.add(boneGroup);
-        ATLAS.bone = boneGroup;
-        LAYERS.bone = boneGroup;
-
-        /* ---- core：皮肤 / 血管 / 内脏 ---- */
-        scene.add(core.scene);          // 整体先挂上，血管稍后再摘到 vesselRoot
-        const skinNode = core.scene.getObjectByName('skin') || core.scene.getObjectByName('Skin');
+        if (loaded[0].status !== 'fulfilled') throw loaded[0].reason;
+        core = loaded[0].value;
+        bone = loaded[1].status === 'fulfilled' ? loaded[1].value : null;
+        if (!bone) {
+          layerOn.bone = false;
+          const button = document.querySelector('[data-layer="bone"]');
+          button.disabled = true;
+          button.title = '骨骼模型暂时无法加载';
+        }
         const vesselRoot = new THREE.Group();
         vesselRoot.name = 'atlas-vessels';
-
-        const organKeys = ['heart', 'lungs', 'liver', 'stomach', 'smallIntestine',
-          'largeIntestine', 'kidney', 'spleen', 'pancreas', 'bladder', 'trachea'];
-
+        const envelope = lungEnvelope();
+        const envelopes = envelope.children.slice();
+        const lungs = core.scene.getObjectByName('lungs');
+        if (lungs) {
+          // Wrap the original bronchial tree and the teaching surface together.
+          const lungGroup = new THREE.Group();
+          lungGroup.name = 'lungs';
+          core.scene.remove(lungs);
+          lungGroup.add(lungs, ...envelopes);
+          core.scene.add(lungGroup);
+        }
         core.scene.children.slice().forEach((node) => {
-          const nm = node.name;
-          if (nm === 'skin') {
+          const name = node.name;
+          if (name === 'skin') {
             node.traverse((o) => {
               if (!o.isMesh) return;
-              tuneAtlasMat(o.material, { color: 0xe8b49a, opacity: 0.15, rough: 0.5 });
+              o.material = tissueMaterial(0xc79f86, { roughness: .7, texture: .025 });
               o.material.side = THREE.FrontSide;
-              o.material.emissive.copy(o.material.color).multiplyScalar(0.16);
-              o.material.emissiveIntensity = 1.0;
+              o.material.transparent = true;
               o.material.depthWrite = false;
-              o.renderOrder = 20;
+              o.renderOrder = 10;
             });
-            ATLAS.skin = node;
-            LAYERS.skin = node;
-            return;
-          }
-          if (nm === 'artery' || nm === 'vein') {
-            const isArt = nm === 'artery';
+            ATLAS.skin = LAYERS.skin = node;
+          } else if (['artery', 'vein', 'pulmonaryArtery', 'pulmonaryVein'].includes(name)) {
+            const pulmonary = name.startsWith('pulmonary');
+            const oxygenated = name === 'artery' || name === 'pulmonaryVein';
             node.traverse((o) => {
               if (!o.isMesh) return;
-              tuneAtlasMat(o.material, {
-                color: isArt ? 0xc9202f : 0x1e50b4,
-                emissive: isArt ? 0x5a0a12 : 0x0a1c46,
-                emissiveIntensity: 2.6,
-                opacity: isArt ? 0.98 : 0.72, rough: 0.42,
-              });
+              o.material = tissueMaterial(oxygenated ? 0xb83c3b : 0x346795, { roughness: .47, texture: .02 });
+              o.userData = { ...VESSELS[name === 'artery' ? 'aorta' : name === 'vein' ? 'venaCava' : name === 'pulmonaryArtery' ? 'pulmArtery' : 'pulmVein'], kind: 'vessel' };
             });
+            atlasVessels.push({ node, pulmonary, oxygenated });
             vesselRoot.add(node);
-            return;
+            pickTargets.push(node);
+          } else if (ORGANS[name]) registerAtlasOrgan(name, node);
+          else if (name === 'trachea') {
+            node.traverse((o) => { if (o.isMesh) o.material = tissueMaterial(0xc8b5a0, { roughness: .7 }); });
+            ATLAS.airway = node;
           }
-          if (organKeys.includes(nm)) {
-            const meshes = [];
-            node.traverse((o) => { if (o.isMesh) meshes.push(o); });
-            meshes.forEach((o) => {
-              const mm = o.material;
-              tuneAtlasMat(mm, { rough: 0.46 });
-              if (mm.emissive) {
-                mm.emissive.copy(mm.color).multiplyScalar(0.30);
-                mm.emissiveIntensity = 1.05;
-              }
-            });
-            if (nm === 'trachea') scene.add(node);
-            else registerAtlasOrgan(nm, node);
-            return;
-          }
-          // 其它没归类的结构直接挂上
-          scene.add(node);
         });
-
-        scene.add(vesselRoot);
+        scene.add(core.scene, vesselRoot);
         ATLAS.vesselRoot = vesselRoot;
-        applyClip();
-
+        if (bone) {
+          bone.scene.traverse((o) => {
+            if (!o.isMesh) return;
+            o.material = tissueMaterial(0xd6cbb4, { roughness: .78, texture: .025 });
+          });
+          scene.add(bone.scene);
+          ATLAS.bone = LAYERS.bone = bone.scene;
+        }
         ATLAS.ok = true;
         return true;
-      } catch (err) {
-        console.warn('[atlas] 真实模型加载失败，回退到程序化解剖', err);
+      } catch (error) {
+        console.warn('[atlas] 模型加载失败，启用教学示意模型', error);
+        document.getElementById('modelStatus').textContent = '教学示意模型';
         return false;
       }
     }
 
-    /* ---- 解剖图层：逐层剥离（解剖软件最实用的一个交互） ---- */
-    const layerOn = { skin: true, muscle: true, bone: true, organ: true, vessel: true };
-    function applyLayers() {
-      if (LAYERS.skin) LAYERS.skin.visible = layerOn.skin;
-      if (LAYERS.muscle) LAYERS.muscle.visible = layerOn.muscle;
-      if (LAYERS.bone) LAYERS.bone.visible = layerOn.bone;
-      Object.keys(organObjects).forEach((k) => { organObjects[k].visible = layerOn.organ; });
-      vesselGroup.visible = layerOn.vessel;
-      if (ATLAS.vesselRoot) ATLAS.vesselRoot.visible = layerOn.vessel;
-      if (particleMesh) particleMesh.visible = layerOn.vessel;
-      labelObjs.forEach((o) => { o.visible = layerOn.organ; });
-      document.querySelectorAll('#layerSeg button').forEach((b) => {
-        const on = !!layerOn[b.dataset.layer];
-        b.classList.toggle('is-on', on);
-        b.classList.toggle('is-off', !on);
-      });
-    }
-
-    document.getElementById('layerSeg').addEventListener('click', (e) => {
-      const btn = e.target.closest('button');
-      if (!btn) return;
-      const k = btn.dataset.layer;
-      if (!(k in layerOn)) return;
-      layerOn[k] = !layerOn[k];
-      applyLayers();
-    });
-
-    async function finishLoad() {
-      const useAtlas = await loadAtlas();
-      if (!useAtlas) buildBody();
-      buildAll(useAtlas);
-      buildIndex();
-      applyCycle('all');
-      setView('torso');
-      applyLayers();
-      document.getElementById('loader').classList.add('is-done');
-    }
-
-    /* ==================================================================
-       交互
-       ================================================================== */
+    /* ---- Layers, presets, selection and circulation share one appearance state. ---- */
+    const layerOn = { skin: true, muscle: false, bone: false, organ: true, vessel: true };
+    let cycleMode = 'all';
+    let viewName = 'torso';
+    let isPlaying = true;
+    let simulationTime = 0;
+    let journeyRunning = false;
+    let journeyStep = -1;
+    let journeyElapsed = 0;
     const voice = S.createVoice({ audioBase: '../audio/circulation/' });
     S.bindVoiceButton(document.getElementById('voiceBtn'), voice);
-    const card = S.createCard(document.getElementById('card') || document.body);
-    const picker = S.makePicker(camera, renderer.domElement);
+    const card = S.createCard(document.getElementById('card'));
     const fly = S.makeFly(camera, controls);
     const clock = new THREE.Clock();
+    const indexButtons = {};
 
-    function dimOthers(activeKey) {
-      Object.keys(organObjects).forEach((k) => {
-        const on = !activeKey || k === activeKey;
-        const g = organObjects[k];
-        g.traverse((o) => {
-          if (!o.isMesh || !o.material || o.userData.isOutline) return;
-          const base = o.material.userData.baseOpacity != null ? o.material.userData.baseOpacity : 1;
-          o.material.opacity = on ? base : base * 0.22;
-          o.material.emissiveIntensity = on ? o.material.userData.baseEmissive : 0.02;
-        });
-        const om = g.userData.outlineMat;
-        if (om) om.opacity = on ? 0.09 : 0.02;
+    function syncButtons(selector, attribute, value) {
+      document.querySelectorAll(selector).forEach((button) => {
+        const on = button.dataset[attribute] === value;
+        button.classList.toggle('is-on', on);
+        button.setAttribute('aria-pressed', String(on));
       });
     }
 
-    function focusOrgan(key) {
-      const obj = organObjects[key];
-      const def = ORGANS[key];
-      if (!obj || !def) return;
-
-      const b = new THREE.Box3().setFromObject(obj);
-      const c = b.getCenter(new THREE.Vector3());
-      const size = b.getSize(new THREE.Vector3()).length();
-      const dist = Math.max(size * 1.9, 1.1);
-      const dir = camera.position.clone().sub(c).normalize();
-      if (dir.lengthSq() < 0.01) dir.set(0.2, 0.15, 1);
-      fly.flyTo(c.clone().add(dir.multiplyScalar(dist)), c, 1.05);
-
-      card.show(def);
-      voice.speak(S.narrate(def), def.id);
-      dimOthers(key);
-      markIndex(key);
-    }
-
-    function focusBody() {
-      setView('full');
-      card.show(CYCLES.all);
-      voice.speak(S.narrate(CYCLES.all), CYCLES.all.id);
-      dimOthers(null);
-      markIndex(null);
-    }
-
-    picker.onHover(() => pickTargets, (obj) => {
-      renderer.domElement.style.cursor = obj ? 'pointer' : 'grab';
-    });
-
-    picker.onClick(() => pickTargets, (obj) => {
-      if (!obj) return;
-      let o = obj;
-      while (o && !(o.userData && (o.userData.kind === 'organ' || o.userData.kind === 'vessel'))) o = o.parent;
-      if (!o) return;
-      const d = o.userData;
-      if (d.kind === 'organ' && d.key) {
-        focusOrgan(d.key);
-      } else if (d.kind === 'vessel') {
-        const item = vesselObjs.find((v) => v.mesh === o || v.mesh === obj);
-        card.show(d);
-        voice.speak(S.narrate(d), d.id);
-        if (item) {
-          const p = item.mesh.geometry.parameters.path.getPointAt(0.5);
-          const dir = camera.position.clone().sub(p).normalize();
-          fly.flyTo(p.clone().add(dir.multiplyScalar(2.4)), p, 1.0);
-        }
-        dimOthers(null);
-        markIndex(null);
+    function refreshAppearance() {
+      if (LAYERS.skin) LAYERS.skin.visible = layerOn.skin;
+      if (LAYERS.muscle) LAYERS.muscle.visible = layerOn.muscle;
+      if (LAYERS.bone) {
+        LAYERS.bone.visible = layerOn.bone;
+        if (ATLAS.ok) LAYERS.bone.traverse((o) => {
+          if (o.isMesh) setOpacity(o.material, currentPreset === 'skeleton' ? 1 : activeOrgan ? .045 : .12);
+        });
       }
-    });
+      if (ATLAS.airway) ATLAS.airway.visible = layerOn.organ;
+      Object.entries(organObjects).forEach(([key, object]) => {
+        object.visible = layerOn.organ;
+        let opacity = 1;
+        if (currentPreset === 'vascular') opacity = key === 'heart' ? .95 : .08;
+        if (activeOrgan) opacity = key === activeOrgan ? 1 : .065;
+        if (key === 'lungs' && cycleMode === 'pulmonary') opacity = .12;
+        object.traverse((o) => {
+          if (!o.isMesh || !o.material) return;
+          if (o.userData.isOutline) { o.material.opacity = 0; return; }
+          setOpacity(o.material, opacity);
+        });
+      });
+      vesselGroup.visible = layerOn.vessel && currentPreset === 'vascular' && !activeOrgan;
+      if (ATLAS.vesselRoot) ATLAS.vesselRoot.visible = layerOn.vessel;
+      if (particleMesh) particleMesh.visible = layerOn.vessel && currentPreset === 'vascular' && !activeOrgan;
+      atlasVessels.forEach(({ node, pulmonary }) => {
+        const on = cycleMode === 'all' || (cycleMode === 'pulmonary') === pulmonary;
+        node.traverse((o) => {
+          if (o.isMesh) setOpacity(o.material, on ? (activeOrgan ? .2 : 1) : .035);
+        });
+      });
+      vesselObjs.forEach((v) => {
+        const on = cycleMode === 'all' || v.group === cycleMode;
+        const stepKeys = [['pulmArtery'], ['pulmArtery', 'pulmVein'], ['aorta'], ['aorta', 'carotid'], ['venaCava']];
+        v.active = on && (journeyStep < 0 || stepKeys[journeyStep].includes(v.key));
+        v.mat.uniforms.uOpacity.value = v.active ? (ATLAS.ok ? .18 : .5) : .015;
+      });
+      document.querySelectorAll('#layerSeg button').forEach((button) => {
+        const on = layerOn[button.dataset.layer];
+        button.classList.toggle('is-on', on);
+        button.setAttribute('aria-pressed', String(on));
+      });
+      Object.entries(indexButtons).forEach(([key, button]) => {
+        button.classList.toggle('is-on', key === activeOrgan);
+        button.setAttribute('aria-pressed', String(key === activeOrgan));
+      });
+      applyXray();
+      // Selecting an organ always reveals it through the outside silhouette.
+      if (activeOrgan && ATLAS.skin) ATLAS.skin.traverse((o) => { if (o.isMesh) setOpacity(o.material, .025); });
+    }
 
-    /* ---- 器官索引 ---- */
-    const organList = document.getElementById('organList');
-    const indexButtons = {};
+    const views = {
+      full: { target: P(0, 2.37, 0), distance: 6.55 },
+      torso: { target: P(0, 3.38, 0), distance: 3.65 },
+      chest: { target: P(.015, 3.48, 0), distance: 1.65 },
+      belly: { target: P(0, 2.87, .02), distance: 1.8 },
+      head: { target: P(0, 4.32, 0), distance: 1.2 },
+    };
+    function frameTarget(target, distance, duration = 1) {
+      // Leave room above and below for the title and the children's route strip.
+      const narrow = window.innerWidth <= 900;
+      const short = window.innerHeight <= 600;
+      const topSpace = short ? 75 : narrow ? 195 : 90;
+      const bottomSpace = short ? 148 : 215;
+      const usableFraction = Math.max(.38, (window.innerHeight - topSpace - bottomSpace) / window.innerHeight);
+      const adjusted = distance * (.8 / usableFraction);
+      const centered = target.clone();
+      const halfHeight = adjusted * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+      centered.y -= (bottomSpace - topSpace) / window.innerHeight * halfHeight;
+      // The narrow control panel occupies the right-hand side of the viewport.
+      const shiftX = narrow ? 0 : .065;
+      centered.x += shiftX * halfHeight * camera.aspect;
+      const position = centered.clone().add(P(adjusted * .035, .025, adjusted));
+      fly.flyTo(position, centered, duration);
+    }
+    function setView(name, duration = 1) {
+      viewName = name;
+      const view = views[name] || views.torso;
+      frameTarget(view.target, view.distance, duration);
+      syncButtons('#viewSeg button', 'view', name);
+    }
+    function stopJourney() {
+      journeyRunning = false;
+      journeyStep = -1;
+      journeyElapsed = 0;
+      document.getElementById('journeyBtn').textContent = '开始旅行 →';
+      document.getElementById('journeyBtn').setAttribute('aria-pressed', 'false');
+      syncButtons('#journeySteps button', 'step', '');
+      document.getElementById('journeyCaption').textContent = '心脏像一台小水泵，让血液在身体里不停旅行。';
+    }
+    function setPreset(name, changeView = true) {
+      currentPreset = name;
+      activeOrgan = null;
+      layerOn.skin = name !== 'skeleton';
+      layerOn.bone = name === 'skeleton' && !document.querySelector('[data-layer="bone"]').disabled;
+      layerOn.organ = name !== 'skeleton';
+      layerOn.vessel = name !== 'skeleton';
+      xray = name === 'vascular' ? .94 : .85;
+      cycleMode = 'all';
+      syncButtons('#presetSeg button', 'preset', name);
+      syncButtons('#cycleSeg button', 'cycle', 'all');
+      card.hide();
+      refreshAppearance();
+      if (changeView) setView(name === 'skeleton' ? 'full' : 'torso');
+    }
+    function applyCycle(mode, explain = false) {
+      cycleMode = mode;
+      activeOrgan = null;
+      syncButtons('#cycleSeg button', 'cycle', mode);
+      refreshAppearance();
+      if (explain) {
+        const info = CYCLES[mode];
+        card.show(info);
+        voice.speak(info.say, info.id);
+      }
+    }
+    function focusOrgan(key) {
+      const obj = organObjects[key], def = ORGANS[key];
+      if (!obj || !def) return;
+      stopJourney();
+      controls.autoRotate = false;
+      updateRotateButton();
+      activeOrgan = key;
+      layerOn.organ = true;
+      const bounds = new THREE.Box3().setFromObject(obj);
+      const size = bounds.getSize(new THREE.Vector3());
+      const distance = Math.max(size.y, size.x / Math.max(camera.aspect, .6)) * 1.6 + .5;
+      frameTarget(bounds.getCenter(new THREE.Vector3()), distance);
+      viewName = '';
+      syncButtons('#viewSeg button', 'view', '');
+      card.show(def);
+      voice.speak(def.say, def.id);
+      refreshAppearance();
+    }
+    document.getElementById('card').querySelector('.sv-card__close').addEventListener('click', () => {
+      activeOrgan = null;
+      voice.stop();
+      refreshAppearance();
+    });
 
     function buildIndex() {
       const order = ['heart', 'lungs', 'brain', 'liver', 'stomach', 'smallIntestine', 'largeIntestine', 'kidney', 'spleen', 'pancreas', 'bladder'];
       order.forEach((key) => {
         const def = ORGANS[key];
-        if (!def) return;
-        const el = document.createElement('div');
-        el.className = 'cx-item';
-        el.dataset.key = key;
+        const button = document.createElement('button');
+        button.className = 'cx-item';
+        button.dataset.key = key;
+        button.setAttribute('aria-pressed', 'false');
         const dot = document.createElement('span');
         dot.className = 'cx-item__dot';
         dot.style.background = '#' + def.color.toString(16).padStart(6, '0');
-        const name = document.createElement('span');
-        name.textContent = def.name;
-        el.appendChild(dot);
-        el.appendChild(name);
-        el.addEventListener('click', () => focusOrgan(key));
-        el.addEventListener('mouseenter', () => {
-          const g = organObjects[key];
-          if (!g) return;
-          g.traverse((o) => {
-            if (o.isMesh && o.material && o.material.userData.baseEmissive != null) {
-              o.material.emissiveIntensity = o.material.userData.baseEmissive + 0.35;
-            }
-          });
-        });
-        el.addEventListener('mouseleave', () => {
-          const g = organObjects[key];
-          if (!g) return;
-          g.traverse((o) => {
-            if (o.isMesh && o.material && o.material.userData.baseEmissive != null) {
-              o.material.emissiveIntensity = o.material.userData.baseEmissive;
-            }
-          });
-        });
-        organList.appendChild(el);
-        indexButtons[key] = el;
+        button.appendChild(dot);
+        button.appendChild(document.createTextNode(def.name));
+        button.addEventListener('click', () => focusOrgan(key));
+        document.getElementById('organList').appendChild(button);
+        indexButtons[key] = button;
       });
     }
 
-    function markIndex(key) {
-      Object.keys(indexButtons).forEach((k) => indexButtons[k].classList.toggle('is-on', k === key));
-    }
-
-    /* ---- 循环分层 ---- */
-    let cycleMode = 'all';
-    function applyCycle(mode) {
-      cycleMode = mode;
-      vesselObjs.forEach((v) => {
-        const on = mode === 'all' || v.group === mode;
-        v.active = on;
-        v.mat.uniforms.uOpacity.value = on ? (ATLAS.ok ? 0.05 : (mode === 'all' ? 0.52 : 0.72)) : 0.03;
-      });
-      document.querySelectorAll('#cycleSeg button').forEach((b) => {
-        b.classList.toggle('is-on', b.dataset.cycle === mode);
-      });
-      if (mode === 'systemic' || mode === 'pulmonary') {
-        const c = CYCLES[mode];
-        card.show(c);
-        voice.speak(S.narrate(c), c.id);
-        dimOthers(null);
-        markIndex(null);
-      }
-      // 看肺循环时把肺变成“玻璃肺”，肺内的血管才透得出来
-      const lungs = organObjects.lungs;
-      if (lungs) {
-        lungs.traverse((o) => {
-          if (!o.isMesh || o.userData.isOutline || !o.material || o.material.userData.baseOpacity == null) return;
-          const base = o.material.userData.baseOpacity;
-          o.material.opacity = mode === 'pulmonary' ? Math.min(base, 0.24) : base;
-        });
-      }
-    }
-
-    document.getElementById('cycleSeg').addEventListener('click', (e) => {
-      const btn = e.target.closest('button');
-      if (!btn) return;
-      const mode = btn.dataset.cycle;
-      applyCycle(mode);
-      if (mode === 'all') {
-        focusBody();
-        applyCycle('all');
-      } else if (mode === 'pulmonary') {
-        setView('chest');
-      } else {
-        setView('full');
-      }
+    document.getElementById('presetSeg').addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button) return;
+      stopJourney(); voice.stop(); setPreset(button.dataset.preset);
     });
-
-    /* ---- 视角 ---- */
-    const views = {
-      full: () => ({ pos: P(0.25, H * 0.5, 6.9), target: P(0, H * 0.5, 0) }),
-      torso: () => ({ pos: P(0.22, L.chestY - CM * 8, CM * 144), target: P(0, L.chestY - CM * 8, 0) }),
-      chest: () => ({ pos: P(CM * 12, L.chestY + CM * 2, CM * 82), target: P(0, L.chestY - CM * 1, 0) }),
-      belly: () => ({ pos: P(CM * 10, L.chestY - CM * 22, CM * 84), target: P(0, L.chestY - CM * 24, 0) }),
-      head: () => ({ pos: P(CM * 8, L.headY + CM * 1, CM * 46), target: P(0, L.headY, 0) }),
-    };
-
-    function setView(name) {
-      const v = (views[name] || views.full)();
-      fly.flyTo(v.pos, v.target, 1.2);
-      document.querySelectorAll('#viewSeg button').forEach((b) => {
-        b.classList.toggle('is-on', b.dataset.view === name);
-      });
-    }
-
-    document.getElementById('viewSeg').addEventListener('click', (e) => {
-      const btn = e.target.closest('button');
-      if (btn) setView(btn.dataset.view);
+    document.getElementById('layerSeg').addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button) return;
+      const key = button.dataset.layer;
+      layerOn[key] = !layerOn[key];
+      refreshAppearance();
     });
-
+    document.getElementById('opacitySlider').addEventListener('input', (event) => {
+      xray = Number(event.target.value) / 100;
+      activeOrgan = null;
+      card.hide();
+      refreshAppearance();
+    });
+    document.getElementById('cycleSeg').addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button) return;
+      stopJourney(); setPreset('vascular', false);
+      applyCycle(button.dataset.cycle, true);
+      setView(button.dataset.cycle === 'pulmonary' ? 'chest' : 'full');
+    });
+    document.getElementById('viewSeg').addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (!button) return;
+      stopJourney();
+      activeOrgan = null; card.hide(); refreshAppearance(); setView(button.dataset.view);
+    });
+    document.getElementById('labelsBtn').addEventListener('click', (event) => {
+      labelsOn = !labelsOn;
+      event.currentTarget.textContent = `名称标注 · ${labelsOn ? '开' : '关'}`;
+      event.currentTarget.setAttribute('aria-pressed', String(labelsOn));
+    });
+    document.getElementById('mobileControlsBtn').addEventListener('click', (event) => {
+      const open = document.body.classList.toggle('controls-open');
+      event.currentTarget.setAttribute('aria-expanded', String(open));
+      event.currentTarget.textContent = open ? '收起控制 ×' : '图层与视角';
+    });
+    function updateRotateButton() {
+      const button = document.getElementById('rotateBtn');
+      button.textContent = `自动旋转 · ${controls.autoRotate ? '开' : '关'}`;
+      button.setAttribute('aria-pressed', String(controls.autoRotate));
+    }
+    controls.autoRotateSpeed = .65;
+    document.getElementById('rotateBtn').addEventListener('click', () => {
+      controls.autoRotate = !controls.autoRotate;
+      updateRotateButton();
+    });
+    controls.addEventListener('start', () => {
+      fly.cancel(); controls.autoRotate = false; updateRotateButton();
+      if (journeyRunning) { stopJourney(); voice.stop(); refreshAppearance(); }
+    });
     document.getElementById('resetBtn').addEventListener('click', () => {
-      focusBody();
-      document.querySelectorAll('#viewSeg button').forEach((b) => b.classList.remove('is-on'));
+      stopJourney(); voice.stop(); controls.autoRotate = false; updateRotateButton(); setPreset('anatomy');
     });
-
-    /* ---- 播放 / 透视 ---- */
-    let isPlaying = true;
-    const playBtn = document.getElementById('playBtn');
-    playBtn.addEventListener('click', () => {
+    document.getElementById('playBtn').addEventListener('click', (event) => {
       isPlaying = !isPlaying;
-      playBtn.innerHTML = isPlaying
-        ? '<span class="sv-btn__icon">⏸</span><span>暂停</span>'
-        : '<span class="sv-btn__icon">▶</span><span>播放</span>';
-      if (!isPlaying) clock.getDelta();
+      event.currentTarget.innerHTML = isPlaying ? '<span class="sv-btn__icon">⏸</span><span>暂停血流</span>' : '<span class="sv-btn__icon">▶</span><span>继续血流</span>';
+      event.currentTarget.setAttribute('aria-pressed', String(!isPlaying));
+    });
+    document.getElementById('xrayBtn').addEventListener('click', () => {
+      xray = xray >= .95 ? .35 : Math.min(1, xray + .15);
+      activeOrgan = null;
+      refreshAppearance();
     });
 
-    const xrayBtn = document.getElementById('xrayBtn');
-    const xrayVal = document.getElementById('xrayVal');
-    xrayBtn.addEventListener('click', () => {
-      xray = xray >= 0.6 ? 0.08 : xray + 0.13;
-      applyXray();
+    const journey = [
+      { view: 'chest', cycle: 'pulmonary', text: '从右心室出发！氧气少的血液，沿着肺动脉前往肺部。' },
+      { view: 'chest', cycle: 'pulmonary', text: '到达肺部！血液送走二氧化碳，接上新鲜氧气，再沿肺静脉回到左心房。' },
+      { view: 'chest', cycle: 'systemic', text: '左心房把血液交给左心室。左心室有力一跳，把富含氧气的血液送进主动脉。' },
+      { view: 'full', cycle: 'systemic', text: '出发去全身！动脉不断分支，在毛细血管里把氧气和营养交给身体细胞。' },
+      { view: 'torso', cycle: 'systemic', text: '送完氧气，血液沿静脉回家，经上、下腔静脉进入右心房。下一站又是肺部！' },
+    ];
+    function showJourneyStep(index) {
+      journeyStep = index;
+      journeyElapsed = 0;
+      activeOrgan = null;
+      const step = journey[index];
+      applyCycle(step.cycle);
+      setView(step.view);
+      card.hide();
+      syncButtons('#journeySteps button', 'step', String(index));
+      document.getElementById('journeyCaption').textContent = step.text;
+      voice.speak(step.text);
+    }
+    function startJourney(index = 0) {
+      stopJourney(); setPreset('vascular', false);
+      controls.autoRotate = false; updateRotateButton();
+      journeyRunning = true;
+      document.getElementById('journeyBtn').textContent = '结束旅行 ×';
+      document.getElementById('journeyBtn').setAttribute('aria-pressed', 'true');
+      showJourneyStep(index);
+    }
+    document.getElementById('journeyBtn').addEventListener('click', () => {
+      if (journeyRunning) { stopJourney(); voice.stop(); applyCycle('all'); }
+      else startJourney();
+    });
+    document.getElementById('journeySteps').addEventListener('click', (event) => {
+      const button = event.target.closest('button');
+      if (button) startJourney(Number(button.dataset.step));
     });
 
-    /* ==================================================================
-       动画
-       ================================================================== */
-    const heartGroup = () => organObjects.heart;
-    const labelProbe = new THREE.Vector3();
-    const labelV = new THREE.Vector3();
+    // Ignore a drag's pointer-up so rotating never accidentally opens an organ.
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    let pointerStart = null;
+    renderer.domElement.addEventListener('pointerdown', (event) => {
+      pointerStart = { x: event.clientX, y: event.clientY, id: event.pointerId };
+    });
+    renderer.domElement.addEventListener('pointercancel', () => { pointerStart = null; });
+    renderer.domElement.addEventListener('pointerup', (event) => {
+      if (!pointerStart || pointerStart.id !== event.pointerId) return;
+      const moved = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y);
+      pointerStart = null;
+      if (moved > 6) return;
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.set((event.clientX - rect.left) / rect.width * 2 - 1, -(event.clientY - rect.top) / rect.height * 2 + 1);
+      raycaster.setFromCamera(pointer, camera);
+      const isVisible = (node) => {
+        for (let o = node; o; o = o.parent) if (!o.visible) return false;
+        return true;
+      };
+      const hits = raycaster.intersectObjects(pickTargets.filter(isVisible), true);
+      const hit = hits.find((h) => isVisible(h.object) && h.object.material?.opacity > .25);
+      if (!hit) return;
+      let object = hit.object;
+      while (object && !['organ', 'vessel'].includes(object.userData.kind)) object = object.parent;
+      if (!object) return;
+      if (object.userData.kind === 'organ') focusOrgan(object.userData.key);
+      else { card.show(object.userData); voice.speak(object.userData.say, object.userData.id); }
+    });
+    renderer.domElement.style.cursor = 'grab';
+
+    const labelPosition = new THREE.Vector3();
     let labelTick = 0;
-    let heartBeat = 0;
-
-    // 器官挨得近时标签会叠在一起，这里做一次简单的屏幕空间避让
     function layoutLabels() {
-      if ((labelTick++ % 2) !== 0) return;
-      const items = [];
-      labelObjs.forEach((o) => {
-        const el = o.userData.inner;
-        if (!el || o.element.style.opacity === '0') return;
-        o.getWorldPosition(labelV);
-        labelV.project(camera);
-        if (labelV.z > 1) return;
-        const x = (labelV.x * 0.5 + 0.5) * window.innerWidth;
-        const y = (-labelV.y * 0.5 + 0.5) * window.innerHeight;
-        const w = el.offsetWidth || 48;
-        const h = el.offsetHeight || 18;
-        items.push({ el, sx: x - w / 2, sy: y - h / 2, w, h });
-      });
-      items.sort((a, b) => a.sy - b.sy);
+      if (++labelTick % 3 !== 0) return;
       const placed = [];
-      items.forEach((it) => {
+      labelObjs.forEach((object) => {
+        const key = object.userData.key;
+        const selected = !activeOrgan || key === activeOrgan;
+        const minor = object.userData.minor && !activeOrgan && camera.position.distanceTo(controls.target) > 2.7;
+        const usefulForCycle = currentPreset !== 'vascular' || ['heart', 'lungs'].includes(key) || activeOrgan;
+        object.visible = labelsOn && layerOn.organ && selected && !minor && usefulForCycle && currentPreset !== 'skeleton';
+        if (!object.visible) return;
+        object.getWorldPosition(labelPosition).project(camera);
+        const x = (labelPosition.x * .5 + .5) * window.innerWidth;
+        let y = (-labelPosition.y * .5 + .5) * window.innerHeight;
+        const element = object.userData.inner;
+        const width = element.offsetWidth || 45;
         let shift = 0;
-        for (let k = 0; k < 8; k++) {
-          const box = { x1: it.sx, y1: it.sy + shift, x2: it.sx + it.w, y2: it.sy + it.h + shift };
-          const hit = placed.some((p) => !(box.x2 < p.x1 || box.x1 > p.x2 || box.y2 < p.y1 || box.y1 > p.y2));
-          if (!hit) { placed.push(box); break; }
-          shift += it.h + 2;
+        for (let i = 0; i < 8; i++) {
+          if (!placed.some((p) => Math.abs(x - p.x) < (width + p.width) / 2 + 8 && Math.abs(y + shift - p.y) < 27)) break;
+          shift += 26;
         }
-        it.el.style.transform = shift ? 'translateY(' + shift + 'px)' : '';
+        placed.push({ x, y: y + shift, width });
+        element.style.transform = `translateY(${shift}px)`;
+        const narrow = window.innerWidth <= 900;
+        const maxX = window.innerWidth - (narrow ? 12 : 280);
+        object.element.style.opacity = labelPosition.z > 1 || x < (narrow ? 10 : 200) || x > maxX || y + shift < (narrow ? 190 : 80) || y + shift > window.innerHeight - 220 ? '0' : '';
+        element.style.pointerEvents = object.element.style.opacity === '0' ? 'none' : 'auto';
       });
     }
-
+    async function finishLoad() {
+      const useAtlas = await loadAtlas();
+      if (!useAtlas) buildBody();
+      buildAll(useAtlas);
+      buildIndex();
+      setPreset('anatomy', false);
+      setView('torso', .01);
+      updateParticles(0);
+      document.getElementById('loader').classList.add('is-done');
+    }
+    let heartBeat = 0;
     function animate() {
-      const dt = clock.getDelta();
+      const dt = Math.min(clock.getDelta(), .05);
       if (isPlaying) {
-        const t = performance.now() / 1000;
-        // lub-dub 双节拍
-        const beat = Math.pow(Math.max(0, Math.sin(t * Math.PI * 1.15)), 6) * 0.11
-          + Math.pow(Math.max(0, Math.sin((t - 0.24) * Math.PI * 1.15)), 6) * 0.06;
-        const hg = heartGroup();
-        if (hg) {
-          heartBeat += (beat - heartBeat) * 0.35;
-          hg.scale.setScalar(hg.userData.baseScale * (1 + heartBeat));
+        simulationTime += dt;
+        const t = simulationTime;
+        const beat = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2.4)), 12) * .035
+          + Math.pow(Math.max(0, Math.sin((t - .15) * Math.PI * 2.4)), 16) * .018;
+        const heart = organObjects.heart;
+        if (heart) {
+          heartBeat += (beat - heartBeat) * .3;
+          heart.scale.setScalar(heart.userData.baseScale * (1 + heartBeat));
         }
-        const lg = organObjects.lungs;
-        if (lg) {
-          const br = Math.sin(t * 1.5);
-          const bs = lg.userData.baseScale;
-          lg.scale.set(bs * (1 + br * 0.012), bs * (1 + br * 0.02), bs * (1 + br * 0.012));
+        const lungs = organObjects.lungs;
+        if (lungs) {
+          const breath = Math.sin(t * 1.45) * .007;
+          const base = lungs.userData.baseScale;
+          lungs.scale.set(base * (1 + breath), base * (1 + breath * .5), base * (1 + breath));
         }
         vesselObjs.forEach((v) => { v.mat.uniforms.uTime.value += dt; });
-        updateParticles(dt);
+        if (journeyRunning) {
+          journeyElapsed += dt;
+          if (journeyElapsed > 8) showJourneyStep((journeyStep + 1) % journey.length);
+        }
       }
+      updateParticles(isPlaying ? dt : 0);
       fly.update(dt);
       controls.update();
-
-      // 次要标签（脾、胰、膀胱）在远景时收起，避免堆叠
-      labelObjs.forEach((o) => {
-        if (!o.userData.minor) return;
-        o.getWorldPosition(labelProbe);
-        o.element.style.opacity = camera.position.distanceTo(labelProbe) > 6.5 ? '0' : '';
-      });
-
+      const angle = Math.abs(THREE.MathUtils.radToDeg(controls.getAzimuthalAngle())) % 360;
+      document.getElementById('orientationText').textContent = angle < 45 || angle > 315 ? '前面' : angle > 135 && angle < 225 ? '背面' : '侧面';
       layoutLabels();
       labelRenderer.render(scene, camera);
       composer.render();
       requestAnimationFrame(animate);
     }
-    finishLoad();
+    finishLoad().catch((error) => {
+      console.error(error);
+      document.querySelector('.sv-loader__text').textContent = '模型暂时无法显示，请刷新页面重试。';
+    });
     animate();
-
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       composer.setSize(window.innerWidth, window.innerHeight);
       labelRenderer.setSize(window.innerWidth, window.innerHeight);
+      if (viewName) setView(viewName, .2);
     });
   </script>
 </body>
