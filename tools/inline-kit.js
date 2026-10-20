@@ -23,6 +23,7 @@ const PAGES = [
   'src/solar-system/solar-system.html',
   'src/circulation/circulation.html',
   'src/weather/weather.html',
+  'src/garden/garden.html',
   'src/dinosaur/dinosaur.html',
   'src/birth/birth.html',
 ];

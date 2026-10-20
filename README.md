@@ -21,11 +21,12 @@ sci-vis/
     │   ├── solar-system/          # 太阳系 19 段
     │   ├── dinosaur/              # 恐龙 12 段
     │   ├── circulation/           # 血液循环 21 段
-    │   └── weather/               # 水循环 17 段
+    │   ├── weather/               # 水循环 17 段
+    │   └── garden/                # 江南园林 16 段
     ├── solar-system/solar-system.html   # 太阳系（程序化行星 + 卫星 + 泛光 + 漫游）
     ├── circulation/circulation.html     # 血液循环（11 个内脏 + 22 段血管 + 循环分层）
     ├── weather/weather.html             # 水循环（程序化海岛 + 七环节 + 四档天气）
-    ├── weather/weather.html             # 水循环（PBR 海面 + 云雨 + 流程聚焦）
+    ├── garden/garden.html               # 江南园林（粉墙黛瓦 + 叠山理水 + 借景框景）
     ├── dinosaur/                         # 恐龙年代（真实骨骼动画 + 小行星事件）
     │   ├── dinosaur.html
     │   └── models/*.glb                  # CC0 恐龙模型（Trex / Triceratops / ...）
@@ -62,6 +63,7 @@ VOICE=zh-CN-YunxiNeural RATE=-2% node tools/gen-voice.js src/solar-system/solar-
 | 恐龙 | `src/audio/dinosaur/` | 12 |
 | 血液循环 | `src/audio/circulation/` | 21 |
 | 水循环 | `src/audio/weather/` | 17 |
+| 江南园林 | `src/audio/garden/` | 16 |
 
 其他页面想接入，只需给数据块加这两个标记、给实体加 `id` 与 `say`，再 `S.createVoice({ audioBase: '../audio/<页面>/' })` + `voice.speak(data.say, data.id)`。
 
@@ -166,6 +168,21 @@ VOICE=zh-CN-YunxiNeural RATE=-2% node tools/gen-voice.js src/solar-system/solar-
 - **四档天气**：晴朗 / 多云 / 降雨 / 暴雨，云量、云色、雨量、日照、雾浓度、天空色、水面色调七项参数平滑过渡
 - **每个条目 4 条数据 + 2 条描述 + 2 条冷知识**：全球年蒸发 50 万 km³、云滴直径 0.02 mm、雨滴最大 6 mm、地下水 2340 万 km³ …
 - **神经语音讲解**：17 段（7 环节 + 6 实体 + 4 分段），edge-tts 预生成在 `src/audio/weather/`（约 2 MB），缺失时自动回退浏览器语音
+
+### 🏯 江南园林 · 缩千里于咫尺（src/garden/garden.html）
+
+一座按造园手法搭起来的微缩园林：粉墙黛瓦围出一亩三分地，中间一池水，四周亭台楼榭。
+
+**核心功能：**
+
+- **园中十景**：六角亭（攒尖顶 + 飞檐 + 宝顶 + 石桌凳）、远香堂（硬山顶 + 落地长窗 + 匾额）、芙蓉榭（平台挑水）、香洲（旱船：船体 + 中舱 + 两层尾楼）、游廊（内外双排柱 + 单坡顶 + 坐凳栏杆）、太湖石假山（噪声石堆叠，瘦皱漏透）、水池（不规则岸线 + 驳岸犬牙交错）、曲桥（低平贴水 + 三折）、月洞门（真开洞的墙体几何）、漏窗（海棠纹镂空）
+- **四类植物**：松（虬曲主干 + 分层松针）、竹（丛植 + 竹节 + 叶簇）、柳（垂枝 + 叶串，随风轻摆）、荷（水面圆叶 + 花），另有芭蕉
+- **借景**：园外远处立一座塔，半隐在雾里——这就是《园冶》说的"园虽别内外，得景则无拘远近"
+- **造园手法讲解**：借景、框景单独成卡，框景可以直接切到"洞口"视角，站在月洞门前看被框住的那一幅
+- **五组视角**：全园 / 亭中（从亭内往外看）/ 水榭 / 洞口（框景机位）/ 俯瞰
+- **十四个可点对象 + 15 个 3D 标签**，标签逐帧投影避让
+- **每条目 4 条数据 + 2 条描述 + 2 条冷知识**：狮子林 9 条山路 21 个洞、宋徽宗花石纲、留园一条廊几十种漏窗不重样、荷叶效应 …
+- **神经语音讲解**：16 段（10 景 + 4 植物 + 2 手法），edge-tts 预生成在 `src/audio/garden/`（约 2 MB）
 
 ### 🦖 恐龙 · 地质年代漫游（src/dinosaur/dinosaur.html）
 

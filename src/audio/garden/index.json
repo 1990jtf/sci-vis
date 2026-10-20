@@ -1,0 +1,98 @@
+{
+  "ting": {
+    "file": "v_ting.mp3",
+    "hash": "eeeabf0b0841",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 118656
+  },
+  "tang": {
+    "file": "v_tang.mp3",
+    "hash": "390cad347f46",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 139248
+  },
+  "xie": {
+    "file": "v_xie.mp3",
+    "hash": "385b9ed2fe27",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 109584
+  },
+  "fang": {
+    "file": "v_fang.mp3",
+    "hash": "6ce1eb6b92be",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 130032
+  },
+  "lang": {
+    "file": "v_lang.mp3",
+    "hash": "8042833df9c9",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 111456
+  },
+  "shan": {
+    "file": "v_shan.mp3",
+    "hash": "7c9bb83e9720",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 153648
+  },
+  "chi": {
+    "file": "v_chi.mp3",
+    "hash": "a76c72197283",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 154224
+  },
+  "qiao": {
+    "file": "v_qiao.mp3",
+    "hash": "70f391b83a15",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 146448
+  },
+  "men": {
+    "file": "v_men.mp3",
+    "hash": "47e908985ca9",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 117216
+  },
+  "chuang": {
+    "file": "v_chuang.mp3",
+    "hash": "9ad1fa1a2ee9",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 137664
+  },
+  "song": {
+    "file": "v_song.mp3",
+    "hash": "073f43df5c05",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 97488
+  },
+  "zhu": {
+    "file": "v_zhu.mp3",
+    "hash": "f56c8d0f5413",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 109440
+  },
+  "liu": {
+    "file": "v_liu.mp3",
+    "hash": "49e885528e56",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 107136
+  },
+  "he": {
+    "file": "v_he.mp3",
+    "hash": "dfbb7b7b7955",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 106416
+  },
+  "jiejing": {
+    "file": "v_jiejing.mp3",
+    "hash": "a22dfede49bf",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 142560
+  },
+  "kuangjing": {
+    "file": "v_kuangjing.mp3",
+    "hash": "b7c135394dcc",
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "bytes": 122400
+  }
+}
