@@ -8,7 +8,7 @@
   <title>科普可视化 · 给好奇心一个目的地</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b131b'/%3E%3Cpath d='M32 10l6 16 16 6-16 6-6 16-6-16-16-6 16-6z' fill='%23a8d9c3'/%3E%3C/svg%3E" />
   <link rel="preload" as="image" href="src/home/previews/earth.webp" />
-  <link rel="stylesheet" href="src/home/home.css" />
+  <link rel="stylesheet" href="src/home/home.css?v=20261021.2" />
   <script src="src/home/home.js" defer></script>
 </head>
 <body>
@@ -68,13 +68,13 @@
       </div>
 
       <div class="topic-grid" id="topicGrid">
-        <a class="topic-card topic-featured" href="src/weather/weather.html" data-topic="weather" data-category="nature" data-keywords="天气 下雨 降雨 暴雨 水汽 地下水 蒸发 凝结 雪山 河流 湖泊 大海 自然 水滴 太阳 日照" aria-labelledby="weatherTitle">
-          <div class="topic-visual"><img src="src/home/previews/weather.webp" width="585" height="445" alt="雪山、森林、河流和地层组成的水循环微缩模型" loading="lazy" decoding="async"/></div>
-          <div class="topic-content"><div class="topic-meta"><span class="featured-badge"><span class="status-dot"></span>从这里开始</span><span class="topic-category">自然万象</span></div><p class="featured-question">一滴水，会去哪里？</p><h3 id="weatherTitle">水循环观察站</h3><p class="topic-description">从海面升空，变成云和雨。<br/>打开地下剖面，看看雨水去了哪里。</p><div class="topic-tags"><span>7 种水循环过程</span><span>天气小实验</span></div><span class="featured-cta">跟着水滴出发 <svg class="icon"><use href="#i-up-right"/></svg></span></div>
+        <a class="topic-card topic-featured" href="src/solar-system/solar-system.html" data-topic="solar" data-category="space" data-keywords="太阳系 太空 宇宙 行星 地球 月球 太阳 水星 金星 火星 木星 土星 天王星 海王星 卫星 自转 公转 一年 生日 星球 光环" aria-labelledby="solarTitle" style="--topic-accent:#d7b886">
+          <div class="topic-visual visual-space"><img src="src/home/previews/solar.webp" width="760" height="430" alt="带有细密冰岩光环的土星三维模型" loading="lazy" decoding="async"/></div>
+          <div class="topic-content"><div class="topic-meta"><span class="featured-badge"><span class="status-dot"></span>从这里开始</span><span class="topic-category">宇宙星球</span></div><p class="featured-question">土星的光环，是什么？</p><h3 id="solarTitle">太阳系观察站</h3><p class="topic-description">转动星球，比较八大行星的大小。<br/>看看不同星球的一年有多长。</p><div class="topic-tags"><span>行星地图</span><span>大小对比</span></div><span class="featured-cta">出发，探索太阳系 <svg class="icon"><use href="#i-up-right"/></svg></span></div>
         </a>
-        <a class="topic-card" href="src/solar-system/solar-system.html" data-topic="solar" data-category="space" data-keywords="太阳系 太空 宇宙 行星 地球 月球 太阳 水星 金星 火星 木星 土星 天王星 海王星 卫星 自转 公转 一年 生日 星球 光环" aria-labelledby="solarTitle" style="--topic-accent:#d7b886">
-          <div class="topic-visual visual-space"><img src="src/home/previews/solar.webp" width="760" height="430" alt="带有细密冰岩光环的土星三维模型" loading="lazy" decoding="async"/><span class="visual-label">SPACE / 01</span><span class="visual-arrow"><svg class="icon"><use href="#i-up-right"/></svg></span></div>
-          <div class="topic-content"><div class="topic-meta"><span class="topic-category">宇宙星球</span><span>转动 · 比较</span></div><h3 id="solarTitle">太阳系观察站</h3><p class="topic-description">土星的光环是什么？比较八大行星的大小，看看不同星球的一年有多长。</p><div class="topic-tags"><span>行星地图</span><span>大小对比</span></div></div>
+        <a class="topic-card" href="src/weather/weather.html" data-topic="weather" data-category="nature" data-keywords="天气 下雨 降雨 暴雨 水汽 地下水 蒸发 凝结 雪山 河流 湖泊 大海 自然 水滴 太阳 日照" aria-labelledby="weatherTitle">
+          <div class="topic-visual"><img src="src/home/previews/weather.webp" width="585" height="445" alt="雪山、森林、河流和地层组成的水循环微缩模型" loading="lazy" decoding="async"/><span class="visual-label">NATURE / 01</span><span class="visual-arrow"><svg class="icon"><use href="#i-up-right"/></svg></span></div>
+          <div class="topic-content"><div class="topic-meta"><span class="topic-category">自然万象</span><span>追踪 · 实验</span></div><h3 id="weatherTitle">水循环观察站</h3><p class="topic-description">一滴水会去哪里？从海面升空，变成云和雨，打开地下剖面看看雨水去了哪里。</p><div class="topic-tags"><span>7 种水循环过程</span><span>天气小实验</span></div></div>
         </a>
         <a class="topic-card" href="src/dinosaur/dinosaur.html" data-topic="dinosaur" data-category="life" data-keywords="恐龙 霸王龙 三角龙 剑龙 甲龙 翼龙 史前 生命 动物 化石 灭绝 尾巴 牙齿 体型 身高 翅膀" aria-labelledby="dinosaurTitle" style="--topic-accent:#a9bd88">
           <div class="topic-visual"><img src="src/home/previews/dinosaur.webp" width="760" height="398" alt="站在史前河岸森林中的霸王龙形态复原模型" loading="lazy" decoding="async"/><span class="visual-label">LIFE / 02</span><span class="visual-arrow"><svg class="icon"><use href="#i-up-right"/></svg></span></div>
@@ -103,8 +103,8 @@
     <section class="questions-section" id="questions" aria-labelledby="questionsTitle">
       <div class="section-heading"><div><p class="eyebrow">GOOD QUESTIONS OPEN NEW WORLDS</p><h2 id="questionsTitle">也可以，从一个「为什么」开始。</h2></div><span class="section-aside">带着问题，答案会更有趣。</span></div>
       <div class="question-grid">
-        <a href="src/weather/weather.html" data-topic-link="weather"><span class="question-number">01 <svg class="icon"><use href="#i-leaf"/></svg></span><h3>下雨之前，<br/>云里发生了什么？</h3><span>去水循环观察站找找 <svg class="icon"><use href="#i-up-right"/></svg></span></a>
-        <a href="src/solar-system/solar-system.html" data-topic-link="solar"><span class="question-number">02 <svg class="icon"><use href="#i-orbit"/></svg></span><h3>如果住在火星，<br/>一年会有多长？</h3><span>去太阳系比较一下 <svg class="icon"><use href="#i-up-right"/></svg></span></a>
+        <a href="src/solar-system/solar-system.html" data-topic-link="solar"><span class="question-number">01 <svg class="icon"><use href="#i-orbit"/></svg></span><h3>如果住在火星，<br/>一年会有多长？</h3><span>去太阳系比较一下 <svg class="icon"><use href="#i-up-right"/></svg></span></a>
+        <a href="src/weather/weather.html" data-topic-link="weather"><span class="question-number">02 <svg class="icon"><use href="#i-leaf"/></svg></span><h3>下雨之前，<br/>云里发生了什么？</h3><span>去水循环观察站找找 <svg class="icon"><use href="#i-up-right"/></svg></span></a>
         <a href="src/dinosaur/dinosaur.html" data-topic-link="dinosaur"><span class="question-number">03 <svg class="icon"><use href="#i-heart"/></svg></span><h3>霸王龙和剑龙，<br/>能够相遇吗？</h3><span>去史前世界找证据 <svg class="icon"><use href="#i-up-right"/></svg></span></a>
         <a href="src/xuanquan/xuanquan.html" data-topic-link="xuanquan"><span class="question-number">04 <svg class="icon"><use href="#i-landmark"/></svg></span><h3>没有手机的古人，<br/>怎么把消息送远？</h3><span>去汉代驿站看一看 <svg class="icon"><use href="#i-up-right"/></svg></span></a>
       </div>
