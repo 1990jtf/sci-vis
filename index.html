@@ -3,206 +3,119 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>科普可视化 · 面向儿童科普</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PGRlZnM+PHJhZGlhbEdyYWRpZW50IGlkPSJnIiBjeD0iMzUlIiBjeT0iMzAlIiByPSI3NSUiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0iI2M3ZDJmZSIvPjxzdG9wIG9mZnNldD0iLjU1IiBzdG9wLWNvbG9yPSIjNjM2NmYxIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMzEyZTgxIi8+PC9yYWRpYWxHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTQiIGZpbGw9IiMwYjEwMjAiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxNyIgZmlsbD0idXJsKCNnKSIvPjxlbGxpcHNlIGN4PSIzMiIgY3k9IjMyIiByeD0iMjUiIHJ5PSI4IiBmaWxsPSJub25lIiBzdHJva2U9IiNhNWI0ZmMiIHN0cm9rZS13aWR0aD0iMi42IiBvcGFjaXR5PSIuOSIgdHJhbnNmb3JtPSJyb3RhdGUoLTIyIDMyIDMyKSIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzIiIHI9IjE3IiBmaWxsPSJub25lIiBzdHJva2U9IiNlMGU3ZmYiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iLjUiLz48L3N2Zz4=" />
-  <style>
-    :root {
-      --bg0: #03050d; --bg1: #0a1224;
-      --text: #eef3ff; --dim: #9aa8c4; --faint: #6b7896;
-      --stroke: rgba(255,255,255,0.10);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
-    body {
-      font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', -apple-system, sans-serif;
-      background: var(--bg0);
-      color: var(--text);
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-    #stars {
-      position: fixed; inset: 0; z-index: 0;
-      background: radial-gradient(circle at 50% 20%, #0d1730 0%, var(--bg0) 70%);
-    }
-    .wrap { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 72px 28px 64px; }
-
-    header { text-align: center; margin-bottom: 64px; }
-    .eyebrow {
-      font-size: 12px; letter-spacing: 5px; color: var(--faint);
-      text-transform: uppercase; margin-bottom: 14px;
-    }
-    h1 {
-      font-size: 44px; letter-spacing: 4px; font-weight: 700;
-      background: linear-gradient(105deg, #ffffff 20%, #6a8cff 60%, #a06bff 100%);
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-    }
-    header p { margin-top: 16px; color: var(--dim); font-size: 15px; letter-spacing: 1px; }
-
-    .grid {
-      display: grid; gap: 22px;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    }
-    .card {
-      --accent: #6a8cff; --accent2: #a06bff;
-      position: relative; display: block; text-decoration: none; color: var(--text);
-      border-radius: 20px; padding: 26px 26px 22px;
-      background: linear-gradient(160deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02));
-      border: 1px solid var(--stroke);
-      overflow: hidden;
-      transition: transform 0.35s cubic-bezier(0.2,0.8,0.2,1), box-shadow 0.35s, border-color 0.35s;
-      opacity: 0; transform: translateY(18px);
-      animation: rise 0.8s cubic-bezier(0.2,0.8,0.2,1) forwards;
-    }
-    .card:nth-child(1) { animation-delay: 0.05s; }
-    .card:nth-child(2) { animation-delay: 0.12s; }
-    .card:nth-child(3) { animation-delay: 0.19s; }
-    .card:nth-child(4) { animation-delay: 0.26s; }
-    .card:nth-child(5) { animation-delay: 0.33s; }
-    @keyframes rise { to { opacity: 1; transform: none; } }
-    .card::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: radial-gradient(420px 200px at 85% -10%, var(--glow, rgba(106,140,255,0.16)), transparent 65%);
-      opacity: 0; transition: opacity 0.4s;
-      pointer-events: none;
-    }
-    .card:hover {
-      transform: translateY(-6px);
-      border-color: rgba(255,255,255,0.22);
-      box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
-    }
-    .card:hover::before { opacity: 1; }
-    .card .icon {
-      width: 52px; height: 52px; border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 27px; margin-bottom: 18px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.03));
-      border: 1px solid var(--stroke);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
-    }
-    .card h2 { font-size: 21px; letter-spacing: 1.5px; margin-bottom: 8px; }
-    .card p { font-size: 13px; line-height: 1.8; color: var(--dim); min-height: 70px; }
-    .card .tags { display: flex; gap: 7px; margin-top: 16px; flex-wrap: wrap; }
-    .card .tag {
-      font-size: 11px; padding: 4px 11px; border-radius: 999px;
-      background: rgba(255,255,255,0.07); border: 1px solid var(--stroke);
-      color: var(--dim); letter-spacing: 0.5px;
-    }
-    .card .arrow {
-      position: absolute; right: 24px; top: 30px;
-      color: var(--faint); font-size: 18px;
-      transition: transform 0.3s, color 0.3s;
-    }
-    .card:hover .arrow { transform: translateX(4px); color: var(--text); }
-
-    footer {
-      margin-top: 72px; text-align: center;
-      font-size: 12px; color: var(--faint); letter-spacing: 1px;
-    }
-    @media (max-width: 640px) {
-      h1 { font-size: 30px; }
-      .wrap { padding: 48px 16px; }
-    }
-  </style>
+  <meta name="theme-color" content="#0b131b" />
+  <meta name="description" content="给好奇的小小探索家的互动科学馆。转动星球，走进恐龙世界，跟随一滴水旅行，在 7 个三维专题里动手观察、发现科学。" />
+  <title>科普可视化 · 给好奇心一个目的地</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230b131b'/%3E%3Cpath d='M32 10l6 16 16 6-16 6-6 16-6-16-16-6 16-6z' fill='%23a8d9c3'/%3E%3C/svg%3E" />
+  <link rel="preload" as="image" href="src/home/previews/earth.webp" />
+  <link rel="stylesheet" href="src/home/home.css" />
+  <script src="src/home/home.js" defer></script>
 </head>
 <body>
-  <canvas id="stars"></canvas>
-  <div class="wrap">
-    <header>
-      <div class="eyebrow">Sci-Vis for Kids</div>
-      <h1>科普可视化</h1>
-      <p>面向儿童的科学知识互动演示 · 用 3D 与动画讲科学</p>
-    </header>
+  <a class="skip-link" href="#explore">跳到探索主题</a>
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <svg class="icon-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 2.7 7.3L22 12l-7.3 2.7L12 22l-2.7-7.3L2 12l7.3-2.7Z"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-up-right" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6h12v12"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 6h3c5 0 7 12 12 12h3m-4-4 4 4-4 4M3 18h3c2 0 3-2 4-4m4-4c1-2 2-4 4-4h3m-4-4 4 4-4 4"/></symbol>
+    <symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><ellipse cx="12" cy="12" rx="11" ry="4" transform="rotate(-32 12 12)"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.8 4.7c-2.3-2.3-5.8-1.7-8.8 1.4C9 3 5.5 2.4 3.2 4.7-1 9 4 15 12 21c8-6 13-12 8.8-16.3Z"/><path d="M5 12h4l2-4 2 8 2-4h4"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M20 3C9 2 2 9 6 16c7 5 15-3 14-13ZM3 22 16 8M7 18l-1-6m5 2h6"/></symbol>
+    <symbol id="i-landmark" viewBox="0 0 24 24"><path d="m2 9 10-6 10 6H2Zm3 3v7m7-7v7m7-7v7M3 22h18"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 3v18h18M8 17v-5m5 5V7m5 10V4"/></symbol>
+    <symbol id="i-drag" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18m-6-6-3-3-3 3m6 12-3 3-3-3M6 9l-3 3 3 3m12-6 3 3-3 3"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M5 9H2v6h3l6 5V4L5 9Zm10-2c3 3 3 7 0 10m3-13c5 5 5 11 0 16"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8Z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14m8-14v14"/></symbol>
+  </defs></svg>
 
-    <main class="grid">
-      <a class="card" href="src/solar-system/solar-system.html" style="--accent:#ffb347; --glow:rgba(255,179,71,0.14)">
-        <div class="icon">🪐</div>
-        <span class="arrow">→</span>
-        <h2>太阳系</h2>
-        <p>八大行星 + 月球与 8 颗卫星，真实的公转速度比例、自转周期，以及每个天体到太阳的距离（公里 / 光年 / 光行时）。点击天体镜头平滑飞掠，支持自动漫游与时间加速。</p>
-        <div class="tags"><span class="tag">泛光渲染</span><span class="tag">卫星系统</span><span class="tag">神经语音讲解</span></div>
-      </a>
+  <header class="site-header page-width">
+    <a class="brand" href="./" aria-label="科普可视化首页"><span class="brand-mark"><svg><use href="#i-spark"/></svg></span><span>科普可视化<small>SCI-VIS · 互动探索馆</small></span></a>
+    <nav class="main-nav" aria-label="首页导航"><a href="#explore" class="is-current">探索主题</a><a href="#questions">从问题出发</a><a href="#companion">给陪伴者</a></nav>
+    <button class="motion-button" id="motionBtn" type="button" aria-pressed="false" aria-label="暂停动态效果"><svg class="icon"><use href="#i-pause"/></svg><span>动态效果</span></button>
+  </header>
 
-      <a class="card" href="src/circulation/circulation.html" style="--accent:#ff5566; --glow:rgba(255,85,102,0.13)">
-        <div class="icon">❤️</div>
-        <span class="arrow">→</span>
-        <h2>人体 · 血液循环</h2>
-        <p>基于 BodyParts3D 的真实解剖数据：扫描级的人体骨骼、心脏、肺、肝、胃肠、双肾，以及遍布全身的动脉与静脉网络。皮肤、骨骼、内脏、血管四层可逐层剥离。</p>
-        <div class="tags"><span class="tag">BodyParts3D</span><span class="tag">真实解剖</span><span class="tag">四层可剥离</span></div>
-      </a>
+  <main class="page-width">
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="status-dot"></span> 给好奇的小小探索家 <span class="eyebrow-line"></span> HELLO, EXPLORER</p>
+        <h1 id="heroTitle">世界那么大，<br/>一起<span class="hero-highlight">探索一下。</span></h1>
+        <p class="hero-intro">从一颗星球，到一滴水。<br/>转动模型、跟着讲解，把一个个「为什么」看明白。</p>
+        <div class="hero-actions"><a class="button button-primary" href="#explore">出发，去探索 <svg class="icon"><use href="#i-arrow"/></svg></a><button class="button button-secondary" id="surpriseBtn" type="button" hidden><svg class="icon"><use href="#i-shuffle"/></svg>帮我选一个</button></div>
+        <div class="hero-features"><span><b>07</b> 个探索主题</span><span><svg class="icon"><use href="#i-drag"/></svg>可以动手的 3D 世界</span><span><svg class="icon"><use href="#i-sound"/></svg>中文语音讲解</span></div>
+      </div>
+      <div class="hero-world" aria-label="从我们的地球，发现更多探索方向">
+        <span class="world-coordinate" aria-hidden="true">OUR PALE BLUE HOME</span>
+        <div class="world-orbit orbit-one" aria-hidden="true"></div><div class="world-orbit orbit-two" aria-hidden="true"></div><div class="world-orbit orbit-three" aria-hidden="true"></div>
+        <div class="earth-halo" aria-hidden="true"></div><img class="hero-earth" src="src/home/previews/earth.webp" width="420" height="420" alt="蓝色海洋、陆地和白色云层覆盖的地球三维模型" fetchpriority="high" />
+        <a class="world-link world-space" href="src/solar-system/solar-system.html" data-topic-link="solar"><span class="world-link-icon"><svg class="icon"><use href="#i-orbit"/></svg></span><span>抬头，看宇宙<small>从地球，飞向八大行星</small></span><svg class="icon world-link-arrow"><use href="#i-up-right"/></svg></a>
+        <a class="world-link world-nature" href="src/weather/weather.html" data-topic-link="weather"><span class="world-link-icon"><svg class="icon"><use href="#i-leaf"/></svg></span><span>低头，找自然<small>一滴水也有自己的旅程</small></span><svg class="icon world-link-arrow"><use href="#i-up-right"/></svg></a>
+        <span class="world-caption"><span class="status-dot"></span> 地球 · 我们共同的家 <span>01 / ∞</span></span>
+      </div>
+    </section>
 
-      <a class="card" href="src/weather/weather.html" style="--accent:#38bdf8; --glow:rgba(56,189,248,0.13)">
-        <div class="icon">🌧️</div>
-        <span class="arrow">→</span>
-        <h2>天气系统 · 水循环</h2>
-        <p>走进有雪山、分枝树木、河湖和海岸的三维小世界。沿 7 种水循环过程探索，打开地下含水层剖面，改变天气与日照，再跟着一滴水旅行。</p>
-        <div class="tags"><span class="tag">山海模型</span><span class="tag">地下剖面</span><span class="tag">天气实验</span></div>
-      </a>
+    <div class="recent-visit" id="recentVisit" hidden><span><span class="status-dot"></span> 上次打开</span><a id="recentLink" href="#explore"></a><button id="clearRecent" aria-label="清除上次打开的记录" type="button">×</button></div>
 
-      <a class="card" href="src/dinosaur/dinosaur.html" style="--accent:#4ade80; --glow:rgba(74,222,128,0.13)">
-        <div class="icon">🦖</div>
-        <span class="arrow">→</span>
-        <h2>恐龙 · 自然博物馆</h2>
-        <p>走进史前河岸森林，观察 8 种史前动物的牙齿、角、背板与膜翼。切换栖息地、形态细节和同尺对比，用自己的身高当尺子，跟随语音与小问题读懂恐龙时代。</p>
-        <div class="tags"><span class="tag">身体特征</span><span class="tag">同尺对比</span><span class="tag">史前森林</span></div>
-      </a>
+    <section class="explore-section" id="explore" aria-labelledby="exploreTitle">
+      <div class="section-heading"><div><p class="eyebrow">CHOOSE YOUR NEXT ADVENTURE</p><h2 id="exploreTitle">下一站，你想去哪儿？</h2></div><span class="section-count" id="resultCount" aria-live="polite" aria-atomic="true">7 个世界，等你发现</span></div>
+      <div class="explore-tools" id="exploreTools" hidden>
+        <div class="category-list" role="group" aria-label="按探索主题筛选">
+          <button type="button" data-filter="all" aria-pressed="true" class="is-active">全部主题 <span>7</span></button><button type="button" data-filter="space" aria-pressed="false"><svg class="icon"><use href="#i-orbit"/></svg>宇宙星球</button><button type="button" data-filter="life" aria-pressed="false"><svg class="icon"><use href="#i-heart"/></svg>生命奥秘</button><button type="button" data-filter="nature" aria-pressed="false"><svg class="icon"><use href="#i-leaf"/></svg>自然万象</button><button type="button" data-filter="culture" aria-pressed="false"><svg class="icon"><use href="#i-landmark"/></svg>人文足迹</button><button type="button" data-filter="data" aria-pressed="false"><svg class="icon"><use href="#i-chart"/></svg>数据发现</button>
+        </div>
+        <form class="topic-search" role="search" id="searchForm"><svg class="icon"><use href="#i-search"/></svg><label class="visually-hidden" for="topicSearch">搜索主题、事物或问题</label><input type="search" id="topicSearch" placeholder="试试「恐龙」或「下雨」" autocomplete="off" maxlength="80"/><button type="button" id="clearSearch" aria-label="清空搜索" hidden>×</button></form>
+      </div>
 
-      <a class="card" href="src/birth/birth.html" style="--accent:#f6b73c; --glow:rgba(246,183,60,0.13)">
-        <div class="icon">👶</div>
-        <span class="arrow">→</span>
-        <h2>人口 · 出生人口</h2>
-        <p>1985-2025 年出生人口的三维数据雕塑：柱高与颜色双重编码、出生率流光折线逐点生长，悬停查看每年数据，镜头三视角切换。</p>
-        <div class="tags"><span class="tag">数据可视化</span><span class="tag">渐变映射</span><span class="tag">镜头预设</span></div>
-      </a>
+      <div class="topic-grid" id="topicGrid">
+        <a class="topic-card topic-featured" href="src/weather/weather.html" data-topic="weather" data-category="nature" data-keywords="天气 下雨 降雨 暴雨 水汽 地下水 蒸发 凝结 雪山 河流 湖泊 大海 自然 水滴 太阳 日照" aria-labelledby="weatherTitle">
+          <div class="topic-visual"><img src="src/home/previews/weather.webp" width="585" height="445" alt="雪山、森林、河流和地层组成的水循环微缩模型" loading="lazy" decoding="async"/></div>
+          <div class="topic-content"><div class="topic-meta"><span class="featured-badge"><span class="status-dot"></span>从这里开始</span><span class="topic-category">自然万象</span></div><p class="featured-question">一滴水，会去哪里？</p><h3 id="weatherTitle">水循环观察站</h3><p class="topic-description">从海面升空，变成云和雨。<br/>打开地下剖面，看看雨水去了哪里。</p><div class="topic-tags"><span>7 种水循环过程</span><span>天气小实验</span></div><span class="featured-cta">跟着水滴出发 <svg class="icon"><use href="#i-up-right"/></svg></span></div>
+        </a>
+        <a class="topic-card" href="src/solar-system/solar-system.html" data-topic="solar" data-category="space" data-keywords="太阳系 太空 宇宙 行星 地球 月球 太阳 水星 金星 火星 木星 土星 天王星 海王星 卫星 自转 公转 一年 生日 星球 光环" aria-labelledby="solarTitle" style="--topic-accent:#d7b886">
+          <div class="topic-visual visual-space"><img src="src/home/previews/solar.webp" width="760" height="430" alt="带有细密冰岩光环的土星三维模型" loading="lazy" decoding="async"/><span class="visual-label">SPACE / 01</span><span class="visual-arrow"><svg class="icon"><use href="#i-up-right"/></svg></span></div>
+          <div class="topic-content"><div class="topic-meta"><span class="topic-category">宇宙星球</span><span>转动 · 比较</span></div><h3 id="solarTitle">太阳系观察站</h3><p class="topic-description">土星的光环是什么？比较八大行星的大小，看看不同星球的一年有多长。</p><div class="topic-tags"><span>行星地图</span><span>大小对比</span></div></div>
+        </a>
+        <a class="topic-card" href="src/dinosaur/dinosaur.html" data-topic="dinosaur" data-category="life" data-keywords="恐龙 霸王龙 三角龙 剑龙 甲龙 翼龙 史前 生命 动物 化石 灭绝 尾巴 牙齿 体型 身高 翅膀" aria-labelledby="dinosaurTitle" style="--topic-accent:#a9bd88">
+          <div class="topic-visual"><img src="src/home/previews/dinosaur.webp" width="760" height="398" alt="站在史前河岸森林中的霸王龙形态复原模型" loading="lazy" decoding="async"/><span class="visual-label">LIFE / 02</span><span class="visual-arrow"><svg class="icon"><use href="#i-up-right"/></svg></span></div>
+          <div class="topic-content"><div class="topic-meta"><span class="topic-category">生命奥秘</span><span>观察 · 辨认</span></div><h3 id="dinosaurTitle">恐龙自然博物馆</h3><p class="topic-description">观察牙齿、角和背板，用自己的身高当尺子，认识恐龙与翼龙的不同本领。</p><div class="topic-tags"><span>8 种史前动物</span><span>和你比身高</span></div></div>
+        </a>
+        <a class="topic-card" href="src/circulation/circulation.html" data-topic="circulation" data-category="life" data-keywords="人体 身体 器官 心脏 肺 血液 血管 循环 氧气 呼吸 血流 大脑 骨骼 动脉 静脉 生命" aria-labelledby="circulationTitle" style="--topic-accent:#d69c91">
+          <div class="topic-visual visual-body"><img src="src/home/previews/circulation.webp" width="490" height="425" alt="显示心肺、消化器官与血管网络的人体参考解剖模型" loading="lazy" decoding="async"/><span class="visual-label">LIFE / 03</span><span class="visual-arrow"><svg class="icon"><use href="#i-up-right"/></svg></span></div>
+          <div class="topic-content"><div class="topic-meta"><span class="topic-category">生命奥秘</span><span>透视 · 跟随</span></div><h3 id="circulationTitle">身体里的生命之河</h3><p class="topic-description">和一滴血一起旅行，认识心脏和肺。切换器官、血管与骨骼，看看身体怎样工作。</p><div class="topic-tags"><span>11 个器官</span><span>血液循环导览</span></div></div>
+        </a>
+        <a class="topic-card" href="src/garden/garden.html" data-topic="garden" data-category="culture" data-keywords="园林 江南 古建筑 人文 文化 历史 六角亭 亭子 水榭 荷花 竹子 太湖石 假山 月洞门 窗 桥 松树 借景 框景" aria-labelledby="gardenTitle" style="--topic-accent:#a7bda4">
+          <div class="topic-visual"><img src="src/home/previews/garden.webp" width="760" height="388" alt="粉墙黛瓦、亭台、曲桥和水池组成的江南园林模型" loading="lazy" decoding="async"/><span class="visual-label">CULTURE / 04</span><span class="visual-arrow"><svg class="icon"><use href="#i-up-right"/></svg></span></div>
+          <div class="topic-content"><div class="topic-meta"><span class="topic-category">人文足迹</span><span>漫游 · 寻景</span></div><h3 id="gardenTitle">江南园林</h3><p class="topic-description">走过曲桥、绕过假山，看看一扇月洞门，怎样框住一幅会变化的风景。</p><div class="topic-tags"><span>叠山理水</span><span>借景与框景</span></div></div>
+        </a>
+        <a class="topic-card" href="src/xuanquan/xuanquan.html" data-topic="xuanquan" data-category="culture" data-keywords="悬泉置 敦煌 汉代 丝绸之路 丝路 古代 邮递 邮驿 驿站 人文 历史 汉简 骆驼 马匹 烽墩 驼队 送信 消息" aria-labelledby="xuanquanTitle" style="--topic-accent:#c6a27f">
+          <div class="topic-visual"><img src="src/home/previews/xuanquan.webp" width="760" height="306" alt="戈壁上的汉代坞院、马厩、驿道与驼队示意模型" loading="lazy" decoding="async"/><span class="visual-label">CULTURE / 05</span><span class="visual-arrow"><svg class="icon"><use href="#i-up-right"/></svg></span></div>
+          <div class="topic-content"><div class="topic-meta"><span class="topic-category">人文足迹</span><span>走近 · 寻找</span></div><h3 id="xuanquanTitle">悬泉置 · 丝路驿站</h3><p class="topic-description">古人怎么把消息送到远方？走进戈壁上的汉代驿站，寻找汉简、马厩与驼队。</p><div class="topic-tags"><span>汉代邮驿</span><span>驿站生活</span></div></div>
+        </a>
+        <a class="topic-card" href="src/birth/birth.html" data-topic="birth" data-category="data" data-keywords="人口 出生 数据 图表 柱状图 统计 变化 数学 出生率 年份 比较 趋势" aria-labelledby="birthTitle" style="--topic-accent:#b2a5d4">
+          <div class="topic-visual visual-data"><img src="src/home/previews/birth.webp" width="760" height="332" alt="用三维柱状图和折线呈现不同年份的出生人口数据" loading="lazy" decoding="async"/><span class="visual-label">DATA / 06</span><span class="visual-arrow"><svg class="icon"><use href="#i-up-right"/></svg></span></div>
+          <div class="topic-content"><div class="topic-meta"><span class="topic-category">数据发现</span><span>比较 · 读图</span></div><h3 id="birthTitle">把人口变成一幅图</h3><p class="topic-description">柱子为什么有高有低？从 1985—2025 年的出生人口图中，练习发现数据的变化。</p><div class="topic-tags"><span>三维数据雕塑</span><span>认识图表</span></div></div>
+        </a>
+      </div>
+      <div class="empty-state" id="emptyState" hidden><svg class="icon"><use href="#i-search"/></svg><h3>这个问题，还在探索的路上。</h3><p>换一个词试试，或者回到全部主题，发现新的方向。</p><button class="button button-secondary" id="resetFilters" type="button">看看全部主题 <svg class="icon"><use href="#i-arrow"/></svg></button></div>
+    </section>
 
-      <a class="card" href="src/garden/garden.html" style="--accent:#c1503c; --glow:rgba(193,80,60,0.13)">
-        <div class="icon">🏯</div>
-        <span class="arrow">→</span>
-        <h2>江南园林 · 缩千里于咫尺</h2>
-        <p>粉墙黛瓦围出一亩三分地：六角亭、远香堂、芙蓉榭、香洲、游廊、太湖石假山与曲桥，一池水把它们串起来。借景、框景、障景都能点开听讲，还能切到洞口，看月洞门框住的那一幅画。</p>
-        <div class="tags"><span class="tag">叠山理水</span><span class="tag">借景框景</span><span class="tag">五组视角</span></div>
-      </a>
+    <section class="questions-section" id="questions" aria-labelledby="questionsTitle">
+      <div class="section-heading"><div><p class="eyebrow">GOOD QUESTIONS OPEN NEW WORLDS</p><h2 id="questionsTitle">也可以，从一个「为什么」开始。</h2></div><span class="section-aside">带着问题，答案会更有趣。</span></div>
+      <div class="question-grid">
+        <a href="src/weather/weather.html" data-topic-link="weather"><span class="question-number">01 <svg class="icon"><use href="#i-leaf"/></svg></span><h3>下雨之前，<br/>云里发生了什么？</h3><span>去水循环观察站找找 <svg class="icon"><use href="#i-up-right"/></svg></span></a>
+        <a href="src/solar-system/solar-system.html" data-topic-link="solar"><span class="question-number">02 <svg class="icon"><use href="#i-orbit"/></svg></span><h3>如果住在火星，<br/>一年会有多长？</h3><span>去太阳系比较一下 <svg class="icon"><use href="#i-up-right"/></svg></span></a>
+        <a href="src/dinosaur/dinosaur.html" data-topic-link="dinosaur"><span class="question-number">03 <svg class="icon"><use href="#i-heart"/></svg></span><h3>霸王龙和剑龙，<br/>能够相遇吗？</h3><span>去史前世界找证据 <svg class="icon"><use href="#i-up-right"/></svg></span></a>
+        <a href="src/xuanquan/xuanquan.html" data-topic-link="xuanquan"><span class="question-number">04 <svg class="icon"><use href="#i-landmark"/></svg></span><h3>没有手机的古人，<br/>怎么把消息送远？</h3><span>去汉代驿站看一看 <svg class="icon"><use href="#i-up-right"/></svg></span></a>
+      </div>
+    </section>
 
-      <a class="card" href="src/xuanquan/xuanquan.html" style="--accent:#b5713a; --glow:rgba(181,113,58,0.13)">
-        <div class="icon">🏜️</div>
-        <span class="arrow">→</span>
-        <h2>悬泉置 · 丝路驿站</h2>
-        <p>敦煌以东的戈壁上，一座 50×50 米的汉代坞院：东开的院门、院外的马厩、西南角的烽墩、门前的驿道。三万五千枚汉简，记下了这座驿站每天的迎来送往。</p>
-        <div class="tags"><span class="tag">汉代邮驿</span><span class="tag">悬泉汉简</span><span class="tag">戈壁复原</span></div>
-      </a>
-    </main>
+    <section class="companion-section" id="companion" aria-label="给一起探索的大人">
+      <details id="companionDetails"><summary><span class="companion-mark"><svg class="icon"><use href="#i-spark"/></svg></span><span><small>给一起探索的大人</small><strong>不用急着给答案，先陪孩子发现。</strong></span><span class="companion-expand">一起怎么探索 <span>＋</span></span></summary><div class="companion-body"><div><b>01</b><h3>先问一个问题</h3><p>从孩子正在好奇的事出发，每次选一个主题就好。</p></div><div><b>02</b><h3>一起动手观察</h3><p>转一转模型、换个视角、试着改变条件，再听听讲解。</p></div><div><b>03</b><h3>说说自己的发现</h3><p>鼓励孩子用自己的话解释，也欢迎留下新的问题。</p></div></div></details>
+    </section>
+  </main>
 
-    <footer>Three.js · Web Speech API · 无需构建，双击即用</footer>
-  </div>
-
-  <script>
-    // 首页星空：轻量 2D canvas，缓慢闪烁
-    const cv = document.getElementById('stars');
-    const ctx = cv.getContext('2d');
-    let stars = [];
-    function resize() {
-      cv.width = innerWidth; cv.height = innerHeight;
-      stars = Array.from({ length: 140 }, () => ({
-        x: Math.random() * cv.width,
-        y: Math.random() * cv.height * 0.9,
-        r: Math.random() * 1.3 + 0.3,
-        p: Math.random() * Math.PI * 2,
-        s: 0.4 + Math.random() * 1.2,
-      }));
-    }
-    resize();
-    addEventListener('resize', resize);
-    (function draw(t) {
-      ctx.clearRect(0, 0, cv.width, cv.height);
-      stars.forEach((s) => {
-        const a = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(t / 1000 * s.s + s.p));
-        ctx.fillStyle = 'rgba(220,232,255,' + a.toFixed(3) + ')';
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      requestAnimationFrame(draw);
-    })(0);
-  </script>
+  <footer class="site-footer page-width"><div class="footer-top"><a class="brand footer-brand" href="./"><span class="brand-mark"><svg><use href="#i-spark"/></svg></span><span>科普可视化<small>让好奇，成为认识世界的开始。</small></span></a><p>观察 · 动手 · 提问 · 发现</p><a href="#" class="back-to-top">回到顶部 ↑</a></div><div class="footer-bottom"><span>三维模型与动画用于教学示意，科学资料与复原说明见各专题。</span><details class="credits"><summary>素材与项目说明</summary><p>封面为本项目三维场景的实际画面。地球与行星地图：<a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope / INOVE</a>，<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>，含拼接、调色与补绘。人体参考模型：<a href="https://lifesciencedb.jp/bp3d/" target="_blank" rel="noopener">BodyParts3D © DBCLS</a>，CC BY 4.0，经 human-atlas 简化及本项目重新分组、调整材质。其他封面为本项目原创程序化场景；恐龙形态复原含推测，具体说明见专题。</p><a href="https://github.com/1990jtf/sci-vis" target="_blank" rel="noopener">查看项目源代码 ↗</a></details><span class="footer-note">为每一份好奇心，留一扇门。</span></div></footer>
+  <dialog class="surprise-dialog" id="surpriseDialog" aria-labelledby="surpriseTitle"><button class="dialog-close" id="closeSurprise" aria-label="关闭探索推荐" type="button">×</button><p class="eyebrow"><svg class="icon"><use href="#i-shuffle"/></svg> 好奇心为你选中了</p><img id="surpriseImage" src="src/home/previews/solar.webp" width="760" height="430" alt=""/><h2 id="surpriseTitle">太阳系观察站</h2><p id="surpriseQuestion"></p><div class="surprise-actions"><button type="button" class="button button-secondary" id="reshuffleBtn">换个方向 <svg class="icon"><use href="#i-shuffle"/></svg></button><a class="button button-primary" href="src/solar-system/solar-system.html" id="surpriseLink">就去这里 <svg class="icon"><use href="#i-arrow"/></svg></a></div></dialog>
 </body>
 </html>
